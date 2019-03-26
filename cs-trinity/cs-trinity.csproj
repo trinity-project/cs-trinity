@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -243,7 +244,14 @@
   <ItemGroup>
     <Compile Include="Channel\Channel.cs" />
     <Compile Include="Channel\TradeHistory.cs" />
-    <Compile Include="DB\LevelDB.cs" />
+    <Compile Include="DB\Cache.cs" />
+    <Compile Include="DB\Comparators.cs" />
+    <Compile Include="DB\Database.cs" />
+    <Compile Include="DB\Iterators.cs" />
+    <Compile Include="DB\LevelDBBase.cs" />
+    <Compile Include="DB\NativePtr.cs" />
+    <Compile Include="DB\Options.cs" />
+    <Compile Include="DB\SafeData.cs" />
     <Compile Include="Transaction\Transaction.cs" />
     <Compile Include="Transaction\Type\Founder.cs" />
     <Compile Include="Transaction\Type\Htlc.cs" />

@@ -23,15 +23,48 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
+using Trinity.DB.NativePtr;
 
 namespace Trinity.DB
 {
-    class LevelDB
+    internal class SafeData<T> : SafeHandle
+        where T : struct
     {
+        private GCHandle SafeRawData;
+
+        public SafeData(T[] arr)
+            : base(default(IntPtr), true)
+        {
+            SafeRawData = GCHandle.Alloc(arr, GCHandleType.Pinned);
+
+            // freed initialized GCHandles.
+            handle = SafeRawData.AddrOfPinnedObject();
+        }
+
+        public Ptr<T> Ptr
+        {
+            get { return (Ptr<T>)handle; }
+        }
+
+        public override bool IsInvalid
+        {
+            get { return handle == default(IntPtr); }
+        }
+
+        protected override bool ReleaseHandle()
+        {
+            if (handle != default(IntPtr))
+            {
+                SafeRawData.Free();
+                handle = default(IntPtr);
+            }
+            return true;
+        }
     }
 }
