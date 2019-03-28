@@ -36,10 +36,10 @@ namespace Trinity.Transaction
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionHeader
     {
-        public string MessageType;
-        public string Sender;
-        public string Receiver;
-        public string ChannelName;
-        public UInt64 TxNonce;
+        public string MessageType { get; set; }
+        public string Sender { get; set; }
+        public string Receiver { get; set; }
+        public string ChannelName { get; set; }
+        public UInt64 TxNonce { get; set; }
     }
 }

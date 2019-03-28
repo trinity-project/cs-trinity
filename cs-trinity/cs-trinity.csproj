@@ -256,12 +256,16 @@
     <Compile Include="DB\Options.cs" />
     <Compile Include="DB\SafeData.cs" />
     <Compile Include="Transaction\Transaction.cs" />
+    <Compile Include="Transaction\TransactionHeader.cs" />
+    <Compile Include="Transaction\TrinityMessage.cs" />
+    <Compile Include="Transaction\TrinityTransaction.cs" />
     <Compile Include="Transaction\Type\Founder.cs" />
     <Compile Include="Transaction\Type\Htlc.cs" />
     <Compile Include="Transaction\Type\Rsmc.cs" />
     <Compile Include="Transaction\Type\Settle.cs" />
     <Compile Include="Trinity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TrinityTcpClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Network\RPC\" />
