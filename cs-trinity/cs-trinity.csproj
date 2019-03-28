@@ -247,14 +247,8 @@
   <ItemGroup>
     <Compile Include="Channel\Channel.cs" />
     <Compile Include="Channel\TradeHistory.cs" />
-    <Compile Include="DB\Cache.cs" />
-    <Compile Include="DB\Comparators.cs" />
-    <Compile Include="DB\Database.cs" />
-    <Compile Include="DB\Iterators.cs" />
-    <Compile Include="DB\LevelDBBase.cs" />
-    <Compile Include="DB\NativePtr.cs" />
-    <Compile Include="DB\Options.cs" />
-    <Compile Include="DB\SafeData.cs" />
+    <Compile Include="Properties\Settings1.cs" />
+    <Compile Include="Properties\Settings1.Designer.cs" />
     <Compile Include="Transaction\Transaction.cs" />
     <Compile Include="Transaction\TransactionHeader.cs" />
     <Compile Include="Transaction\TrinityMessage.cs" />
@@ -268,6 +262,7 @@
     <Compile Include="TrinityTcpClient.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="DB\" />
     <Folder Include="Network\RPC\" />
     <Folder Include="Network\TCP\" />
     <Folder Include="Transaction\Signature\" />
@@ -275,6 +270,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <None Include="Properties\Settings1.settings" />
     <None Include="Trinity.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

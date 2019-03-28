@@ -110,6 +110,7 @@ namespace Trinity.DB
             get { return _Cache; }
         }
 
+        /*
         public Comparators Comparator
         {
             set
@@ -119,7 +120,7 @@ namespace Trinity.DB
             }
             get { return _Comparators; }
         }
-
+        */
         public long BlockSize
         {
             set { Native.leveldb_options_set_block_size(this.Handler, (UIntPtr)value); }
