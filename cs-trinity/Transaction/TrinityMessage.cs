@@ -103,13 +103,13 @@ namespace Wallet
         {
             JObject msg = (JObject)(JObject)JsonConvert.DeserializeObject(message);
 
-            message = msg;
+            /*message = msg;
             message_type = message.get("MessageType");
             receiver = message.get("Receiver");
             sender = message.get("Sender");
             message_body = message.get("MessageBody");
             error = message.get("Error");
-            magic = message.get("NetMagic");
+            magic = message.get("NetMagic");*/
         }
     }
 
