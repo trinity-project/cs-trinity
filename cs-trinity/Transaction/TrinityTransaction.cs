@@ -30,7 +30,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Wallet.Transaction.Transaction
+namespace Trinity.Transaction.Transaction
 {
     class TrinityTransaction
     {

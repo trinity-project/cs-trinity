@@ -32,7 +32,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Neo;
 
-namespace Wallet.Properties
+namespace Trinity.Properties
 {
     internal sealed partial class Settings1
     {
@@ -51,7 +51,7 @@ namespace Wallet.Properties
                 Save();
             }
 
-            IConfigurationSection section = new ConfigurationBuilder().AddJsonFile("C:\\Neo\\trinityConfig.json").Build().GetSection("ApplicationConfiguration");
+            IConfigurationSection section = new ConfigurationBuilder().AddJsonFile("Trinity.json").Build().GetSection("ApplicationConfiguration");
             this.Gateway = new GatewaySettings(section.GetSection("Gateway"));
             this.ChannelFree = new ChannelFreeSettings(section.GetSection("ChannelFree"));
             this.Config = new ConfigSettings(section.GetSection("Config"));

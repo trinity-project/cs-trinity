@@ -30,11 +30,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Neo.IO.Json;
-using Settings = Wallet.Properties.Settings1;
+using Settings = Trinity.Properties.Settings1;
 using Neo.Wallets;
 using Newtonsoft.Json;
+using Trinity.Network.TCP;
 
-namespace Wallet
+namespace Trinity.Transaction
 {
     class TrinityMessage
     {
