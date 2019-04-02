@@ -187,11 +187,19 @@
     <Reference Include="Neo, Version=2.9.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Neo.2.9.0\lib\net47\Neo.dll</HintPath>
     </Reference>
+    <Reference Include="neo-gui_pluginframework, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\trinity-neo-gui\neo-gui_pluginframework\obj\Debug\neo-gui_pluginframework.dll</HintPath>
+    </Reference>
     <Reference Include="Neo.VM, Version=2.3.1.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Neo.VM.2.3.1.1\lib\net461\Neo.VM.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="plugin_trinity, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\trinity-neo-gui\neo-gui\bin\Debug\plugins\plugin_trinity.dll</HintPath>
     </Reference>
     <Reference Include="Remotion.Linq, Version=2.2.0.0, Culture=neutral, PublicKeyToken=fee00910d6e5f53b, processorArchitecture=MSIL">
       <HintPath>..\packages\Remotion.Linq.2.2.0\lib\net45\Remotion.Linq.dll</HintPath>
@@ -267,6 +275,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BlockChain\Funding.cs" />
+    <Compile Include="BlockChain\Monitor.cs" />
     <Compile Include="Channel\Channel.cs" />
     <Compile Include="Channel\TradeHistory.cs" />
     <Compile Include="Program.cs" />
