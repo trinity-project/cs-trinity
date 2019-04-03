@@ -35,7 +35,7 @@ using Neo.Wallets;
 using Newtonsoft.Json;
 using Trinity.Network.TCP;
 
-namespace Trinity.Transaction
+namespace Trinity.Trade
 {
     class TrinityMessage
     {

@@ -1,4 +1,4 @@
-/*
+﻿/*
 Author: Trinity Core Team
 
 MIT License
@@ -23,15 +23,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Trinity.Transaction.Type
+namespace Trinity.Trade
 {
-    class Rsmc
+    class TrinityTransaction
     {
     }
 }

@@ -31,7 +31,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MessagePack;
 
-namespace Trinity.Transaction
+namespace Trinity.Trade
 {
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionHeader

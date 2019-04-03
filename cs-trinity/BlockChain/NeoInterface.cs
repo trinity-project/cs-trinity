@@ -27,6 +27,7 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Akka.Actor;
 using Neo;
 using Neo.IO.Json;
 using Neo.Ledger;
@@ -40,6 +41,8 @@ namespace Trinity.BlockChain
 {
     class NeoInterface
     {
+        private static readonly NeoSystem system;
+
         public static JObject getBalance(string assetId)
         {
             if (Plugin_trinity.api.CurrentWallet == null)
@@ -98,9 +101,36 @@ namespace Trinity.BlockChain
             }
             else
             {
-                return Plugin_trinity.api.CurrentWallet.WalletHeight;
+                return (Plugin_trinity.api.CurrentWallet.WalletHeight > 0)? Plugin_trinity.api.CurrentWallet.WalletHeight-1 : 0;
+            }            
+        }
+
+        private static JObject GetRelayResult(RelayResultReason reason)
+        {
+            switch (reason)
+            {
+                case RelayResultReason.Succeed:
+                    return true;
+                case RelayResultReason.AlreadyExists:
+                    throw new RpcException(-501, "Block or transaction already exists and cannot be sent repeatedly.");
+                case RelayResultReason.OutOfMemory:
+                    throw new RpcException(-502, "The memory pool is full and no more transactions can be sent.");
+                case RelayResultReason.UnableToVerify:
+                    throw new RpcException(-503, "The block cannot be validated.");
+                case RelayResultReason.Invalid:
+                    throw new RpcException(-504, "Block or transaction validation failed.");
+                //case RelayResultReason.PolicyFail:
+                //    throw new RpcException(-505, "One of the Policy filters failed.");
+                default:
+                    throw new RpcException(-500, "Unknown error.");
             }
-            
+        }
+
+        public static JObject sendRawTransaction(string trans)
+        {
+            Transaction tx = Transaction.DeserializeFrom(trans.HexToBytes());
+            RelayResultReason reason = system.Blockchain.Ask<RelayResultReason>(tx).Result;
+            return GetRelayResult(reason);
         }
     }
 }

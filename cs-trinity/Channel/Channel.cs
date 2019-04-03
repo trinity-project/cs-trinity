@@ -34,7 +34,7 @@ using Newtonsoft.Json.Linq;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
 
-namespace Trinity.Transaction.Channel
+namespace Trinity.Channel
 {
     class Channel
     {

@@ -29,9 +29,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Trinity.Transaction.Type
+namespace Trinity.Trade.Type
 {
-    class Htlc
+    class Settle
     {
     }
 }
