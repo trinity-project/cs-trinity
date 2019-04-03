@@ -32,38 +32,11 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using plugin_trinity;
 
 namespace Trinity.BlockChain
 {
     class Monitor
     {
-        public List<string> getBlock(uint blockHeigh)
-        {
-            JObject blockInfo = new JObject();
-            JArray tx;
-            Block block;
-            List<string> txidList = new List<string>();
-            block = Blockchain.Singleton.Store.GetBlock(blockHeigh);
-            tx = (JArray)block.ToJson()["tx"];
-            for (int txNum = 0; txNum < tx.Count(); txNum++)
-            {
-                blockInfo = JObject.Parse(tx[txNum].ToString());
-                blockInfo["txid"].ToString();
-                txidList.Add(blockInfo["txid"].ToString());
-            }
-            if (txidList.Count == 0)
-            {
-                return null;
-            }
-            return txidList;
-        }
-
-        public uint getBlockHeight()
-        {
-            return Blockchain.Singleton.Height + 1;
-        }
-
         public void monitorBlock()
         {
             while (true)
@@ -74,13 +47,13 @@ namespace Trinity.BlockChain
 
                 try
                 {
-                    blockChainHeight = getBlockHeight();
+                    blockChainHeight = NeoInterface.getBlockHeight();
                 }
                 catch (Exception ex)
                 {
                     throw ex;
                 }
-                walletBlockHeitht = Plugin_trinity.api.CurrentWallet.WalletHeight;
+                walletBlockHeitht = NeoInterface.getWalletBlockHeight();
                 deltaBlockHeitht = blockChainHeight - walletBlockHeitht;
                 if (deltaBlockHeitht >= 0)
                 {

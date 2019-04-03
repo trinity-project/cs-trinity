@@ -30,19 +30,21 @@ using System.Linq;
 using Neo;
 using Neo.IO.Json;
 using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC;
+using Neo.Persistence;
 using Neo.Wallets;
 using plugin_trinity;
 
 namespace Trinity.BlockChain
 {
-    class Interface
+    class NeoInterface
     {
-        public JObject getBalance(string assetId)
+        public static JObject getBalance(string assetId)
         {
             if (Plugin_trinity.api.CurrentWallet == null)
             {
-                throw new RpcException(-400, "Access denied.");
+                throw new RpcException(-400, "Wallet didn't open.");
             }
             else
             {
@@ -60,6 +62,45 @@ namespace Trinity.BlockChain
                 }
                 return json;
             }
+        }
+
+        public static List<string> getBlockTxId(uint blockHeigh)
+        {
+            JObject blockInfo = new JObject();
+            JArray tx;
+            Block block;
+            List<string> txidList = new List<string>();
+            block = Blockchain.Singleton.Store.GetBlock(blockHeigh);
+            tx = (JArray)block.ToJson()["tx"];
+            for (int txNum = 0; txNum < tx.Count(); txNum++)
+            {
+                blockInfo = JObject.Parse(tx[txNum].ToString());
+                blockInfo["txid"].ToString();
+                txidList.Add(blockInfo["txid"].ToString());
+            }
+            if (txidList.Count == 0)
+            {
+                return null;
+            }
+            return txidList;
+        }
+
+        public static uint getBlockHeight()
+        {
+            return Blockchain.Singleton.Height + 1;
+        }
+
+        public static uint getWalletBlockHeight()
+        {
+            if (Plugin_trinity.api.CurrentWallet == null)
+            {
+                throw new RpcException(-400, "Wallet didn't open.");
+            }
+            else
+            {
+                return Plugin_trinity.api.CurrentWallet.WalletHeight;
+            }
+            
         }
     }
 }

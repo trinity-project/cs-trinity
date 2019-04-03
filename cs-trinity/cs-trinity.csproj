@@ -273,7 +273,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BlockChain\Funding.cs" />
-    <Compile Include="BlockChain\Interface.cs" />
+    <Compile Include="BlockChain\NeoInterface.cs" />
     <Compile Include="BlockChain\Monitor.cs" />
     <Compile Include="Channel\Channel.cs" />
     <Compile Include="Channel\TradeHistory.cs" />
