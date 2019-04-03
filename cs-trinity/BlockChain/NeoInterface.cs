@@ -120,7 +120,7 @@ namespace Trinity.BlockChain
                 case RelayResultReason.Invalid:
                     throw new RpcException(-504, "Block or transaction validation failed.");
                 //case RelayResultReason.PolicyFail:
-                    throw new RpcException(-505, "One of the Policy filters failed.");
+                //  throw new RpcException(-505, "One of the Policy filters failed.");
                 default:
                     throw new RpcException(-500, "Unknown error.");
             }
