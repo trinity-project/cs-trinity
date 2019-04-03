@@ -120,7 +120,7 @@ namespace Trinity.BlockChain
                 case RelayResultReason.Invalid:
                     throw new RpcException(-504, "Block or transaction validation failed.");
                 //case RelayResultReason.PolicyFail:
-                //    throw new RpcException(-505, "One of the Policy filters failed.");
+                    throw new RpcException(-505, "One of the Policy filters failed.");
                 default:
                     throw new RpcException(-500, "Unknown error.");
             }
@@ -129,7 +129,7 @@ namespace Trinity.BlockChain
         public static JObject sendRawTransaction(string trans)
         {
             Transaction tx = Transaction.DeserializeFrom(trans.HexToBytes());
-            RelayResultReason reason = system.Blockchain.Ask<RelayResultReason>(tx).Result;
+            RelayResultReason reason = Plugin_trinity.api.NeoSystem.Blockchain.Ask<RelayResultReason>(tx).Result;
             return GetRelayResult(reason);
         }
     }
