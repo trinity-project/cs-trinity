@@ -33,5 +33,8 @@ namespace Trinity.Trade.Type
 {
     class Founder
     {
+        public Founder() { }
+        ~Founder() { }
+
     }
 }
