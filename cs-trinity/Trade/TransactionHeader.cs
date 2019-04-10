@@ -33,13 +33,99 @@ using MessagePack;
 
 namespace Trinity.Trade
 {
+    /// <summary>
+    /// This file is used to serialized the offchain transaction message's header and body
+    /// definitions.
+    /// Message header contains 2 parts: Mandotary and Optional parts.
+    /// </summary>
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionHeader
     {
+        /// <summary>
+        /// Mandatory contents in the message header
+        /// </summary>
         public string MessageType { get; set; }
         public string Sender { get; set; }
         public string Receiver { get; set; }
         public string ChannelName { get; set; }
+        // Probably this word shoud be used in the message header in future
+        // instead of the message body's word.
+        // public string AssetType { get; set; }
+        public string NetMagic { get; set; }
         public UInt64 TxNonce { get; set; }
+        
+        // Just exists only for HTLC message
+        public string Router { get; set; }
+        public string Next { get; set; }
+
+        /// <summary>
+        /// Optional contents in the message header
+        /// </summary>
+        public string Error { get; set; }
+        public string Comments { get; set; }
+    }
+
+    /// <summary>
+    /// Body for RegisterChannel Message
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    class RegisterChannelBody
+    {
+        public string AssetType { get; set; }
+        public string Deposit { get; set; }
+        public string OriginalMessage { get; set; } // Just for RegisterChannelFail
+    }
+
+    /// <summary>
+    /// Body for Founder Message
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    class FounderBody
+    {
+        public string AssetType { get; set; }
+        public string Deposit { get; set; }
+        public string Founder { get; set; }
+        public string Commitment { get; set; }
+        public string RevocableDelivery { get; set; }
+        public int RoleIndex { get; set; }
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    class SettleBody
+    {
+        public string Settlement { get; set; }
+        public string Balance { get; set; }
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    class RsmcBody
+    {
+        public string AssetType { get; set; }
+        public string Value { get; set; }
+        public string Commitment { get; set; }
+        public string RevocableDelivery { get; set; }
+        public string BreachRemedy { get; set; }
+        public int RoleIndex { get; set; }
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    class HtlcBody
+    {
+        public string AssetType { get; set; }
+        public string Count { get; set; }
+        public string HCTX { get; set; }
+        public string RDTX { get; set; }
+        public string HEDTX { get; set; }
+        public string HTTX { get; set; }
+        public string HTDTX { get; set; }
+        public string HTRDTX { get; set; }
+        public string RoleIndex { get; set; }
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    class RResponseBody
+    {
+        public string HR { get; set; }
+        public string R { get; set; }
     }
 }
