@@ -27,13 +27,16 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Akka.Actor;
 using Neo;
+using Neo.Cryptography;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC;
 using Neo.Persistence;
+using Neo.SmartContract;
 using Neo.Wallets;
 using plugin_trinity;
 
@@ -131,6 +134,27 @@ namespace Trinity.BlockChain
             Transaction tx = Transaction.DeserializeFrom(trans.HexToBytes());
             RelayResultReason reason = Plugin_trinity.api.NeoSystem.Blockchain.Ask<RelayResultReason>(tx).Result;
             return GetRelayResult(reason);
+        }
+
+        public static string sign(string data)
+        {
+            byte[] raw, signedData = null;
+
+            raw = Encoding.UTF8.GetBytes(data);  //input as string
+            //raw = data.HexToBytes(); //input as hex
+            //UInt160 addressHash = comboBox1.Text.ToScriptHash();
+            //var account = Plugin_trinity.api.CurrentWallet.GetAccount(addressHash);
+            var account = Plugin_trinity.api.CurrentWallet.GetAccounts().FirstOrDefault();           
+            var keys = account.GetKey();
+            try
+            {
+                signedData = Crypto.Default.Sign(raw, keys.PrivateKey, keys.PublicKey.EncodePoint(false).Skip(1).ToArray());
+            }
+            catch (Exception err)
+            {
+                return null;
+            }
+            return signedData?.ToHexString();
         }
     }
 }
