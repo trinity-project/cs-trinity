@@ -181,7 +181,7 @@ namespace Trinity.BlockChain
             op_data += "67";  // APPCALL
             Console.WriteLine("asset_id:");
             Console.WriteLine(contract_hash.Substring(2).HexToBytes().Reverse().ToArray().ToHexString());
-            op_data += contract_hash.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();//好像多去了2位
+            op_data += contract_hash.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();                   //好像多去了2位
             op_data += "f1";  // maybe THROWIFNOT
 
             return op_data;
@@ -434,7 +434,7 @@ namespace Trinity.BlockChain
 
             public abstract byte[] ConvertToArray(T attr);
 
-            public TransactionAttribute(TransactionAttributeUsage Usage, T Data, List<TransactionAttribute> attributes)
+            public TransactionAttribute(TransactionAttributeUsage Usage, T Data, List<TransactionAttribute> attributes)     //构造函数
             {
                 this.Usage = Usage;
                 this.Data = Data;
