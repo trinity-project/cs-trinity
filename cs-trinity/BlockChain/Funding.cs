@@ -66,7 +66,7 @@ namespace Trinity.BlockChain
         }
 
         //去除首尾的引号
-        //暂用，因获取的JObject值中包含引号                                              ？？？
+        //暂用，因获取的JObject值中包含引号
         public static string FormatJObject(string Value)
         {
             return Value.Substring(1, Value.Length - 2);
@@ -181,7 +181,7 @@ namespace Trinity.BlockChain
             op_data += "67";  // APPCALL
             Console.WriteLine("asset_id:");
             Console.WriteLine(contract_hash.Substring(2).HexToBytes().Reverse().ToArray().ToHexString());
-            op_data += contract_hash.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();                   //好像多去了2位  ？？？
+            op_data += contract_hash.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();//好像多去了2位
             op_data += "f1";  // maybe THROWIFNOT
 
             return op_data;
@@ -398,7 +398,7 @@ namespace Trinity.BlockChain
             #if DEBUG
                 t = 1554866704;
             #endif
-            string pre_txid = CTxId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();                    //pre_txid
+            string pre_txid = CTxId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();        //pre_txid
             UInt160 ScriptHashSelf = ToScriptHash1(AddressSelf);                                        //outputTo
 
             new TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
@@ -434,7 +434,7 @@ namespace Trinity.BlockChain
 
             public abstract byte[] ConvertToArray(T attr);
 
-            public TransactionAttribute(TransactionAttributeUsage Usage, T Data, List<TransactionAttribute> attributes)     //构造函数
+            public TransactionAttribute(TransactionAttributeUsage Usage, T Data, List<TransactionAttribute> attributes)
             {
                 this.Usage = Usage;
                 this.Data = Data;
@@ -493,43 +493,43 @@ namespace Trinity.BlockChain
         }
 
 
-        static void Main()
-        {
-            string PublicKeySelf = "02ea3b68aa765c9af9dfa89eeb39dde03d1816493d9e11bb827940ee47ce2536cc";          //Acwk9RhThDhn6x47GpKmUV9SS8qmGHSimC
-            string PublicKeyOther = "02d62f3a5e56ae9e20e0803d735465e88019ef9e7545a14c611ba72bb6fdab5d52";         //AcnJGoFrRe5QNKjSadk7yZpw8wQuTWmiRE
-            string BalanceSelf = "10";
-            string BalanceOther = "10";
-            string AssetId = "5e7fb71d90044445caf77c0c36df0901fda8340c";
+        //static void Main()
+        //{
+        //    string PublicKeySelf = "02ea3b68aa765c9af9dfa89eeb39dde03d1816493d9e11bb827940ee47ce2536cc";          //Acwk9RhThDhn6x47GpKmUV9SS8qmGHSimC
+        //    string PublicKeyOther = "02d62f3a5e56ae9e20e0803d735465e88019ef9e7545a14c611ba72bb6fdab5d52";         //AcnJGoFrRe5QNKjSadk7yZpw8wQuTWmiRE
+        //    string BalanceSelf = "10";
+        //    string BalanceOther = "10";
+        //    string AssetId = "5e7fb71d90044445caf77c0c36df0901fda8340c";
 
-            //FundingTx
-            Console.WriteLine("----------FundingTx------------");
-            JObject FundingTx = createFundingTx(PublicKeySelf, BalanceSelf, PublicKeyOther, BalanceOther, AssetId);
-            Console.WriteLine(FundingTx);
+        //    //FundingTx
+        //    Console.WriteLine("----------FundingTx------------");
+        //    JObject FundingTx = createFundingTx(PublicKeySelf, BalanceSelf, PublicKeyOther, BalanceOther, AssetId);
+        //    Console.WriteLine(FundingTx);
 
-            //CTX
-            Console.WriteLine("----------CTX------------");
-            string addressFunding = FundingTx["addressFunding"].ToString();
-            addressFunding = FormatJObject(addressFunding);                                                                   //暂用
-            string fundingScript = FundingTx["scriptFunding"].ToString();
-            fundingScript = FormatJObject(fundingScript);                                                                     //暂用
+        //    //CTX
+        //    Console.WriteLine("----------CTX------------");
+        //    string addressFunding = FundingTx["addressFunding"].ToString();
+        //    addressFunding = FormatJObject(addressFunding);                                                                   //暂用
+        //    string fundingScript = FundingTx["scriptFunding"].ToString();
+        //    fundingScript = FormatJObject(fundingScript);                                                                     //暂用
 
-            JObject CTX = createCTX(addressFunding, BalanceSelf, BalanceOther, PublicKeySelf, PublicKeyOther, fundingScript, AssetId);
-            Console.WriteLine(CTX);
+        //    JObject CTX = createCTX(addressFunding, BalanceSelf, BalanceOther, PublicKeySelf, PublicKeyOther, fundingScript, AssetId);
+        //    Console.WriteLine(CTX);
 
-            //RDTX
-            Console.WriteLine("----------RDTX------------");
-            UInt160 ScriptHashSelf1 = PublicKeyToScriptHash(PublicKeySelf);
-            string AddressSelf = ToAddress1(ScriptHashSelf1);
-            string addressRSMC = CTX["addressRSMC"].ToString();
-            addressRSMC = FormatJObject(addressRSMC);                                                                   //暂用
-            string CTxId = CTX["txId"].ToString();
-            CTxId = FormatJObject(CTxId);                                                                               //暂用
-            string RSMCScript = CTX["scriptRSMC"].ToString();
-            RSMCScript = FormatJObject(RSMCScript);                                                                     //暂用
+        //    //RDTX
+        //    Console.WriteLine("----------RDTX------------");
+        //    UInt160 ScriptHashSelf1 = PublicKeyToScriptHash(PublicKeySelf);
+        //    string AddressSelf = ToAddress1(ScriptHashSelf1);
+        //    string addressRSMC = CTX["addressRSMC"].ToString();
+        //    addressRSMC = FormatJObject(addressRSMC);                                                                   //暂用
+        //    string CTxId = CTX["txId"].ToString();
+        //    CTxId = FormatJObject(CTxId);                                                                               //暂用
+        //    string RSMCScript = CTX["scriptRSMC"].ToString();
+        //    RSMCScript = FormatJObject(RSMCScript);                                                                     //暂用
 
-            JObject RDTX = createRDTX(addressRSMC, AddressSelf, BalanceSelf, CTxId, RSMCScript, AssetId);
-            Console.WriteLine(RDTX);
+        //    JObject RDTX = createRDTX(addressRSMC, AddressSelf, BalanceSelf, CTxId, RSMCScript, AssetId);
+        //    Console.WriteLine(RDTX);
 
-        }
+        //}
     }
 }
