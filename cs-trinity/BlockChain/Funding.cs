@@ -108,24 +108,60 @@ namespace Trinity.BlockChain
         }
 
         //创建多签合约，封装自NEO方法
+        //弃用
+        //public static Contract CreateMultiSigContract1(string publicKey1, string publicKey2)
+        //{
+        //    ECPoint[] publicKeys;
+        //    List<System.String> listS = new List<System.String>();
+        //    if (publicKey1.CompareTo(publicKey2) > 0)
+        //    {
+        //        listS.Add(publicKey1);
+        //        listS.Add(publicKey2);
+        //    }
+        //    else
+        //    {
+        //        listS.Add(publicKey2);
+        //        listS.Add(publicKey1);
+        //    }
+
+        //    publicKeys = listS.Select(p => ECPoint.DecodePoint(p.HexToBytes(), ECCurve.Secp256r1)).ToArray();
+        //    Contract contract = Contract.CreateMultiSigContract(2, publicKeys);
+        //    return contract;
+        //}
+
+        //创建多签合约，封装自NEO方法
+        //使之与原python方法相同
         public static Contract CreateMultiSigContract(string publicKey1, string publicKey2)
         {
-            ECPoint[] publicKeys;
-            List<System.String> listS = new List<System.String>();
+            Console.WriteLine(111111111111);
+            return new Contract
+            {
+                Script = CreateMultiSigRedeemScript(publicKey1, publicKey2),
+                ParameterList = Enumerable.Repeat(ContractParameterType.Signature, 2).ToArray()
+            };
+        }
+
+        public static byte[] CreateMultiSigRedeemScript(string publicKey1, string publicKey2)
+        {
+            Console.WriteLine(222222222222);
+            string pubkey_large;
+            string pubkey_small;
             if (publicKey1.CompareTo(publicKey2) > 0)
             {
-                listS.Add(publicKey1);
-                listS.Add(publicKey2);
+                pubkey_large = publicKey1;
+                pubkey_small = publicKey2;
             }
             else
             {
-                listS.Add(publicKey2);
-                listS.Add(publicKey1);
+                pubkey_large = publicKey2;
+                pubkey_small = publicKey1;
             }
 
-            publicKeys = listS.Select(p => ECPoint.DecodePoint(p.HexToBytes(), ECCurve.Secp256r1)).ToArray();
-            Contract contract = Contract.CreateMultiSigContract(2, publicKeys);
-            return contract;
+            string contractTemplate = "53c56b6c766b00527ac46c766b51527ac4616c766b00c36121{0}ac642f006c766b51c361" +
+                                      "21{1}ac635f006c766b00c36121{2}ac642f006c766b51c36121{3}" +
+                                      "ac62040000620400516c766b52527ac46203006c766b52c3616c7566";
+            string RSMCContract = String.Format(contractTemplate, pubkey_small, pubkey_large, pubkey_large, pubkey_small);
+            return RSMCContract.HexToBytes();
         }
 
         //Script转Address
