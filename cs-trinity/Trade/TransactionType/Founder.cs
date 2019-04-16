@@ -25,7 +25,9 @@ SOFTWARE.
 */
 using System;
 using Trinity.Trade.Tempates.Definitions;
+using Trinity.Trade.Tempates;
 using Trinity.BlockChain;
+using Trinity.TrinityWallet.TransferHandler;
 using Neo.IO.Json;
 
 namespace Trinity.Trade.TransactionType
@@ -35,28 +37,28 @@ namespace Trinity.Trade.TransactionType
     /// </summary>
     public class Founder : Header<FounderBody>
     {
-        public Founder(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce)
-        {
-            this.MessageBody.AssetType = asset;
-            this.MessageBody.Deposit = value;
-        }
+        //public Founder(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce)
+        //{
+        //    this.MessageBody.AssetType = asset;
+        //    this.MessageBody.Deposit = value;
+        //}
     }
 
     public class FounderSign : Founder
     {
-        public FounderSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce, value)
-        {
-        }
+        //public FounderSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce, value)
+        //{
+        //}
     }
 
     public class FounderFail : Founder
     {
-        public FounderFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce, value)
-        {
-        }
+        //public FounderFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce, value)
+        //{
+        //}
     }
 
     /// <summary>
@@ -72,7 +74,7 @@ namespace Trinity.Trade.TransactionType
         }
 
         public FounderHandler(string sender, string receiver, string channel, string asset, string magic,
-            UInt64 nonce, string deposit, int role) : base(sender, receiver, channel, asset, magic, nonce)
+            UInt64 nonce, string deposit, int role) : base()
         {
             this.Request.MessageBody.AssetType = asset;
             this.Request.MessageBody.Deposit = deposit;

@@ -28,8 +28,9 @@ using System;
 using System.Reflection;
 using MessagePack;
 using Trinity.Network.TCP;
+using Trinity.TrinityWallet.Templates;
 
-namespace Trinity.Trade
+namespace Trinity.Trade.Tempates
 {
     /// <summary>
     /// 
@@ -37,10 +38,8 @@ namespace Trinity.Trade
     /// <typeparam name="TMessage">Type of Transaction Message</typeparam>
     /// <typeparam name="TSHandler">Type of Transaction Handler When handling TMessage successfully</typeparam>
     /// <typeparam name="TFHandler">Type of Transaction Handler When handling Tmessage failed</typeparam>
-    public abstract class TrinityTransaction<TMessage, TSHandler, TFHandler>
+    public abstract class TrinityTransaction<TMessage, TSHandler, TFHandler> : TrinityMessages<TMessage, TSHandler, TFHandler>
     {
-        protected TMessage Request;
-        protected string Message;
         protected TSHandler SHandler;
         protected TFHandler FHandler;
         protected TrinityTcpClient TcpHandler;
@@ -97,53 +96,44 @@ namespace Trinity.Trade
         /// Default Constructor
         /// </summary>
         /// <param name="msg"></param>
-        public TrinityTransaction(string msg)
+        public TrinityTransaction() : base()
         {
-            try
-            {
-                this.Request = 
-                    MessagePackSerializer.Deserialize<TMessage>(MessagePackSerializer.FromJson(msg));
-
-                // parse the header information
-                this.ParseMessageHeader();
-            }
-            catch (Exception)
-            {
-                // TODO: Log system to record this error
-            }
         }
 
         /// <summary>
-        /// Default Constructor
+        /// Constructor
         /// </summary>
         /// <param name="msg"></param>
-        public TrinityTransaction(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce)
+        public TrinityTransaction(string msg) : base(msg)
         {
-            this.Sender = sender;
-            this.Receiver = receiver;
-            this.ChannelName = channel;
-            this.AssetType = asset;
-            this.NetMagic = magic;
-            this.TxNonce = nonce.ToString();
-
-            // to set the message header
-            this.SetMessageHeader();
+            // parse the header information
+            this.ParseMessageHeader();
         }
 
         /// <summary>
-        /// Convert the TMessage to String message
+        /// Constructor for handle interface between trinity dll and gui
+        /// </summary>
+        /// <param name="msg"></param>
+        //public TrinityTransaction(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) : base()
+        //{
+        //    this.Sender = sender;
+        //    this.Receiver = receiver;
+        //    this.ChannelName = channel;
+        //    this.AssetType = asset;
+        //    this.NetMagic = magic;
+        //    this.TxNonce = nonce.ToString();
+
+        //    // to set the message header
+        //    this.SetMessageHeader();
+        //}
+
+        /// <summary>
+        /// Constructor for sending TMessage out to peer.
         /// </summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public TrinityTransaction(TMessage msg)
+        public TrinityTransaction(TMessage msg) : base(msg)
         {
-            this.Message = 
-                MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(msg));
-        }
-
-        public virtual string ToJson(TMessage msg)
-        {
-            return MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(msg));
         }
 
         public bool IsFailRole(int Role)
@@ -173,7 +163,7 @@ namespace Trinity.Trade
 
         public virtual void MakeTransaction(TrinityTcpClient client, TMessage msg)
         {
-            client.sendData(this.ToJson(msg));
+            client.sendData(this.ToJson());
         }
 
         public virtual void MakeTransaction(TrinityTcpClient client)

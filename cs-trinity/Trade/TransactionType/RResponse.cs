@@ -25,6 +25,8 @@ SOFTWARE.
 */
 using System;
 using Trinity.Trade.Tempates.Definitions;
+using Trinity.Trade.Tempates;
+using Trinity.TrinityWallet.TransferHandler;
 
 namespace Trinity.Trade.TransactionType
 {
@@ -33,9 +35,9 @@ namespace Trinity.Trade.TransactionType
     /// </summary>
     public class RResponse : Header<RResponseBody>
     {
-        public RResponse(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
-            base(sender, receiver, channel, asset, magic, nonce)
-        { }
+        //public RResponse(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
+        //    base(sender, receiver, channel, asset, magic, nonce)
+        //{ }
     }
 
     /// <summary>

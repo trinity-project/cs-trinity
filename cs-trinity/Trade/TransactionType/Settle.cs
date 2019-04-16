@@ -25,6 +25,8 @@ SOFTWARE.
 */
 using System;
 using Trinity.Trade.Tempates.Definitions;
+using Trinity.Trade.Tempates;
+using Trinity.TrinityWallet.TransferHandler;
 
 namespace Trinity.Trade.TransactionType
 {
@@ -33,16 +35,16 @@ namespace Trinity.Trade.TransactionType
     /// </summary>
     public class Settle : Header<SettleBody>
     {
-        public Settle(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
-            base(sender, receiver, channel, asset, magic, nonce)
-        { }
+        //public Settle(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
+        //    base(sender, receiver, channel, asset, magic, nonce)
+        //{ }
     }
 
     public class SettleSign : Settle
     {
-        public SettleSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
-            base(sender, receiver, channel, asset, magic, nonce)
-        { }
+        //public SettleSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
+        //    base(sender, receiver, channel, asset, magic, nonce)
+        //{ }
     }
 
     /// <summary>

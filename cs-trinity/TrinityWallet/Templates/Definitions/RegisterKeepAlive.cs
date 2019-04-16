@@ -25,40 +25,26 @@ SOFTWARE.
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using MessagePack;
 
-namespace Trinity.Trade.Tempates.Definitions
+namespace Trinity.TrinityWallet.Templates.Definitions
 {
-    /// <summary>
-    /// This file define the prototype of the message header.
-    /// </summary>
-    [MessagePackObject(keyAsPropertyName: true)]
-    public abstract class Header<TBody>
+    [MessagePackObject(keyAsPropertyName:true)]
+    public class RegisterKeepAlive
     {
-        /// <summary>
-        /// Mandatory contents in the message header
-        /// </summary>
         public string MessageType { get { return this.GetType().Name; } }
-        public string Sender { get; set; }
-        public string Receiver { get; set; }
-        public string ChannelName { get; set; }
+        public string Ip { get; set; }
+        public string Protocol { get; set; }
 
-        // Used in the future.
-        public string AssetType { get; set; }
-
-        public string NetMagic { get; set; }
-        public UInt64 TxNonce { get; set; }
-
-        // Just exists only for HTLC message
-        public string Router { get; set; }
-        public string Next { get; set; }
-
-        /// <summary>
-        /// Optional contents in the message header
-        /// </summary>
-        public string Error { get; set; }
-        public string Comments { get; set; }
-
-        public TBody MessageBody { get; set; }
+        //public RegisterKeepAlive()
+        //{
+        //    this.MessageType = this.GetType().Name;
+        //    this.Ip = "localhost:20556";
+        //    this.Protocol = "TCP";
+        //}
     }
 }

@@ -25,40 +25,32 @@ SOFTWARE.
 */
 
 using System;
-using MessagePack;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Trinity.TrinityWallet.Templates.Definitions;
+using Trinity.TrinityWallet.Templates;
 
-namespace Trinity.Trade.Tempates.Definitions
+namespace Trinity.TrinityWallet.TransferHandler
 {
-    /// <summary>
-    /// This file define the prototype of the message header.
-    /// </summary>
-    [MessagePackObject(keyAsPropertyName: true)]
-    public abstract class Header<TBody>
+    public class RegisterWallet : TrinityMessages<RegisterKeepAlive, VoidHandler, VoidHandler>
     {
-        /// <summary>
-        /// Mandatory contents in the message header
-        /// </summary>
-        public string MessageType { get { return this.GetType().Name; } }
-        public string Sender { get; set; }
-        public string Receiver { get; set; }
-        public string ChannelName { get; set; }
+        public RegisterWallet() : base() { }
+        public RegisterWallet(string msg) : base(msg) { }
+        public RegisterWallet(RegisterKeepAlive msg) : base(msg) { }
+        public RegisterWallet(string ip, string port, string protocol = "TCP")
+        {
+            this.Request = new RegisterKeepAlive
+            {
+                Ip = String.Format("{0}:{1}", ip, port),
+                Protocol = protocol,
+            };
+        }
 
-        // Used in the future.
-        public string AssetType { get; set; }
-
-        public string NetMagic { get; set; }
-        public UInt64 TxNonce { get; set; }
-
-        // Just exists only for HTLC message
-        public string Router { get; set; }
-        public string Next { get; set; }
-
-        /// <summary>
-        /// Optional contents in the message header
-        /// </summary>
-        public string Error { get; set; }
-        public string Comments { get; set; }
-
-        public TBody MessageBody { get; set; }
+        public override void Dispose()
+        {
+            base.Dispose();
+        }
     }
 }

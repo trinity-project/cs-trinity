@@ -24,41 +24,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
-using MessagePack;
-
-namespace Trinity.Trade.Tempates.Definitions
+namespace Trinity.TrinityWallet.TransferHandler
 {
     /// <summary>
-    /// This file define the prototype of the message header.
+    /// 
     /// </summary>
-    [MessagePackObject(keyAsPropertyName: true)]
-    public abstract class Header<TBody>
+    public class VoidHandler
     {
-        /// <summary>
-        /// Mandatory contents in the message header
-        /// </summary>
-        public string MessageType { get { return this.GetType().Name; } }
-        public string Sender { get; set; }
-        public string Receiver { get; set; }
-        public string ChannelName { get; set; }
+        protected string Request;
 
-        // Used in the future.
-        public string AssetType { get; set; }
+        public VoidHandler(string msg)
+        {
+            this.Request = msg;
+        }
 
-        public string NetMagic { get; set; }
-        public UInt64 TxNonce { get; set; }
+        public bool Handle()
+        {
+            return false;
+        }
 
-        // Just exists only for HTLC message
-        public string Router { get; set; }
-        public string Next { get; set; }
+        public void FailStep()
+        {
+        }
 
-        /// <summary>
-        /// Optional contents in the message header
-        /// </summary>
-        public string Error { get; set; }
-        public string Comments { get; set; }
-
-        public TBody MessageBody { get; set; }
+        public void SucceedStep()
+        {
+        }
     }
 }

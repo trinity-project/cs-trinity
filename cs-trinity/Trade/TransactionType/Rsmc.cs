@@ -25,6 +25,8 @@ SOFTWARE.
 */
 using System;
 using Trinity.Trade.Tempates.Definitions;
+using Trinity.Trade.Tempates;
+using Trinity.TrinityWallet.TransferHandler;
 
 namespace Trinity.Trade.TransactionType
 {
@@ -33,27 +35,27 @@ namespace Trinity.Trade.TransactionType
     /// </summary>
     public class Rsmc : Header<RsmcBody>
     {
-        public Rsmc(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce)
-        {
-            this.MessageBody.AssetType = asset;
-            this.MessageBody.Value = value;
-        }
+        //public Rsmc(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce)
+        //{
+        //    this.MessageBody.AssetType = asset;
+        //    this.MessageBody.Value = value;
+        //}
     }
 
     public class RsmcSign : Rsmc
     {
-        public RsmcSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce, value)
-            { }
+        //public RsmcSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce, value)
+        //    { }
     }
 
     public class RsmcFail : Rsmc
     {
-        public RsmcFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce, value)
-            { }
-        }
+        //public RsmcFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce, value)
+        //    { }
+    }
 
     /// <summary>
     /// Class Handler for handling Rsmc Message

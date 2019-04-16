@@ -28,6 +28,8 @@ using System;
 using System.Text;
 using System.Security.Cryptography;
 using Trinity.Trade.Tempates.Definitions;
+using Trinity.Trade.Tempates;
+using Trinity.TrinityWallet.TransferHandler;
 using Trinity.Network.TCP;
 
 
@@ -38,21 +40,21 @@ namespace Trinity.Trade.TransactionType
     /// </summary>
     public class RegisterChannel : Header<RegisterBody>
     {
-        public RegisterChannel(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce)
-        {
-            this.MessageBody.AssetType = asset;
-            this.MessageBody.Deposit = value;
-        }
+        //public RegisterChannel(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce)
+        //{
+        //    this.MessageBody.AssetType = asset;
+        //    this.MessageBody.Deposit = value;
+        //}
     }
 
     public class RegisterChannelFail : RegisterChannel
     {
-        public RegisterChannelFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce, value)
-        {
-            this.MessageBody.OriginalMessage = value;
-        }
+        //public RegisterChannelFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce, value)
+        //{
+        //    this.MessageBody.OriginalMessage = value;
+        //}
     }
 
     /// <summary>
@@ -76,7 +78,7 @@ namespace Trinity.Trade.TransactionType
         /// <param name="nonce"></param>
         /// <param name="deposit"></param>
         public RegisterChannelHandler(string sender, string receiver, string channel, string asset, string magic, 
-            UInt64 nonce, string deposit) : base(sender, receiver, channel, asset, magic, nonce)
+            UInt64 nonce, string deposit) : base()
         {
             this.ChannelName = this.GenerateChannelName();
             // TODO: need to be recorded in the database?????

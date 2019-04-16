@@ -289,17 +289,21 @@
     <Compile Include="Trade\Tempates\Definitions\RsmcBody.cs" />
     <Compile Include="Trade\Tempates\Definitions\SettleBody.cs" />
     <Compile Include="Trade\Tempates\Definitions\VoidBody.cs" />
-    <Compile Include="Trade\TrinityTransaction.cs" />
+    <Compile Include="Trade\TransactionType\TransactionErrorCode.cs" />
+    <Compile Include="Trade\Tempates\TrinityTransaction.cs" />
     <Compile Include="Trade\TransactionType\Founder.cs" />
     <Compile Include="Trade\TransactionType\Htlc.cs" />
     <Compile Include="Trade\TransactionType\RegisterChannel.cs" />
     <Compile Include="Trade\TransactionType\RResponse.cs" />
     <Compile Include="Trade\TransactionType\Rsmc.cs" />
     <Compile Include="Trade\TransactionType\Settle.cs" />
-    <Compile Include="Trade\TransactionType\VoidHandler.cs" />
+    <Compile Include="TrinityWallet\TransferHandler\VoidHandler.cs" />
     <Compile Include="Trinity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Network\TCP\TrinityTcpClient.cs" />
+    <Compile Include="TrinityWallet\Templates\Definitions\RegisterKeepAlive.cs" />
+    <Compile Include="TrinityWallet\Templates\TrinityMessages.cs" />
+    <Compile Include="TrinityWallet\TransferHandler\RegisterWallet.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="3rdParty\" />

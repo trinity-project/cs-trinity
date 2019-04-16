@@ -24,31 +24,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
 namespace Trinity.Trade.TransactionType
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public class VoidHandler
+    public enum TransactionErrorCode : UInt16
     {
-        protected string Request;
+        Ok = 0,
 
-        public VoidHandler(string msg)
-        {
-            this.Request = msg;
-        }
+        // Common Error code for all messages
+        InvalidUrl = 0x10,
+        InvalidAssetTypeOrID = 0x11,
+        InvalidChannelNameOrID = 0x12,
+        InvalidNetMagicID = 0x13,
+        InvalidTxNonce = 0x14,
 
-        public bool Handle()
-        {
-            return false;
-        }
+        // Error Code for "RegisterChannel" Message
+        RegisterChannelUnkownError = 0x100,
+        RegisterChannelInvalidUrl = 0x101,
+        RegisterChannelInvalidDeposit = 0x102,
 
-        public void FailStep()
-        {
-        }
+        // Error Code for "Founder" Message
 
-        public void SucceedStep()
-        {
-        }
+        Fail = 0xFFFF
     }
 }

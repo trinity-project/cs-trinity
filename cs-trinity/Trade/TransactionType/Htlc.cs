@@ -25,6 +25,9 @@ SOFTWARE.
 */
 using System;
 using Trinity.Trade.Tempates.Definitions;
+using Trinity.Trade.Tempates;
+using Trinity.TrinityWallet.TransferHandler;
+
 
 namespace Trinity.Trade.TransactionType
 {
@@ -33,26 +36,26 @@ namespace Trinity.Trade.TransactionType
     /// </summary>
     public class Htlc : Header<HtlcBody>
     {
-        public Htlc(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce)
-        {
-            this.MessageBody.AssetType = asset;
-            this.MessageBody.Count = value;
-        }
+        //public Htlc(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce)
+        //{
+        //    this.MessageBody.AssetType = asset;
+        //    this.MessageBody.Count = value;
+        //}
     }
 
     public class HtlcSign : Htlc
     {
-        public HtlcSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce, value)
-        { }
+        //public HtlcSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce, value)
+        //{ }
     }
 
     public class HtlcFail : Htlc
     {
-        public HtlcFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-            base(sender, receiver, channel, asset, magic, nonce, value)
-        { }
+        //public HtlcFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
+        //    base(sender, receiver, channel, asset, magic, nonce, value)
+        //{ }
     }
 
     /// <summary>
