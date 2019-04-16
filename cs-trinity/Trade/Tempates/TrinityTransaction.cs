@@ -83,14 +83,19 @@ namespace Trinity.Trade.Tempates
         public virtual string JsonMessage { get { return this.Message; } }
 
         /// <summary>
-        /// Verification method sets. Should be overwritten in child classes.
+        /// Virtual Method sets. Should be overwritten in child classes.
         /// </summary>
         /// <returns></returns>
+        /// Verification method sets
         public virtual bool Verify() { return true; }
         public virtual bool VerifyNonce() { return true; }
         public virtual bool VerifySignature() { return true; }
         public virtual bool VerifyBalance() { return true; }
         public virtual bool VerifyNetMagic() { return true; }
+
+        // Sinarture Method Sets
+        public virtual void SetCommitment(string commitment) { }
+        public virtual void SetRecovableCommitment(string commitment) { }
 
         /// <summary>
         /// Default Constructor
@@ -190,6 +195,23 @@ namespace Trinity.Trade.Tempates
             {
                 attr.SetValue(this.Request, value);
             }
+        }
+
+        protected virtual void SetBodyAttribute<T>(string name, T value)
+        {
+            try
+            {
+                PropertyInfo attr = this.TMessageType.GetProperty("MessageBody").GetType().GetProperty(name);
+                if (null != attr)
+                {
+                    attr.SetValue(attr, value);
+                }
+            }
+            catch
+            {
+                // TODO: Log system to record this error to the files
+            }
+
         }
 
         /// <summary>

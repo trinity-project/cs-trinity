@@ -37,28 +37,14 @@ namespace Trinity.Trade.TransactionType
     /// </summary>
     public class Founder : Header<FounderBody>
     {
-        //public Founder(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-        //    base(sender, receiver, channel, asset, magic, nonce)
-        //{
-        //    this.MessageBody.AssetType = asset;
-        //    this.MessageBody.Deposit = value;
-        //}
     }
 
     public class FounderSign : Founder
     {
-        //public FounderSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-        //    base(sender, receiver, channel, asset, magic, nonce, value)
-        //{
-        //}
     }
 
     public class FounderFail : Founder
     {
-        //public FounderFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-        //    base(sender, receiver, channel, asset, magic, nonce, value)
-        //{
-        //}
     }
 
     /// <summary>
@@ -73,13 +59,24 @@ namespace Trinity.Trade.TransactionType
         {
         }
 
-        public FounderHandler(string sender, string receiver, string channel, string asset, string magic,
-            UInt64 nonce, string deposit, int role) : base()
+        public FounderHandler(string sender, string receiver, string channel, string asset, 
+            string magic, string deposit, int role=0) : base()
         {
-            this.Request.MessageBody.AssetType = asset;
-            this.Request.MessageBody.Deposit = deposit;
-            this.Request.MessageBody.RoleIndex = role;
-            this.RoleIndex = role;
+            this.Request = new Founder
+            {
+                Sender = sender,
+                Receiver = receiver,
+                ChannelName = channel,
+                AssetType = asset,
+                NetMagic = magic,
+                TxNonce = 0,
+                MessageBody = new FounderBody
+                {
+                    AssetType = asset,
+                    Deposit = deposit,
+                    RoleIndex = role
+                },
+            };
         }
 
         public override bool Handle()
