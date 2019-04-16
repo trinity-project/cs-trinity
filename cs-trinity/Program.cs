@@ -24,7 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#if false
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,35 +34,8 @@ namespace Trinity
 {
     class Program
     {
-        static void Main() {
-            
+        static void Main()
+        {
         }
     }
 }
-#endif
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Numerics;
-using Neo;
-using Neo.VM;
-using Neo.Wallets;
-using Neo.Cryptography;
-using Neo.Cryptography.ECC;
-using Neo.SmartContract;
-using Neo.Network.P2P;
-using Neo.Network.P2P.Payloads;
-using System.IO;
-
-namespace Trinity
-{
-
-    class Program
-    {
-    
-    }
-}
-
