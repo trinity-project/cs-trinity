@@ -24,14 +24,43 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Trinity.Trade.Tempates.Definitions;
 
-namespace Trinity.Trade.Type
+namespace Trinity.Trade.TransactionType
 {
-    class Settle
+    /// <summary>
+    /// Prototype for RResponse message
+    /// </summary>
+    public class RResponse : Header<RResponseBody>
     {
+        public RResponse(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
+            base(sender, receiver, channel, asset, magic, nonce)
+        { }
+    }
+
+    /// <summary>
+    /// Class Handler for handling RResponse Message
+    /// </summary>
+    public class RResponseHandler : TrinityTransaction<RResponse, RsmcHandler, VoidHandler>
+    {
+        public RResponseHandler(string msg) : base(msg)
+        {
+        }
+
+        public override bool Handle()
+        {
+            return false;
+        }
+
+        public override void FailStep()
+        {
+            this.FHandler = null;
+
+        }
+
+        public override void SucceedStep()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

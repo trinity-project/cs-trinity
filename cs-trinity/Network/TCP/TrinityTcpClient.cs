@@ -39,7 +39,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Trinity.Network.TCP
 {
-    class TrinityTcpClient
+    public class TrinityTcpClient
     {
         private Socket clientSocket;
         //private TcpClient client = null;

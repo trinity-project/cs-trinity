@@ -23,18 +23,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Trinity.Trade.Type
+using MessagePack;
+
+namespace Trinity.Trade.Tempates.Definitions
 {
-    class Founder
+    /// <summary>
+    /// Body for RResponse Message
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RResponseBody
     {
-        public Founder() { }
-        ~Founder() { }
-
+        public string HR { get; set; }
+        public string R { get; set; }
     }
 }

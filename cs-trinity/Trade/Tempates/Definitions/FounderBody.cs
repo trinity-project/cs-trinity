@@ -23,15 +23,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Trinity.Trade.Type
+using MessagePack;
+
+namespace Trinity.Trade.Tempates.Definitions
 {
-    class Rsmc
+    /// <summary>
+    /// This file define Founder Message Body
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class FounderBody
     {
+        public string AssetType { get; set; }
+        public string Deposit { get; set; }
+        public string Founder { get; set; }
+        public string Commitment { get; set; }
+        public string RevocableDelivery { get; set; }
+        public int RoleIndex { get; set; }
     }
 }
