@@ -26,6 +26,7 @@ SOFTWARE.
 
 using System;
 using MessagePack;
+using Trinity.Network.TCP;
 
 namespace Trinity.TrinityWallet.Templates
 {
@@ -39,6 +40,7 @@ namespace Trinity.TrinityWallet.Templates
     {
         protected TMessage Request;
         protected string Message;
+        protected TrinityTcpClient TcpHandler;
 
         /// <summary>
         /// Set of virtual method
@@ -92,6 +94,21 @@ namespace Trinity.TrinityWallet.Templates
         {
             Console.WriteLine(this.Message);
             return this.Message;
+        }
+
+        public virtual void SetTcpHandler(TrinityTcpClient client)
+        {
+            this.TcpHandler = client;
+        }
+
+        public virtual void MakeTransaction(TrinityTcpClient client, TMessage msg)
+        {
+            client.sendData(this.ToJson());
+        }
+
+        public virtual void MakeTransaction(TrinityTcpClient client)
+        {
+            client.sendData(this.Message);
         }
     }
 }

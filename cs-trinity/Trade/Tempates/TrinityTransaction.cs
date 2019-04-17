@@ -26,8 +26,6 @@ SOFTWARE.
 
 using System;
 using System.Reflection;
-using MessagePack;
-using Trinity.Network.TCP;
 using Trinity.TrinityWallet.Templates;
 
 namespace Trinity.Trade.Tempates
@@ -42,8 +40,7 @@ namespace Trinity.Trade.Tempates
     {
         protected TSHandler SHandler;
         protected TFHandler FHandler;
-        protected TrinityTcpClient TcpHandler;
-        private Type TMessageType = typeof(TMessage);
+        private string MessageName { get { return typeof(TMessage).Name; } }
 
         /// <summary>
         /// 
@@ -112,7 +109,7 @@ namespace Trinity.Trade.Tempates
         public TrinityTransaction(string msg) : base(msg)
         {
             // parse the header information
-            this.ParseMessageHeader();
+            this.GetHeader();
         }
 
         /// <summary>
@@ -166,58 +163,60 @@ namespace Trinity.Trade.Tempates
             return Role_3 == role;
         }
 
-        public virtual void MakeTransaction(TrinityTcpClient client, TMessage msg)
-        {
-            client.sendData(this.ToJson());
-        }
-
-        public virtual void MakeTransaction(TrinityTcpClient client)
-        {
-            client.sendData(this.Message);
-        }
-
-        protected virtual string GetHeaderAttribute(string name)
-        {
-            PropertyInfo attr = this.TMessageType.GetProperty(name);
-            if (null != attr) {
-                string result = attr.GetValue(this.Request).ToString();
-                Console.WriteLine("{0} is {1}", name, result);
-                return result;
+        protected virtual string GetMessageAttribute<TContext>(TContext context, string name)
+        { 
+            try
+            {
+                PropertyInfo attr = typeof(TContext).GetProperty(name);
+                return attr.GetValue(context).ToString();
+            }
+            catch (Exception ExpInfo)
+            {
+                // TODO: Write to file later.
+                Console.WriteLine("Failed to get attribute<{0}> from {1} Message: {2}",
+                    name, this.MessageName, ExpInfo);
             }
             
             return null;
         }
 
-        protected virtual void SetHeaderAttribute<T>(string name, T value)
-        {
-            PropertyInfo attr = this.TMessageType.GetProperty(name);
-            if (null != attr)
-            {
-                attr.SetValue(this.Request, value);
-            }
-        }
-
-        protected virtual void SetBodyAttribute<T>(string name, T value)
+        protected virtual void SetMessageAttribute<TContext, TValue>(TContext context, string name, TValue value)
         {
             try
             {
-                PropertyInfo attr = this.TMessageType.GetProperty("MessageBody").GetType().GetProperty(name);
-                if (null != attr)
-                {
-                    attr.SetValue(attr, value);
-                }
+                PropertyInfo attr = typeof(TContext).GetProperty(name);
+                attr.SetValue(context, value);
             }
-            catch
+            catch (Exception ExpInfo)
             {
-                // TODO: Log system to record this error to the files
+                // TODO: Write to file later.
+                Console.WriteLine("Failed to set attribute<{0}> to {1} Message: {2}",
+                    name, this.MessageName, ExpInfo);
             }
-
         }
+
+        private string GetHeaderAttribute(string name)
+        {
+            return this.GetMessageAttribute<TMessage>(this.Request, name);
+        }
+
+        protected void SetHeaderAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<TMessage, TValue>(this.Request, name, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public virtual string GetBodyAttribute(string name) { return null; }
+        public virtual void SetBodyAttribute(string name, string value) { }
+        public virtual void SetBodyAttribute(string name, UInt64 value) { }
 
         /// <summary>
         /// Parse the header information of the message
         /// </summary>
-        public virtual void ParseMessageHeader()
+        public virtual void GetHeader()
         {
             this.MessageType = this.GetHeaderAttribute("MessageType");
             this.Sender = this.GetHeaderAttribute("Sender");
@@ -235,7 +234,7 @@ namespace Trinity.Trade.Tempates
             this.Comments = this.GetHeaderAttribute("Sender");
         }
 
-        public virtual void SetMessageHeader()
+        public virtual void SetHeader()
         {
             this.SetHeaderAttribute<string>("Sender", this.Sender);
             this.SetHeaderAttribute<string>("Receiver", this.Receiver);
@@ -245,9 +244,6 @@ namespace Trinity.Trade.Tempates
             this.SetHeaderAttribute<UInt64>("TxNonce", Convert.ToUInt64(this.TxNonce));
         }
 
-        public virtual void SetTcpHandler(TrinityTcpClient client)
-        {
-            this.TcpHandler = client;
-        }
+        
     }
 }

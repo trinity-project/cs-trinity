@@ -82,6 +82,21 @@ namespace Trinity.Trade.TransactionType
         {
             throw new NotImplementedException();
         }
+
+        public override string GetBodyAttribute(string name)
+        {
+            return this.GetMessageAttribute<HtlcBody>(this.Request.MessageBody, name);
+        }
+
+        public override void SetBodyAttribute(string name, string value)
+        {
+            this.SetMessageAttribute<HtlcBody, string>(this.Request.MessageBody, name, value);
+        }
+
+        public override void SetBodyAttribute(string name, UInt64 value)
+        {
+            this.SetMessageAttribute<HtlcBody, UInt64>(this.Request.MessageBody, name, value);
+        }
     }
 
     /// <summary>

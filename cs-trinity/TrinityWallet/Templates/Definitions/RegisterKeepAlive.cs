@@ -39,12 +39,5 @@ namespace Trinity.TrinityWallet.Templates.Definitions
         public string MessageType { get { return this.GetType().Name; } }
         public string Ip { get; set; }
         public string Protocol { get; set; }
-
-        //public RegisterKeepAlive()
-        //{
-        //    this.MessageType = this.GetType().Name;
-        //    this.Ip = "localhost:20556";
-        //    this.Protocol = "TCP";
-        //}
     }
 }
