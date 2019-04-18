@@ -148,6 +148,16 @@ namespace Trinity.Trade.TransactionType
 
             return nb.ToString();
         }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, out value);
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, value);
+        }
     }
 
     public class RegisterChannelFailHandler : TrinityTransaction<RegisterChannel, VoidHandler, VoidHandler>
@@ -171,6 +181,16 @@ namespace Trinity.Trade.TransactionType
         public override void SucceedStep()
         {
             throw new NotImplementedException();
+        }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, out value);
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 }

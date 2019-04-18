@@ -129,19 +129,14 @@ namespace Trinity.Trade.TransactionType
             return false;
         }
 
-        public override string GetBodyAttribute(string name)
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
         {
-            return this.GetMessageAttribute<FounderBody>(this.Request.MessageBody, name);
+            this.GetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, out value);
         }
 
-        public override void SetBodyAttribute(string name, string value)
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
         {
-            this.SetMessageAttribute<FounderBody, string>(this.Request.MessageBody, name, value);
-        }
-
-        public override void SetBodyAttribute(string name, UInt64 value)
-        {
-            this.SetMessageAttribute<FounderBody, UInt64>(this.Request.MessageBody, name, value);
+            this.SetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 
@@ -170,19 +165,14 @@ namespace Trinity.Trade.TransactionType
             throw new NotImplementedException();
         }
 
-        public override string GetBodyAttribute(string name)
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
         {
-            return this.GetMessageAttribute<FounderBody>(this.Request.MessageBody, name);
+            this.GetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, out value);
         }
 
-        public override void SetBodyAttribute(string name, string value)
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
         {
-            this.SetMessageAttribute<FounderBody, string>(this.Request.MessageBody, name, value);
-        }
-
-        public override void SetBodyAttribute(string name, UInt64 value)
-        {
-            this.SetMessageAttribute<FounderBody, UInt64>(this.Request.MessageBody, name, value);
+            this.SetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 
@@ -211,19 +201,14 @@ namespace Trinity.Trade.TransactionType
             throw new NotImplementedException();
         }
 
-        public override string GetBodyAttribute(string name)
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
         {
-            return this.GetMessageAttribute<FounderBody>(this.Request.MessageBody, name);
+            this.GetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, out value);
         }
 
-        public override void SetBodyAttribute(string name, string value)
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
         {
-            this.SetMessageAttribute<FounderBody, string>(this.Request.MessageBody, name, value);
-        }
-
-        public override void SetBodyAttribute(string name, UInt64 value)
-        {
-            this.SetMessageAttribute<FounderBody, UInt64>(this.Request.MessageBody, name, value);
+            this.SetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 }

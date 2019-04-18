@@ -25,6 +25,8 @@ SOFTWARE.
 */
 
 using System;
+using System.Reflection;
+using System.Collections.Generic;
 using MessagePack;
 using Trinity.Network.TCP;
 
@@ -41,6 +43,7 @@ namespace Trinity.TrinityWallet.Templates
         protected TMessage Request;
         protected string Message;
         protected TrinityTcpClient TcpHandler;
+        private string MessageName { get { return typeof(TMessage).Name; } }
 
         /// <summary>
         /// Set of virtual method
@@ -103,12 +106,61 @@ namespace Trinity.TrinityWallet.Templates
 
         public virtual void MakeTransaction(TrinityTcpClient client, TMessage msg)
         {
-            client.sendData(this.ToJson());
+            this.TcpHandler.SendData(this.ToJson());
         }
 
         public virtual void MakeTransaction(TrinityTcpClient client)
         {
-            client.sendData(this.Message);
+            this.TcpHandler.SendData(this.Message);
         }
+
+        protected virtual void GetMessageAttribute<TContext, TValue>(TContext context, string name, out TValue value)
+        {
+            value = default(TValue);
+
+            try
+            {
+                PropertyInfo attr = typeof(TContext).GetProperty(name);
+                value = (TValue)attr.GetValue(context);
+            }
+            catch (Exception ExpInfo)
+            {
+                // TODO: Write to file later.
+                Console.WriteLine("Failed to get attribute<{0}> from {1} Message: {2}",
+                    name, this.MessageName, ExpInfo);
+            }
+        }
+
+        protected virtual void SetMessageAttribute<TContext, TValue>(TContext context, string name, TValue value)
+        {
+            try
+            {
+                PropertyInfo attr = typeof(TContext).GetProperty(name);
+                attr.SetValue(context, value);
+            }
+            catch (Exception ExpInfo)
+            {
+                // TODO: Write to file later.
+                Console.WriteLine("Failed to set attribute<{0}> to {1} Message: {2}",
+                    name, this.MessageName, ExpInfo);
+            }
+        }
+
+        public void GetHeaderAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<TMessage, TValue>(this.Request, name, out value);
+        }
+
+        public void SetHeaderAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<TMessage, TValue>(this.Request, name, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public abstract void GetBodyAttribute<TValue>(string name, out TValue value);
+        public abstract void SetBodyAttribute<TValue>(string name, TValue value);
     }
 }

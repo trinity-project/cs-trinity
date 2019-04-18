@@ -81,6 +81,16 @@ namespace Trinity.Trade.TransactionType
         {
             throw new NotImplementedException();
         }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, out value);
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, value);
+        }
     }
 
     /// <summary>
@@ -107,6 +117,16 @@ namespace Trinity.Trade.TransactionType
         {
             throw new NotImplementedException();
         }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, out value);
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, value);
+        }
     }
 
     /// <summary>
@@ -132,6 +152,16 @@ namespace Trinity.Trade.TransactionType
         public override void SucceedStep()
         {
             throw new NotImplementedException();
+        }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, out value);
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 }

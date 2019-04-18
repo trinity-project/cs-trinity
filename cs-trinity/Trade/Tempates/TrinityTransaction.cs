@@ -25,7 +25,6 @@ SOFTWARE.
 */
 
 using System;
-using System.Reflection;
 using Trinity.TrinityWallet.Templates;
 
 namespace Trinity.Trade.Tempates
@@ -40,7 +39,6 @@ namespace Trinity.Trade.Tempates
     {
         protected TSHandler SHandler;
         protected TFHandler FHandler;
-        private string MessageName { get { return typeof(TMessage).Name; } }
 
         /// <summary>
         /// 
@@ -162,76 +160,26 @@ namespace Trinity.Trade.Tempates
         {
             return Role_3 == role;
         }
-
-        protected virtual string GetMessageAttribute<TContext>(TContext context, string name)
-        { 
-            try
-            {
-                PropertyInfo attr = typeof(TContext).GetProperty(name);
-                return attr.GetValue(context).ToString();
-            }
-            catch (Exception ExpInfo)
-            {
-                // TODO: Write to file later.
-                Console.WriteLine("Failed to get attribute<{0}> from {1} Message: {2}",
-                    name, this.MessageName, ExpInfo);
-            }
-            
-            return null;
-        }
-
-        protected virtual void SetMessageAttribute<TContext, TValue>(TContext context, string name, TValue value)
-        {
-            try
-            {
-                PropertyInfo attr = typeof(TContext).GetProperty(name);
-                attr.SetValue(context, value);
-            }
-            catch (Exception ExpInfo)
-            {
-                // TODO: Write to file later.
-                Console.WriteLine("Failed to set attribute<{0}> to {1} Message: {2}",
-                    name, this.MessageName, ExpInfo);
-            }
-        }
-
-        private string GetHeaderAttribute(string name)
-        {
-            return this.GetMessageAttribute<TMessage>(this.Request, name);
-        }
-
-        protected void SetHeaderAttribute<TValue>(string name, TValue value)
-        {
-            this.SetMessageAttribute<TMessage, TValue>(this.Request, name, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public virtual string GetBodyAttribute(string name) { return null; }
-        public virtual void SetBodyAttribute(string name, string value) { }
-        public virtual void SetBodyAttribute(string name, UInt64 value) { }
-
+        
         /// <summary>
         /// Parse the header information of the message
         /// </summary>
         public virtual void GetHeader()
         {
-            this.MessageType = this.GetHeaderAttribute("MessageType");
-            this.Sender = this.GetHeaderAttribute("Sender");
-            this.Receiver = this.GetHeaderAttribute("Receiver");
+            this.GetHeaderAttribute("MessageType", out this.MessageType);
+            this.GetHeaderAttribute("Sender", out this.Sender);
+            this.GetHeaderAttribute("Receiver", out this.Receiver);
 
-            this.ChannelName = this.GetHeaderAttribute("ChannelName");
-            this.AssetType = this.GetHeaderAttribute("AssetType");
+            this.GetHeaderAttribute("ChannelName", out this.ChannelName);
+            this.GetHeaderAttribute("AssetType", out this.AssetType);
 
-            this.NetMagic = this.GetHeaderAttribute("NetMagic");
-            this.TxNonce = this.GetHeaderAttribute("Sender");
+            this.GetHeaderAttribute("NetMagic", out this.NetMagic);
+            this.GetHeaderAttribute("TxNonce", out this.TxNonce);
 
-            this.Router = this.GetHeaderAttribute("Sender");
-            this.Next = this.GetHeaderAttribute("Sender");
-            this.Error = this.GetHeaderAttribute("Sender");
-            this.Comments = this.GetHeaderAttribute("Sender");
+            this.GetHeaderAttribute("Router", out this.Router);
+            this.GetHeaderAttribute("Next", out this.Next);
+            this.GetHeaderAttribute("Error", out this.Error);
+            this.GetHeaderAttribute("Comments", out this.Comments);
         }
 
         public virtual void SetHeader()

@@ -34,16 +34,31 @@ using Trinity.TrinityWallet.Templates.Definitions;
 
 namespace Trinity.TrinityWallet.TransferHandler
 {
-    public class SyncWalletHandler : TrinityMessages<SyncWallet, VoidHandler, VoidHandler>
+    public class SyncWalletHandler : TrinityMessages<SyncWalletData, VoidHandler, VoidHandler>
     {
-        public SyncWalletHandler() : base() { }
+        public SyncWalletHandler() : base()
+        {
+            this.Request = new SyncWalletData
+            {
+                MessageBody = new SyncWalletBody()
+            };
+        }
         public SyncWalletHandler(string msg) : base(msg) { }
-        public SyncWalletHandler(SyncWallet msg) : base(msg) { }
+        public SyncWalletHandler(SyncWalletData msg) : base(msg) { }
         
-
         public override void Dispose()
         {
             base.Dispose();
+        }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<SyncWalletBody, TValue>(this.Request.MessageBody, name, out value);
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<SyncWalletBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 }

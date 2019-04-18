@@ -83,19 +83,14 @@ namespace Trinity.Trade.TransactionType
             throw new NotImplementedException();
         }
 
-        public override string GetBodyAttribute(string name)
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
         {
-            return this.GetMessageAttribute<HtlcBody>(this.Request.MessageBody, name);
+            this.GetMessageAttribute<HtlcBody, TValue>(this.Request.MessageBody, name, out value);
         }
 
-        public override void SetBodyAttribute(string name, string value)
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
         {
-            this.SetMessageAttribute<HtlcBody, string>(this.Request.MessageBody, name, value);
-        }
-
-        public override void SetBodyAttribute(string name, UInt64 value)
-        {
-            this.SetMessageAttribute<HtlcBody, UInt64>(this.Request.MessageBody, name, value);
+            this.SetMessageAttribute<HtlcBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 
@@ -123,6 +118,16 @@ namespace Trinity.Trade.TransactionType
         {
             throw new NotImplementedException();
         }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<HtlcBody, TValue>(this.Request.MessageBody, name, out value);
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<HtlcBody, TValue>(this.Request.MessageBody, name, value);
+        }
     }
 
     /// <summary>
@@ -148,6 +153,16 @@ namespace Trinity.Trade.TransactionType
         public override void SucceedStep()
         {
             throw new NotImplementedException();
+        }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<HtlcBody, TValue>(this.Request.MessageBody, name, out value);
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<HtlcBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 }

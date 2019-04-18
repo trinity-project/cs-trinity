@@ -52,5 +52,15 @@ namespace Trinity.TrinityWallet.TransferHandler
         {
             base.Dispose();
         }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

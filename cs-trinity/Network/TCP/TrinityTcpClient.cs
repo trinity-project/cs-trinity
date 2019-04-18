@@ -57,7 +57,7 @@ namespace Trinity.Network.TCP
             messageQueue = new ConcurrentQueue<string>();
         }
 
-        public void createConnetion()
+        public void CreateConnetion()
         {
             try
             {
@@ -79,12 +79,12 @@ namespace Trinity.Network.TCP
                 clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 1000);
                 
                 //开启新的线程，不停的接收服务器发来的消息
-                Thread receiveThread = new Thread(receiveMessage);
-                Thread handleMsgThread = new Thread(handleMessage);
-                receiveThread.IsBackground = true;
-                handleMsgThread.IsBackground = true;
-                receiveThread.Start();
-                handleMsgThread.Start();
+                //Thread receiveThread = new Thread(ReceiveMessage);
+                //Thread handleMsgThread = new Thread(HandleMessage);
+                //receiveThread.IsBackground = true;
+                //handleMsgThread.IsBackground = true;
+                //receiveThread.Start();
+                //handleMsgThread.Start();
             }
             catch (Exception ex)
             {
@@ -92,7 +92,7 @@ namespace Trinity.Network.TCP
             }
         }
 
-        public void sendData(string msg)
+        public void SendData(string msg)
         {
             try
             {               
@@ -106,9 +106,10 @@ namespace Trinity.Network.TCP
             }
         }
 
-        private void receiveMessage()
+        public bool ReceiveMessage(string expected="MessageTypeNotSetForVerification")
         {
-            
+            bool VerificationResult = false;
+
             while (true)
             {
                 try
@@ -165,12 +166,24 @@ namespace Trinity.Network.TCP
 
 
                     int len = clientSocket.Receive(buffer);
-                    string msg = Encoding.UTF8.GetString(buffer, 0, len);
-                    //Console.WriteLine(msg);
+                    if (0 >= len)
+                    {
+                        continue;
+                    }
+
+                    // Here we get the index of "{" and remove message header wrapped by gateway.
+                    string msg = Encoding.UTF8.GetString(buffer, buffer.ToList().IndexOf(123), len);
+                    if (msg.Contains(expected))
+                    {
+                        VerificationResult = true;
+                        Console.WriteLine("Received {0}: {1}", expected, msg);
+                        break;
+                    }
                     messageQueue.Enqueue(msg);
                     //Console.WriteLine("get message : {0}", Encoding.UTF8.GetString(buffer, 0, len));
                     //receicedData = (client.RemoteEndPoint + ":" + str);
                     //Form_main.showInformation(receicedData);
+                    Thread.Sleep(1000);
 
                 }
                 catch (Exception ex)
@@ -178,9 +191,11 @@ namespace Trinity.Network.TCP
                     //Console.WriteLine(ex.ToString());
                 }
             }
+
+            return VerificationResult;
         }
 
-        private void handleMessage()
+        private void HandleMessage()
         {
             while (true)
             {
@@ -210,7 +225,7 @@ namespace Trinity.Network.TCP
             }
         }
 
-        private void closeConnection()
+        private void CloseConnection()
         {
             try
             {

@@ -50,7 +50,7 @@ namespace Trinity.Trade.TransactionType
     /// <summary>
     /// Class Handler for handling Settle Message
     /// </summary>
-    public class SettleHandler : TrinityTransaction<VoidHandler, VoidHandler, VoidHandler>
+    public class SettleHandler : TrinityTransaction<Settle, SettleSignHandler, VoidHandler>
     {
         public SettleHandler(string msg) : base(msg)
         {
@@ -71,12 +71,22 @@ namespace Trinity.Trade.TransactionType
         {
             throw new NotImplementedException();
         }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<SettleBody, TValue>(this.Request.MessageBody, name, out value);
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<SettleBody, TValue>(this.Request.MessageBody, name, value);
+        }
     }
 
     /// <summary>
     /// Class Handler for handling SettleSign Message
     /// </summary>
-    public class SettleSignHandler : TrinityTransaction<VoidHandler, VoidHandler, VoidHandler>
+    public class SettleSignHandler : TrinityTransaction<SettleSign, VoidHandler, VoidHandler>
     {
         public SettleSignHandler(string msg) : base(msg)
         {
@@ -96,6 +106,16 @@ namespace Trinity.Trade.TransactionType
         public override void SucceedStep()
         {
             throw new NotImplementedException();
+        }
+
+        public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        {
+            this.GetMessageAttribute<SettleBody, TValue>(this.Request.MessageBody, name, out value);
+        }
+
+        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        {
+            this.SetMessageAttribute<SettleBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 }

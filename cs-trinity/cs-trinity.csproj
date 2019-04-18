@@ -297,7 +297,9 @@
     <Compile Include="Trade\TransactionType\RResponse.cs" />
     <Compile Include="Trade\TransactionType\Rsmc.cs" />
     <Compile Include="Trade\TransactionType\Settle.cs" />
-    <Compile Include="TrinityWallet\Templates\Definitions\SyncWallet.cs" />
+    <Compile Include="TrinityWallet\Templates\Definitions\SyncWalletData.cs" />
+    <Compile Include="TrinityWallet\Tests\TestRegisterKeepAlive.cs" />
+    <Compile Include="TrinityWallet\Tests\TestSyncWalletData.cs" />
     <Compile Include="TrinityWallet\TransferHandler\SyncWalletHandler.cs" />
     <Compile Include="TrinityWallet\TransferHandler\VoidHandler.cs" />
     <Compile Include="Trinity.cs" />

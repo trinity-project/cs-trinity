@@ -40,15 +40,15 @@ namespace Trinity.TrinityWallet.Templates.Definitions
         public string alias { get; set; }
         public string AutorCreate { get; set; }
         public string Ip { get; set; }
-        public string MaxChannel { get; set; }
-        public string Channel { get; set; }
-        public string Balance { get; set; }
+        public int MaxChannel { get; set; }
+        public Dictionary<string, Dictionary<string, Double>> Channel { get; set; }
     }
 
     [MessagePackObject(keyAsPropertyName:true)]
-    public class SyncWallet
+    public class SyncWalletData
     {
         public string MessageType { get { return this.GetType().Name; } }
+        public string Sender { get { return "NoUser@ip:port"; } }
         public string NetMagic { get; set; }
         public SyncWalletBody MessageBody { get; set; }
     }

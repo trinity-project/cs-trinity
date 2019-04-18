@@ -24,20 +24,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Trinity.TrinityWallet.TransferHandler;
+using Trinity.Network.TCP;
 
-namespace Trinity
+namespace Trinity.TrinityWallet.Tests
 {
-    public class Program
+    public class TestRegisterKeepAlive : IDisposable
     {
-        public static void Main()
+        private readonly TrinityTcpClient Client;
+
+        public TestRegisterKeepAlive(TrinityTcpClient client)
         {
-            
+            this.Client = client;
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public void RegisterToGateWay()
+        {
+            RegisterWallet msgHandler = new RegisterWallet("localhost", "20556");
+            msgHandler.SetTcpHandler(this.Client);
+
+            // Start to send RegisterKeepAlive to gateway
+            Console.WriteLine("Send RegisterKeepAlive: {0}", msgHandler.ToJson());
+            msgHandler.MakeTransaction(this.Client, msgHandler.GetMessage());
         }
     }
 }
