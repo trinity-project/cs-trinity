@@ -24,19 +24,37 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Trinity
+namespace Trinity.Network
 {
-    public class Program
+    /// <summary>
+    /// Common public methods for Network module
+    /// </summary>
+    public static class Utils
     {
-        public static void Main()
+        /// <summary>
+        /// Conver the network bytes to local array according to the LE and BE mode
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="result"></param>
+        private static void ToLocalArray(ref byte[] value)
         {
+            // Adjust to little endian
+            if (BitConverter.IsLittleEndian)
+            {
+                value = value.Reverse().ToArray();
+            }
+        }
+
+        public static int ToInt32(this byte[] value)
+        {
+            ToLocalArray(ref value);
+            return BitConverter.ToInt32(value, 0);
         }
     }
 }

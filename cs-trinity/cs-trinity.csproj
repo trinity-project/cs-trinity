@@ -278,6 +278,7 @@
     <Compile Include="Channel\Channel.cs" />
     <Compile Include="Channel\TradeHistory.cs" />
     <Compile Include="Network\RPC\TrinityRpcServer.cs" />
+    <Compile Include="Network\Utils.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\Settings1.cs" />
     <Compile Include="Properties\Settings1.Designer.cs" />

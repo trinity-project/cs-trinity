@@ -191,7 +191,5 @@ namespace Trinity.Trade.Tempates
             this.SetHeaderAttribute<string>("NetMagic", this.NetMagic);
             this.SetHeaderAttribute<UInt64>("TxNonce", Convert.ToUInt64(this.TxNonce));
         }
-
-        
     }
 }

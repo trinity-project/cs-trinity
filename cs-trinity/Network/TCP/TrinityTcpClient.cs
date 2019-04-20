@@ -36,6 +36,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Trinity;
 
 namespace Trinity.Network.TCP
 {
@@ -106,9 +107,74 @@ namespace Trinity.Network.TCP
             }
         }
 
+        private UInt16 GetMessageCount(byte[] buffer, int recvLength)
+        {
+            // Buffer has data and the received length is lager than zero
+            if (null != buffer && 0 < recvLength) {
+                // convert the message to the utf-8 string
+                string msg = Encoding.UTF8.GetString(buffer, 0, recvLength);
+
+            }
+            return 0;
+        }
+
+        private void UnWrapMessageToAdaptGateway(byte[] buffer, int recvLength, ref List<string> msgList)
+        {
+            //msgList = default(List<string>);
+            
+            try
+            {
+                if (null == buffer || 0 >= recvLength)
+                {
+                    // TODO: record to log file later
+                    Console.WriteLine("Terminate unwrapping the message from gateway. Length={0}", recvLength);
+                    return;
+                }
+
+                // start parse the recevied data
+                int splitLength = 0;
+                string msg = null;
+                // Message without Header wrapped by gateway
+                if (123 == buffer[0])
+                {
+                    msg = Encoding.UTF8.GetString(buffer, 0, recvLength);
+                    splitLength = 0;
+                }
+                else // Message with Header wrapped by gateway
+                {
+                    int msgLength = buffer.Skip(4).Take(4).ToArray().ToInt32();
+                    splitLength = msgLength + 12;
+                    msg = Encoding.UTF8.GetString(buffer.Skip(12).Take(msgLength).ToArray(), 0, msgLength);
+                }
+
+                msgList.Add(msg);
+
+                int newMsgLength = recvLength - splitLength;
+                this.UnWrapMessageToAdaptGateway(
+                    buffer.Skip(splitLength).Take(newMsgLength).ToArray(), newMsgLength, ref msgList);
+            }
+            catch (Exception Expinfo)
+            {
+                // Record this exception to file in the future
+                Console.WriteLine("Failed to unwrap messages: {}", Expinfo);
+            } 
+        }
+
+        private int GetMessageLength(byte[] length)
+        {
+            if (null != length)
+            {
+                return 0;
+            }
+
+            return 0;
+        }
+
         public bool ReceiveMessage(string expected="MessageTypeNotSetForVerification")
         {
             bool VerificationResult = false;
+            byte[] buffer = new byte[bufferSize];
+            List<string> msgArray = new List<string>();
 
             while (true)
             {
@@ -139,7 +205,8 @@ namespace Trinity.Network.TCP
                     }
                     */
                     //Console.WriteLine("recieved message");
-                    byte[] buffer = new byte[bufferSize];
+                    //byte[] buffer = new byte[bufferSize];
+                    buffer.Initialize();
                     //string str = null;
                     //实际接收到的有效字节数
                     //int len = 0;
@@ -164,22 +231,34 @@ namespace Trinity.Network.TCP
                         //Console.WriteLine("read exception");
                     }*/
 
-
                     int len = clientSocket.Receive(buffer);
                     if (0 >= len)
                     {
                         continue;
                     }
 
-                    // Here we get the index of "{" and remove message header wrapped by gateway.
-                    string msg = Encoding.UTF8.GetString(buffer, buffer.ToList().IndexOf(123), len);
-                    if (msg.Contains(expected))
+                    msgArray.Clear();
+                    this.UnWrapMessageToAdaptGateway(buffer, len, ref msgArray);
+
+                    foreach (string msg in msgArray) {
+                        if (msg.Contains(expected))
+                        {
+                            VerificationResult = true;
+                            Console.WriteLine("Received {0}: {1}", expected, msg);
+                            break;
+                        }
+                        messageQueue.Enqueue(msg);
+                    }
+
+                    // for test method: break this while loop
+                    if (VerificationResult)
                     {
-                        VerificationResult = true;
-                        Console.WriteLine("Received {0}: {1}", expected, msg);
                         break;
                     }
-                    messageQueue.Enqueue(msg);
+
+                    // Here we get the index of "{" and remove message header wrapped by gateway.
+                    // string msg = Encoding.UTF8.GetString(buffer, buffer.ToList().IndexOf(123), len);
+                    
                     //Console.WriteLine("get message : {0}", Encoding.UTF8.GetString(buffer, 0, len));
                     //receicedData = (client.RemoteEndPoint + ":" + str);
                     //Form_main.showInformation(receicedData);
@@ -188,7 +267,7 @@ namespace Trinity.Network.TCP
                 }
                 catch (Exception ex)
                 {
-                    //Console.WriteLine(ex.ToString());
+                    Console.WriteLine(ex.ToString());
                 }
             }
 
@@ -207,7 +286,7 @@ namespace Trinity.Network.TCP
                         if (messageQueue.TryDequeue(out message))
                         {
                             //string str = message.ToString();
-                            Console.WriteLine(message);
+                            Console.WriteLine("HandleMessage: {}", message);
                             JObject rb = (JObject)JsonConvert.DeserializeObject(message);
                             Console.WriteLine(rb["MessageBody"]["Deposit"]);
                             // TODO:triger api to handle message;

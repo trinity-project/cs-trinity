@@ -95,7 +95,6 @@ namespace Trinity.TrinityWallet.Templates
 
         public virtual string GetJsonMessage()
         {
-            Console.WriteLine(this.Message);
             return this.Message;
         }
 
