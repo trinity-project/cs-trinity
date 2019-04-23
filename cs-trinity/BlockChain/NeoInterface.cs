@@ -39,6 +39,7 @@ using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.Wallets;
 using plugin_trinity;
+using System.Numerics;
 
 namespace Trinity.BlockChain
 {
@@ -136,6 +137,7 @@ namespace Trinity.BlockChain
             return GetRelayResult(reason);
         }
 
+        /*
         public static string sign(string data)
         {
             byte[] raw, signedData = null;
@@ -155,6 +157,102 @@ namespace Trinity.BlockChain
                 return null;
             }
             return signedData?.ToHexString();
+        }
+        */
+
+        public static byte[] GetPublicKeyFromPrivateKey(byte[] privateKey)
+        {
+            var PublicKey = Neo.Cryptography.ECC.ECCurve.Secp256r1.G * privateKey;
+            return PublicKey.EncodePoint(true);
+        }
+
+        public static string Bytes2HexString(byte[] data)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var d in data)
+            {
+                sb.Append(d.ToString("x02"));
+            }
+            return sb.ToString();
+        }
+        public static byte[] HexString2Bytes(string str)
+        {
+            if (str.IndexOf("0x") == 0)
+                str = str.Substring(2);
+            byte[] outd = new byte[str.Length / 2];
+            for (var i = 0; i < str.Length / 2; i++)
+            {
+                outd[i] = byte.Parse(str.Substring(i * 2, 2), System.Globalization.NumberStyles.HexNumber);
+            }
+            return outd;
+        }
+
+        static System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create();
+
+        public static string Sign(string messageData, byte[] prikey)
+        {
+            var Secp256r1_G = HexString2Bytes("04" + "6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296" + "4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
+
+            var message = HexString2Bytes(messageData);
+            var PublicKey = Neo.Cryptography.ECC.ECCurve.Secp256r1.G * prikey;
+            var pubkey = PublicKey.EncodePoint(false).Skip(1).ToArray();
+
+            var ecdsa = new Neo.Cryptography.ECC.ECDsa(prikey, Neo.Cryptography.ECC.ECCurve.Secp256r1);
+            var hash = sha256.ComputeHash(message);
+            var result = ecdsa.GenerateSignature(hash);
+            var data1 = result[0].ToByteArray();
+            if (data1.Length > 32)
+                data1 = data1.Take(32).ToArray();
+            var data2 = result[1].ToByteArray();
+            if (data2.Length > 32)
+                data2 = data2.Take(32).ToArray();
+
+            data1 = data1.Reverse().ToArray();
+            data2 = data2.Reverse().ToArray();
+
+            byte[] newdata = new byte[64];
+            Array.Copy(data1, 0, newdata, 32 - data1.Length, data1.Length);
+            Array.Copy(data2, 0, newdata, 64 - data2.Length, data2.Length);
+
+            return Bytes2HexString(newdata);// data1.Concat(data2).ToArray();
+        }
+
+        public static bool VerifySignature(string messageData, string signatureData, byte[] pubkey)
+        {
+            //unity dotnet不完整，不能用dotnet自带的ecdsa
+
+            var message = HexString2Bytes(messageData);
+            var signature = HexString2Bytes(signatureData);
+            var PublicKey = Neo.Cryptography.ECC.ECPoint.DecodePoint(pubkey, Neo.Cryptography.ECC.ECCurve.Secp256r1);
+            var ecdsa = new Neo.Cryptography.ECC.ECDsa(PublicKey);
+            var b1 = signature.Take(32).Reverse().Concat(new byte[] { 0x00 }).ToArray();
+            var b2 = signature.Skip(32).Reverse().Concat(new byte[] { 0x00 }).ToArray();
+            var num1 = new BigInteger(b1);
+            var num2 = new BigInteger(b2);
+            var hash = sha256.ComputeHash(message);
+            return ecdsa.VerifySignature(hash, num1, num2);
+            //var PublicKey = ThinNeo.Cryptography.ECC.ECPoint.DecodePoint(pubkey, ThinNeo.Cryptography.ECC.ECCurve.Secp256r1);
+            //var usepk = PublicKey.EncodePoint(false).Skip(1).ToArray();
+
+            ////byte[] first = { 0x45, 0x43, 0x53, 0x31, 0x20, 0x00, 0x00, 0x00 };
+            ////usepk = first.Concat(usepk).ToArray();
+
+            ////using (System.Security.Cryptography.CngKey key = System.Security.Cryptography.CngKey.Import(usepk, System.Security.Cryptography.CngKeyBlobFormat.EccPublicBlob))
+            ////using (System.Security.Cryptography.ECDsaCng ecdsa = new System.Security.Cryptography.ECDsaCng(key))
+
+            //using (var ecdsa = System.Security.Cryptography.ECDsa.Create(new System.Security.Cryptography.ECParameters
+            //{
+            //    Curve = System.Security.Cryptography.ECCurve.NamedCurves.nistP256,
+            //    Q = new System.Security.Cryptography.ECPoint
+            //    {
+            //        X = usepk.Take(32).ToArray(),
+            //        Y = usepk.Skip(32).ToArray()
+            //    }
+            //}))
+            //{
+            //    var hash = sha256.ComputeHash(message);
+            //    return ecdsa.VerifyHash(hash, signature);
+            //}
         }
     }
 }
