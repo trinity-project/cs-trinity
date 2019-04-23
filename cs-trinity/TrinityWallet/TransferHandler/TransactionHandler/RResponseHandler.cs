@@ -23,33 +23,45 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 using System;
-using Trinity.TrinityWallet.TransferHandler.ControlHandler;
-using Trinity.Network.TCP;
+using Trinity.BlockChain;
+using Trinity.TrinityWallet.Templates.Messages;
 
-namespace Trinity.TrinityWallet.Tests
+namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 {
-    public class TestRegisterKeepAlive : IDisposable
-    {
-        private readonly TrinityTcpClient Client;
+    ///// <summary>
+    ///// Prototype for RResponse message
+    ///// </summary>
+    //public class RResponse : Header<RResponseBody>
+    //{
+    //    //public RResponse(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
+    //    //    base(sender, receiver, channel, asset, magic, nonce)
+    //    //{ }
+    //}
 
-        public TestRegisterKeepAlive(TrinityTcpClient client)
-        {
-            this.Client = client;
-        }
+    ///// <summary>
+    ///// Class Handler for handling RResponse Message
+    ///// </summary>
+    //public class RResponseHandler : TrinityTransaction<RResponse, RsmcHandler, VoidHandler>
+    //{
+    //    public RResponseHandler(string msg) : base(msg)
+    //    {
+    //    }
 
-        public void Dispose()
-        {
-        }
+    //    public override bool Handle()
+    //    {
+    //        return false;
+    //    }
 
-        public void RegisterToGateWay()
-        {
-            RegisterWallet msgHandler = new RegisterWallet("localhost", "20556");
+    //    public override void FailStep()
+    //    {
+    //        this.FHandler = null;
 
-            // Start to send RegisterKeepAlive to gateway
-            Console.WriteLine("Send RegisterKeepAlive: {0}", msgHandler.ToJson());
-            msgHandler.MakeTransaction(this.Client);
-        }
-    }
+    //    }
+
+    //    public override void SucceedStep()
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
 }

@@ -24,20 +24,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MessagePack;
 
 namespace Trinity.TrinityWallet.Templates.Definitions
 {
-    [MessagePackObject(keyAsPropertyName:true)]
-    public class RegisterKeepAlive
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RevocableDeliveryTx : TxContents
     {
-        public string MessageType { get { return this.GetType().Name; } }
-        public string Ip { get; set; }
-        public string Protocol { get; set; }
+        // Don't change these vriable name, if do so, it will cause to fail 
+        // to handle the message
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RevocableDeliverySignTx
+    {
+        // Don't change these vriable name, if do so, it will cause to fail 
+        // to handle the message
+        public string txDataSign { get; set; }
+        public RevocableDeliveryTx originalData { get; set; }
     }
 }

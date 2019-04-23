@@ -25,31 +25,25 @@ SOFTWARE.
 */
 
 using System;
-using Trinity.TrinityWallet.TransferHandler.ControlHandler;
-using Trinity.Network.TCP;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Trinity.TrinityWallet.Templates.Messages;
+using Trinity.TrinityWallet.TransferHandler;
 
-namespace Trinity.TrinityWallet.Tests
+namespace Trinity.TrinityWallet.TransferHandler.ControlHandler
 {
-    public class TestRegisterKeepAlive : IDisposable
+    public class RegisterWallet : TransferHandler<RegisterKeepAlive, VoidHandler, VoidHandler>
     {
-        private readonly TrinityTcpClient Client;
-
-        public TestRegisterKeepAlive(TrinityTcpClient client)
+        public RegisterWallet() : base() { }
+        public RegisterWallet(string ip, string port, string protocol = "TCP")
         {
-            this.Client = client;
-        }
-
-        public void Dispose()
-        {
-        }
-
-        public void RegisterToGateWay()
-        {
-            RegisterWallet msgHandler = new RegisterWallet("localhost", "20556");
-
-            // Start to send RegisterKeepAlive to gateway
-            Console.WriteLine("Send RegisterKeepAlive: {0}", msgHandler.ToJson());
-            msgHandler.MakeTransaction(this.Client);
+            this.Request = new RegisterKeepAlive
+            {
+                Ip = String.Format("{0}:{1}", ip, port),
+                Protocol = protocol
+            };
         }
     }
 }

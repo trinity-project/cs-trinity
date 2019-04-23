@@ -29,27 +29,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MessagePack;
 
-namespace Trinity.TrinityWallet.Templates.Definitions
+namespace Trinity.TrinityWallet.Templates.Messages
 {
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class SyncWalletBody
+    public class FounderFail : Founder
     {
-        public string Publickey { get; set; }
-        public string alias { get; set; }
-        public string AutorCreate { get; set; }
-        public string Ip { get; set; }
-        public int MaxChannel { get; set; }
-        public Dictionary<string, Dictionary<string, Double>> Channel { get; set; }
-    }
-
-    [MessagePackObject(keyAsPropertyName:true)]
-    public class SyncWalletData
-    {
-        public string MessageType { get { return this.GetType().Name; } }
-        public string Sender { get { return "NoUser@ip:port"; } }
-        public string NetMagic { get; set; }
-        public SyncWalletBody MessageBody { get; set; }
     }
 }

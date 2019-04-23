@@ -27,43 +27,22 @@ SOFTWARE.
 using System;
 using System.Text;
 using System.Security.Cryptography;
-using Trinity.Trade.Tempates.Definitions;
-using Trinity.Trade.Tempates;
-using Trinity.TrinityWallet.TransferHandler;
+
 using Trinity.Network.TCP;
+using Trinity.BlockChain;
+using Trinity.TrinityWallet.Templates.Messages;
+using Trinity.TrinityWallet.TransferHandler;
 
 
-namespace Trinity.Trade.TransactionType
+namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 {
-    /// <summary>
-    /// Prototype for register channel message
-    /// </summary>
-    public class RegisterChannel : Header<RegisterBody>
-    {
-        //public RegisterChannel(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-        //    base(sender, receiver, channel, asset, magic, nonce)
-        //{
-        //    this.MessageBody.AssetType = asset;
-        //    this.MessageBody.Deposit = value;
-        //}
-    }
-
-    public class RegisterChannelFail : RegisterChannel
-    {
-        //public RegisterChannelFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-        //    base(sender, receiver, channel, asset, magic, nonce, value)
-        //{
-        //    this.MessageBody.OriginalMessage = value;
-        //}
-    }
-
     /// <summary>
     /// This handler will process the message -- RegisterChannel
     /// </summary>
-    public class RegisterChannelHandler : TrinityTransaction<RegisterChannel, FounderHandler, RegisterChannelFailHandler>
+    public class RegisterChannelHandler : TransferHandler<RegisterChannel, FounderHandler, RegisterChannelFailHandler>
     {
         // Default Constructor
-        public RegisterChannelHandler(string msg): base(msg)
+        public RegisterChannelHandler(): base()
         {
         }
 
@@ -78,28 +57,21 @@ namespace Trinity.Trade.TransactionType
         /// <param name="nonce"></param>
         /// <param name="deposit"></param>
         public RegisterChannelHandler(string sender, string receiver, string channel, string asset, string magic, 
-            UInt64 nonce, string deposit) : base()
+            UInt64 nonce, double deposit)
         {
-            this.ChannelName = this.GenerateChannelName();
             // TODO: need to be recorded in the database?????
-            
-            this.Request.ChannelName = this.ChannelName;
-            this.Request.MessageBody.AssetType = asset;
-            this.Request.MessageBody.Deposit = deposit;
-        }
-
-        public override void MakeTransaction(TrinityTcpClient client)
-        {
-            // send the RegisterChannel Message to the peer.
-            base.MakeTransaction(client);
+            this.Request.SetAttribute("ChannelName", this.GenerateChannelName());
+            this.Request.MessageBody.SetAttribute("AssetType", asset);
+            this.Request.MessageBody.SetAttribute("Deposit", deposit);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override bool Handle()
+        public override bool Handle(string msg)
         {
+            base.Handle(msg);
             if (!(this.Request is RegisterChannel))
             {
                 return false;
@@ -125,14 +97,13 @@ namespace Trinity.Trade.TransactionType
 
         public override void SucceedStep()
         {
-            this.SHandler = new FounderHandler(this.Message);
-            this.SHandler.MakeTransaction(this.TcpHandler);
+            ;
         }
 
         private string GenerateChannelName()
         {
             MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
-            byte[] SBytes = md5.ComputeHash(Encoding.ASCII.GetBytes(this.Sender + DateTime.Now.ToString()));
+            byte[] SBytes = md5.ComputeHash(Encoding.ASCII.GetBytes("" + DateTime.Now.ToString()));
 
             StringBuilder nb = new StringBuilder();
             for (int i = 0; i < SBytes.Length; i++)
@@ -140,7 +111,7 @@ namespace Trinity.Trade.TransactionType
                 nb.AppendFormat("{0:x2}", SBytes[i]);
             }
 
-            byte[] RBytes = md5.ComputeHash(Encoding.ASCII.GetBytes(this.Receiver + DateTime.Now.ToString()));
+            byte[] RBytes = md5.ComputeHash(Encoding.ASCII.GetBytes("" + DateTime.Now.ToString()));
             for (int i = 0; i < RBytes.Length; i++)
             {
                 nb.AppendFormat("{0:x2}", RBytes[i]);
@@ -149,25 +120,25 @@ namespace Trinity.Trade.TransactionType
             return nb.ToString();
         }
 
-        public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        {
-            this.GetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, out value);
-        }
+        //public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        //{
+        //    this.GetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, out value);
+        //}
 
-        public override void SetBodyAttribute<TValue>(string name, TValue value)
-        {
-            this.SetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, value);
-        }
+        //public override void SetBodyAttribute<TValue>(string name, TValue value)
+        //{
+        //    this.SetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, value);
+        //}
     }
 
-    public class RegisterChannelFailHandler : TrinityTransaction<RegisterChannel, VoidHandler, VoidHandler>
+    public class RegisterChannelFailHandler : TransferHandler<RegisterChannel, VoidHandler, VoidHandler>
     {
         // Default Constructor
-        public RegisterChannelFailHandler(string msg) : base(msg)
+        public RegisterChannelFailHandler() : base()
         {
         }
 
-        public override bool Handle()
+        public override bool Handle(string msg)
         {
             return false;
         }
@@ -181,16 +152,6 @@ namespace Trinity.Trade.TransactionType
         public override void SucceedStep()
         {
             throw new NotImplementedException();
-        }
-
-        public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        {
-            this.GetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, out value);
-        }
-
-        public override void SetBodyAttribute<TValue>(string name, TValue value)
-        {
-            this.SetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 }

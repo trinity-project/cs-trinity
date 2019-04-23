@@ -29,38 +29,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Trinity.TrinityWallet.Templates.Definitions;
-using Trinity.TrinityWallet.Templates;
+using MessagePack;
 
-namespace Trinity.TrinityWallet.TransferHandler
+namespace Trinity.TrinityWallet.Templates.Messages
 {
-    public class RegisterWallet : TrinityMessages<RegisterKeepAlive, VoidHandler, VoidHandler>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class VoidBody
     {
-        public RegisterWallet() : base() { }
-        public RegisterWallet(string msg) : base(msg) { }
-        public RegisterWallet(RegisterKeepAlive msg) : base(msg) { }
-        public RegisterWallet(string ip, string port, string protocol = "TCP")
-        {
-            this.Request = new RegisterKeepAlive
-            {
-                Ip = String.Format("{0}:{1}", ip, port),
-                Protocol = protocol,
-            };
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-        }
-
-        public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void SetBodyAttribute<TValue>(string name, TValue value)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

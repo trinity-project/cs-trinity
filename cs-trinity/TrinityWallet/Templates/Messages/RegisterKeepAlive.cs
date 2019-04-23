@@ -31,10 +31,13 @@ using System.Text;
 using System.Threading.Tasks;
 using MessagePack;
 
-namespace Trinity.Trade.Tempates.Definitions
+namespace Trinity.TrinityWallet.Templates.Messages
 {
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class VoidBody
+    [MessagePackObject(keyAsPropertyName:true)]
+    public class RegisterKeepAlive
     {
+        public string MessageType { get { return this.GetType().Name; } }
+        public string Ip { get; set; }
+        public string Protocol { get; set; }
     }
 }

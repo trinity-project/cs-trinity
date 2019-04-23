@@ -27,18 +27,18 @@ SOFTWARE.
 using System;
 using MessagePack;
 
-namespace Trinity.Trade.Tempates.Definitions
+namespace Trinity.TrinityWallet.Templates.Messages
 {
     /// <summary>
     /// This file define the prototype of the message header.
     /// </summary>
     [MessagePackObject(keyAsPropertyName: true)]
-    public abstract class Header<TBody>
+    public class Header<TBody>
     {
         /// <summary>
         /// Mandatory contents in the message header
         /// </summary>
-        public string MessageType { get { return this.GetType().Name; } }
+        public string MessageType => this.GetType().Name;
         public string Sender { get; set; }
         public string Receiver { get; set; }
         public string ChannelName { get; set; }

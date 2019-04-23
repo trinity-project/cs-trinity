@@ -25,31 +25,25 @@ SOFTWARE.
 */
 
 using System;
-using Trinity.TrinityWallet.TransferHandler.ControlHandler;
-using Trinity.Network.TCP;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using MessagePack;
 
-namespace Trinity.TrinityWallet.Tests
+namespace Trinity.TrinityWallet.Templates.Messages
 {
-    public class TestRegisterKeepAlive : IDisposable
+    /// <summary>
+    /// This file define the RegisterChannel Message Body
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RegisterChannelFailBody
     {
-        private readonly TrinityTcpClient Client;
+        public string OriginalMessage { get; set; }
+    }
 
-        public TestRegisterKeepAlive(TrinityTcpClient client)
-        {
-            this.Client = client;
-        }
-
-        public void Dispose()
-        {
-        }
-
-        public void RegisterToGateWay()
-        {
-            RegisterWallet msgHandler = new RegisterWallet("localhost", "20556");
-
-            // Start to send RegisterKeepAlive to gateway
-            Console.WriteLine("Send RegisterKeepAlive: {0}", msgHandler.ToJson());
-            msgHandler.MakeTransaction(this.Client);
-        }
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RegisterChannelFail : Header<RegisterChannelBody>
+    {
     }
 }

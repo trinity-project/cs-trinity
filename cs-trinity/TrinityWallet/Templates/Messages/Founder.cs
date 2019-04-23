@@ -24,41 +24,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Trinity.TrinityWallet.Templates;
+using MessagePack;
 using Trinity.TrinityWallet.Templates.Definitions;
 
-namespace Trinity.TrinityWallet.TransferHandler
+namespace Trinity.TrinityWallet.Templates.Messages
 {
-    public class SyncWalletHandler : TrinityMessages<SyncWalletData, VoidHandler, VoidHandler>
+    /// <summary>
+    /// This file define Founder Message
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class FounderBody
     {
-        public SyncWalletHandler() : base()
-        {
-            this.Request = new SyncWalletData
-            {
-                MessageBody = new SyncWalletBody()
-            };
-        }
-        public SyncWalletHandler(string msg) : base(msg) { }
-        public SyncWalletHandler(SyncWalletData msg) : base(msg) { }
-        
-        public override void Dispose()
-        {
-            base.Dispose();
-        }
-
-        public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        {
-            this.GetMessageAttribute<SyncWalletBody, TValue>(this.Request.MessageBody, name, out value);
-        }
-
-        public override void SetBodyAttribute<TValue>(string name, TValue value)
-        {
-            this.SetMessageAttribute<SyncWalletBody, TValue>(this.Request.MessageBody, name, value);
-        }
+        public string AssetType { get; set; }
+        public double Deposit { get; set; }
+        public FundingTx Founder { get; set; }
+        public CommitmentTx Commitment { get; set; }
+        public RevocableDeliveryTx RevocableDelivery { get; set; }
+        public int RoleIndex { get; set; }
     }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class Founder : Header<FounderBody>
+    { }
 }

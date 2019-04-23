@@ -26,7 +26,7 @@ SOFTWARE.
 
 using MessagePack;
 
-namespace Trinity.Trade.Tempates.Definitions
+namespace Trinity.TrinityWallet.Templates.Messages
 {
     /// <summary>
     /// This file define the HTLC Message Body.

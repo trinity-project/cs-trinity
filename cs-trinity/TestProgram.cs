@@ -31,8 +31,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Trinity.TrinityWallet.Templates.Definitions;
-using Trinity.TrinityWallet.TransferHandler;
-using Trinity.Trade.TransactionType;
+using Trinity.TrinityWallet.TransferHandler.TransactionHandler;
 using Trinity.Network.TCP;
 using Trinity.TrinityWallet.Tests;
 
@@ -46,31 +45,31 @@ namespace Trinity
             TestVerifyMessageBody();
 
             // create the transport for following message tests
-            TrinityTcpClient client = new TrinityTcpClient("47.98.228.81", "8089");
+            // TrinityTcpClient client = new TrinityTcpClient("47.98.228.81", "8089");
             //TrinityTcpClient client = new TrinityTcpClient("10.0.0.5", "8089");
-            client.CreateConnetion();
+            //client.CreateConnetion();
 
-            // Test sets
-            MFTestRegisterKeepAlive(client); // RegisterKeepAlive
-            MFTestSyncWalletData(client); // SyncWalletData
-            
+            //// Test sets
+            //MFTestRegisterKeepAlive(client); // RegisterKeepAlive
+            //MFTestSyncWalletData(client); // SyncWalletData
+
             Console.ReadKey();
         }
 
         public static void TestVerifyMessageBody()
         {
-            // Message : RegisterKeepAlive
-            RegisterKeepAlive Request = new RegisterKeepAlive();
-            RegisterWallet MsgHandler = new RegisterWallet(Request);
-            Console.WriteLine(MsgHandler.GetJsonMessage());
-            using (RegisterWallet msgHandler = new RegisterWallet("test", "port"))
-            {
-                Console.WriteLine(msgHandler.ToJson());
-            }
+            //    // Message : RegisterKeepAlive
+            //    RegisterKeepAlive Request = new RegisterKeepAlive();
+            //    RegisterWallet MsgHandler = new RegisterWallet(Request);
+            //    Console.WriteLine(MsgHandler.GetJsonMessage());
+            //    using (RegisterWallet msgHandler = new RegisterWallet("test", "port"))
+            //    {
+            //        Console.WriteLine(msgHandler.ToJson());
+            //    }
 
             // Message : Founder
-            FounderHandler FounderMsgHndl = new FounderHandler("1", "2", "3", "4", "5", "6");
-            FounderMsgHndl.SetBodyAttribute("Commitment", "testCommitment");
+            FounderHandler FounderMsgHndl = new FounderHandler("1", "2", "3", "4", "5", 6, 7);
+            FounderMsgHndl.SetCommitment();
             Console.WriteLine(FounderMsgHndl.ToJson());
         }
 

@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Trinity.TrinityWallet.TransferHandler;
+using Trinity.TrinityWallet.TransferHandler.ControlHandler;
 using Trinity.Network.TCP;
 
 namespace Trinity.TrinityWallet.Tests
@@ -49,10 +49,8 @@ namespace Trinity.TrinityWallet.Tests
 
         public void SyncWalletData()
         {
-            SyncWalletHandler msgHandler = new SyncWalletHandler();
+            SyncWalletHandler msgHandler = new SyncWalletHandler("NoUser@ip:port", "123456");
 
-            msgHandler.SetTcpHandler(this.Client);
-            msgHandler.SetHeaderAttribute<string>("NetMagic", "12345678");
             msgHandler.SetBodyAttribute("Publickey", "0257f6e8e5ee6a4a5413045c693b4a17c0191f1250e4ff078787c44993a1ddca81");
             msgHandler.SetBodyAttribute("alias", "NoAlias");
             msgHandler.SetBodyAttribute("AutorCreate", "0");
@@ -81,7 +79,7 @@ namespace Trinity.TrinityWallet.Tests
 
             // Start to send RegisterKeepAlive to gateway
             Console.WriteLine("Send SyncWalletData: {0}", msgHandler.ToJson());
-            msgHandler.MakeTransaction(this.Client, msgHandler.GetMessage());
+            msgHandler.MakeTransaction(this.Client);
 
             // received the expected messages
             this.Client.ReceiveMessage("AckSyncWallet");

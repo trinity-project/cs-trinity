@@ -30,7 +30,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Trinity.Trade.TransactionType
+namespace Trinity.TrinityWallet.Templates.Definitions
 {
     public enum TransactionErrorCode : UInt16
     {

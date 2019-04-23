@@ -24,43 +24,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 using System;
-using Trinity.Trade.Tempates.Definitions;
-using Trinity.Trade.Tempates;
 using Trinity.BlockChain;
-using Trinity.TrinityWallet.TransferHandler;
+using Trinity.TrinityWallet.Templates.Definitions;
+using Trinity.TrinityWallet.Templates.Messages;
 using Neo.IO.Json;
 
-namespace Trinity.Trade.TransactionType
+namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 {
-    /// <summary>
-    /// Prototype for Founder / FounderSign / FounderFail message
-    /// </summary>
-    public class Founder : Header<FounderBody>
-    {
-    }
-
-    public class FounderSign : Founder
-    {
-    }
-
-    public class FounderFail : Founder
-    {
-    }
-
     /// <summary>
     /// Class Handler for handling Founder Message
     /// </summary>
-    public class FounderHandler : TrinityTransaction<Founder, FounderSignHandler, FounderFailHandler>
+    public class FounderHandler : TransferHandler<Founder, FounderSignHandler, FounderFailHandler>
     {
         public int RoleIndex;
         public JObject FundingTx;
 
-        public FounderHandler(string msg) : base(msg)
+        public FounderHandler() : base()
         {
+            this.Request = new Founder
+            {
+                MessageBody = new FounderBody()
+                {
+                    Founder = new FundingTx(),
+                    Commitment = new CommitmentTx(),
+                    RevocableDelivery = new RevocableDeliveryTx()
+                }
+            };
         }
 
         public FounderHandler(string sender, string receiver, string channel, string asset, 
-            string magic, string deposit, int role=0) : base()
+            string magic, UInt64 nonce, double deposit, int role=0) : base()
         {
             this.Request = new Founder
             {
@@ -69,18 +62,27 @@ namespace Trinity.Trade.TransactionType
                 ChannelName = channel,
                 AssetType = asset,
                 NetMagic = magic,
-                TxNonce = 0,
+                TxNonce = nonce,
+
                 MessageBody = new FounderBody
                 {
                     AssetType = asset,
                     Deposit = deposit,
-                    RoleIndex = role
+                    RoleIndex = role,
+                    Founder = new FundingTx(),
+                    Commitment = new CommitmentTx(),
+                    RevocableDelivery = new RevocableDeliveryTx()
                 },
             };
+            this.Request.MessageBody.SetAttribute("AssetType", asset);
+            this.Request.MessageBody.SetAttribute("Deposit", deposit);
+            this.Request.MessageBody.SetAttribute("RoleIndex", role);
         }
 
-        public override bool Handle()
+        public override bool Handle(string msg)
         {
+            base.Handle(msg);
+
             if (!this.SignFundingTx())
             {
                 return false;
@@ -112,7 +114,7 @@ namespace Trinity.Trade.TransactionType
             if (this.IsFounderRoleZero(this.RoleIndex))
             {
                 // Because this is triggered by the RegisterChannel, the founder of this channel is value of Receiver;
-                this.FundingTx = Funding.createFundingTx(this.Receiver, "0", this.Sender, "0", this.AssetType);
+                this.FundingTx = Funding.createFundingTx("", "0", "", "0", "");
                 return true;
             }
             else if (this.IsPartnerRoleOne(this.RoleIndex))
@@ -129,28 +131,57 @@ namespace Trinity.Trade.TransactionType
             return false;
         }
 
-        public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        {
-            this.GetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, out value);
-        }
+        //public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        //{
+        //    this.GetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, out value);
+        //}
 
-        public override void SetBodyAttribute<TValue>(string name, TValue value)
+        //public override void SetBodyAttribute<TValue>(string name, TValue value)
+        //{
+        //    this.SetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, value);
+        //}
+
+        public void SetCommitment()
         {
-            this.SetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, value);
+            //this.SetBodyAttribute("Commitment", new CommitmentScript {
+            //    txData = "1",
+            //    addressRSMC = "2",
+            //    scriptRSMC = "3",
+            //    txId = "4",
+            //    witness = "script"
+            //});
+
+            this.Request.MessageBody.Commitment.SetAttribute("txId", "Testtxid-222222222222");
+            Console.WriteLine("txID is {0}", this.Request.MessageBody.Commitment.txId);
+
+            //this.Request.MessageBody.Commitment.Set(new CommitmentScript {
+            //    txId = "TestTxID-11111"
+            //});
+            //this.Request.MessageBody.Commitment = new CommitmentScript
+            //{
+            //    txId = "TestTxID-11111"
+            //};
+
+            Console.WriteLine(this.ToJson());
         }
     }
 
     /// <summary>
     /// Class Handler for handling FounderSign Message
     /// </summary>
-    public class FounderSignHandler : TrinityTransaction<FounderSign, VoidHandler, VoidHandler>
+    public class FounderSignHandler : TransferHandler<FounderSign, VoidHandler, VoidHandler>
     {
-        public FounderSignHandler(string msg) : base(msg)
+        public FounderSignHandler(string sender, string receiver, string channel, string asset,
+            string magic, UInt64 nonce, double deposit, int role = 0)
         {
+            this.Request.MessageBody.SetAttribute("AssetType", asset);
+            this.Request.MessageBody.SetAttribute("Deposit", deposit);
+            this.Request.MessageBody.SetAttribute("RoleIndex", role);
         }
 
-        public override bool Handle()
+        public override bool Handle(string msg)
         {
+            base.Handle(msg);
             return false;
         }
 
@@ -163,30 +194,25 @@ namespace Trinity.Trade.TransactionType
         public override void SucceedStep()
         {
             throw new NotImplementedException();
-        }
-
-        public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        {
-            this.GetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, out value);
-        }
-
-        public override void SetBodyAttribute<TValue>(string name, TValue value)
-        {
-            this.SetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 
     /// <summary>
     /// Class Handler for handling FounderFail Message
     /// </summary>
-    public class FounderFailHandler : TrinityTransaction<FounderFail, VoidHandler, VoidHandler>
+    public class FounderFailHandler : TransferHandler<FounderFail, VoidHandler, VoidHandler>
     {
-        public FounderFailHandler(string msg) : base(msg)
+        public FounderFailHandler(string sender, string receiver, string channel, string asset,
+            string magic, UInt64 nonce, double deposit, int role = 0)
         {
+            this.Request.MessageBody.SetAttribute("AssetType", asset);
+            this.Request.MessageBody.SetAttribute("Deposit", deposit);
+            this.Request.MessageBody.SetAttribute("RoleIndex", role);
         }
 
-        public override bool Handle()
+        public override bool Handle(string msg)
         {
+            base.Handle(msg);
             return false;
         }
 
@@ -199,16 +225,6 @@ namespace Trinity.Trade.TransactionType
         public override void SucceedStep()
         {
             throw new NotImplementedException();
-        }
-
-        public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        {
-            this.GetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, out value);
-        }
-
-        public override void SetBodyAttribute<TValue>(string name, TValue value)
-        {
-            this.SetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, value);
         }
     }
 }

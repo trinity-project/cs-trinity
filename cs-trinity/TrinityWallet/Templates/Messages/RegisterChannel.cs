@@ -26,15 +26,24 @@ SOFTWARE.
 
 using MessagePack;
 
-namespace Trinity.Trade.Tempates.Definitions
+namespace Trinity.TrinityWallet.Templates.Messages
 {
     /// <summary>
-    /// Body for RResponse Message
+    /// This file define the RegisterChannel Message Body
     /// </summary>
     [MessagePackObject(keyAsPropertyName: true)]
-    public class RResponseBody
+    public class RegisterChannelBody
     {
-        public string HR { get; set; }
-        public string R { get; set; }
+        public string AssetType { get; set; }
+        public double Deposit { get; set; }
+        public string Comments { get; set; }
+
+        // Just for RegisterChannelFail
+        public string OriginalMessage { get; set; }
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RegisterChannel : Header<RegisterChannelBody>
+    {
     }
 }

@@ -24,20 +24,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using MessagePack;
 
-namespace Trinity.Trade.Tempates.Definitions
+namespace Trinity.TrinityWallet.Templates.Messages
 {
-    /// <summary>
-    /// This file define the RegisterChannel Message Body
-    /// </summary>
     [MessagePackObject(keyAsPropertyName: true)]
-    public class RegisterBody
+    public class SyncWalletBody
     {
-        public string AssetType { get; set; }
-        public string Deposit { get; set; }
+        public string Publickey { get; set; }
+        public string alias { get; set; }
+        public string AutorCreate { get; set; }
+        public string Ip { get; set; }
+        public int MaxChannel { get; set; }
+        public Dictionary<string, Dictionary<string, Double>> Channel { get; set; }
+    }
 
-        // Just for RegisterChannelFail
-        public string OriginalMessage { get; set; }
+    [MessagePackObject(keyAsPropertyName:true)]
+    public class SyncWalletData
+    {
+        public string MessageType { get { return this.GetType().Name; } }
+        public string Sender { get; set; }
+        public string NetMagic { get; set; }
+        public SyncWalletBody MessageBody { get; set; }
     }
 }

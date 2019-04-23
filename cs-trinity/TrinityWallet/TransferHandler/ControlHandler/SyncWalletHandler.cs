@@ -23,56 +23,51 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 using System;
-using Trinity.Trade.Tempates.Definitions;
-using Trinity.Trade.Tempates;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Trinity.TrinityWallet.Templates.Messages;
 using Trinity.TrinityWallet.TransferHandler;
 
-namespace Trinity.Trade.TransactionType
+namespace Trinity.TrinityWallet.TransferHandler.ControlHandler
 {
-    /// <summary>
-    /// Prototype for RResponse message
-    /// </summary>
-    public class RResponse : Header<RResponseBody>
+    public class SyncWalletHandler : TransferHandler<SyncWalletData, VoidHandler, VoidHandler>
     {
-        //public RResponse(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
-        //    base(sender, receiver, channel, asset, magic, nonce)
-        //{ }
-    }
-
-    /// <summary>
-    /// Class Handler for handling RResponse Message
-    /// </summary>
-    public class RResponseHandler : TrinityTransaction<RResponse, RsmcHandler, VoidHandler>
-    {
-        public RResponseHandler(string msg) : base(msg)
+        public SyncWalletHandler() : base()
         {
+            this.Request = new SyncWalletData
+            {
+                MessageBody = new SyncWalletBody()
+            };
         }
 
-        public override bool Handle()
+        public SyncWalletHandler(string sender, string magic)
         {
-            return false;
-        }
+            this.Request = new SyncWalletData
+            {
+                Sender = sender,
+                NetMagic = magic,
 
-        public override void FailStep()
-        {
-            this.FHandler = null;
-
-        }
-
-        public override void SucceedStep()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        {
-            this.GetMessageAttribute<RResponseBody, TValue>(this.Request.MessageBody, name, out value);
+                MessageBody = new SyncWalletBody()
+            };
         }
 
         public override void SetBodyAttribute<TValue>(string name, TValue value)
         {
-            this.SetMessageAttribute<RResponseBody, TValue>(this.Request.MessageBody, name, value);
+            this.Request.MessageBody.SetAttribute(name, value);
         }
+
+        //public override void GetBodyAttribute<TValue>(string name, out TValue value)
+        //{
+        //    this.GetMessageAttribute<SyncWalletBody, TValue>(this.Request.MessageBody, name, out value);
+        //}
+
+        //public override void SetBodyAttribute<TValue>(string name, TValue value)
+        //{
+        //    this.SetMessageAttribute<SyncWalletBody, TValue>(this.Request.MessageBody, name, value);
+        //}
     }
 }

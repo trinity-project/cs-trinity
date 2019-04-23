@@ -26,19 +26,23 @@ SOFTWARE.
 
 using MessagePack;
 
-namespace Trinity.Trade.Tempates.Definitions
+namespace Trinity.TrinityWallet.Templates.Definitions
 {
-    /// <summary>
-    /// This file define Founder Message Body
-    /// </summary>
     [MessagePackObject(keyAsPropertyName: true)]
-    public class FounderBody
+    public class FundingTx : TxContents
     {
-        public string AssetType { get; set; }
-        public string Deposit { get; set; }
-        public string Founder { get; set; }
-        public string Commitment { get; set; }
-        public string RevocableDelivery { get; set; }
-        public int RoleIndex { get; set; }
+        // Don't change these vriable name, if do so, it will cause to fail 
+        // to handle the message
+        public string addressFunding { get; set; }
+        public string scriptFunding { get; set; }
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class FundingSignTx
+    {
+        // Don't change these vriable name, if do so, it will cause to fail 
+        // to handle the message
+        public string txDataSign { get; set; }
+        public FundingTx originalData { get; set; }
     }
 }

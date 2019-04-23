@@ -26,15 +26,22 @@ SOFTWARE.
 
 using MessagePack;
 
-namespace Trinity.Trade.Tempates.Definitions
+namespace Trinity.TrinityWallet.Templates.Messages
 {
     /// <summary>
-    /// Body for Settle Message
+    /// Body for RResponse Message
     /// </summary>
     [MessagePackObject(keyAsPropertyName: true)]
-    public class SettleBody
+    public class RResponseBody
     {
-        public string Settlement { get; set; }
-        public string Balance { get; set; }
+        public string HR { get; set; }
+        public string R { get; set; }
+        public string AssetType { get; set; }
+        public double Count { get; set; }
+        public string Comments { get; set; }
     }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RResponse : Header<RResponseBody>
+    { }
 }
