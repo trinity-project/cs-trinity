@@ -55,19 +55,60 @@ namespace Trinity.TrinityWallet.TransferHandler.ControlHandler
             };
         }
 
+        public void SetPublicKey(string key)
+        {
+            this.Request.MessageBody.SetAttribute("Publickey", key);
+        }
+
+        public void SetAlias(string alias)
+        {
+            this.Request.MessageBody.SetAttribute("alias", alias);
+        }
+
+        public void SetAutoCreate(string AutoCreate)
+        {
+            this.Request.MessageBody.SetAttribute("AutorCreate", AutoCreate);
+        }
+
+        public void SetNetAddress(string address)
+        {
+            this.Request.MessageBody.SetAttribute("Ip", address);
+        }
+
+        public void SetMaxChannel(int MaxChannel)
+        {
+            this.Request.MessageBody.SetAttribute("MaxChannel", MaxChannel);
+        }
+
+        public void SetChannelInfo()
+        {
+            // TODO: here the value is read from the configuration files, this code will be update later
+            // Currently ,we hardcode this value
+            Dictionary<string, Dictionary<string, Double>> ChannelInfo = new Dictionary<string, Dictionary<string, Double>>();
+            Dictionary<string, Double> InfoItem = new Dictionary<string, Double>();
+            InfoItem.Add("TNC", 10);
+            ChannelInfo.Add("Balance", InfoItem);
+
+            InfoItem.Clear();
+            InfoItem.Add("Fee", 0);
+            ChannelInfo.Add("NEO", InfoItem);
+
+            InfoItem.Clear();
+            InfoItem.Add("Fee", 0.001);
+            ChannelInfo.Add("GAS", InfoItem);
+
+            InfoItem.Clear();
+            InfoItem.Add("Fee", 0.01);
+            InfoItem.Add("CommitMinDeposit", 1);
+            InfoItem.Add("CommitMaxDeposit", 5000);
+            ChannelInfo.Add("TNC", InfoItem);
+
+            this.Request.MessageBody.SetAttribute("Channel", ChannelInfo);
+        }
+
         public override void SetBodyAttribute<TValue>(string name, TValue value)
         {
             this.Request.MessageBody.SetAttribute(name, value);
         }
-
-        //public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        //{
-        //    this.GetMessageAttribute<SyncWalletBody, TValue>(this.Request.MessageBody, name, out value);
-        //}
-
-        //public override void SetBodyAttribute<TValue>(string name, TValue value)
-        //{
-        //    this.SetMessageAttribute<SyncWalletBody, TValue>(this.Request.MessageBody, name, value);
-        //}
     }
 }

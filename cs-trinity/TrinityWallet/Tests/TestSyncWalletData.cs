@@ -50,32 +50,13 @@ namespace Trinity.TrinityWallet.Tests
         public void SyncWalletData()
         {
             SyncWalletHandler msgHandler = new SyncWalletHandler("NoUser@ip:port", "123456");
-
-            msgHandler.SetBodyAttribute("Publickey", "0257f6e8e5ee6a4a5413045c693b4a17c0191f1250e4ff078787c44993a1ddca81");
-            msgHandler.SetBodyAttribute("alias", "NoAlias");
-            msgHandler.SetBodyAttribute("AutorCreate", "0");
-            msgHandler.SetBodyAttribute("Ip", "localhost:20556");
-            msgHandler.SetBodyAttribute("MaxChannel", 10);
-            Dictionary<string, Dictionary<string, Double>> ChannelInfo = new Dictionary<string, Dictionary<string, Double>>();
-            Dictionary<string, Double> InfoItem = new Dictionary<string, Double>();
-            InfoItem.Add("TNC", 10);
-            ChannelInfo.Add("Balance", InfoItem);
-
-            InfoItem.Clear();
-            InfoItem.Add("Fee", 0);
-            ChannelInfo.Add("NEO", InfoItem);
-
-            InfoItem.Clear();
-            InfoItem.Add("Fee", 0.001);
-            ChannelInfo.Add("GAS", InfoItem);
-
-            InfoItem.Clear();
-            InfoItem.Add("Fee", 0.01);
-            InfoItem.Add("CommitMinDeposit", 1);
-            InfoItem.Add("CommitMaxDeposit", 5000);
-            ChannelInfo.Add("TNC", InfoItem);
-
-            msgHandler.SetBodyAttribute("Channel", ChannelInfo);
+            
+            msgHandler.SetPublicKey("0257f6e8e5ee6a4a5413045c693b4a17c0191f1250e4ff078787c44993a1ddca81");
+            msgHandler.SetAlias("NoAlias");
+            msgHandler.SetAutoCreate("0");
+            msgHandler.SetNetAddress("localhost:20556");
+            msgHandler.SetMaxChannel(10);
+            msgHandler.SetChannelInfo();
 
             // Start to send RegisterKeepAlive to gateway
             Console.WriteLine("Send SyncWalletData: {0}", msgHandler.ToJson());
