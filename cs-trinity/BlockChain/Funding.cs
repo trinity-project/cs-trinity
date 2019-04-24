@@ -107,33 +107,10 @@ namespace Trinity.BlockChain
             return BigInteger.Parse(value.ToString()).ToByteArray().ToHexString();
         }
 
-        //创建多签合约，封装自NEO方法
-        //弃用
-        //public static Contract CreateMultiSigContract1(string publicKey1, string publicKey2)
-        //{
-        //    ECPoint[] publicKeys;
-        //    List<System.String> listS = new List<System.String>();
-        //    if (publicKey1.CompareTo(publicKey2) > 0)
-        //    {
-        //        listS.Add(publicKey1);
-        //        listS.Add(publicKey2);
-        //    }
-        //    else
-        //    {
-        //        listS.Add(publicKey2);
-        //        listS.Add(publicKey1);
-        //    }
-
-        //    publicKeys = listS.Select(p => ECPoint.DecodePoint(p.HexToBytes(), ECCurve.Secp256r1)).ToArray();
-        //    Contract contract = Contract.CreateMultiSigContract(2, publicKeys);
-        //    return contract;
-        //}
 
         //创建多签合约，封装自NEO方法
-        //使之与原python方法相同
         public static Contract CreateMultiSigContract(string publicKey1, string publicKey2)
         {
-            Console.WriteLine(111111111111);
             return new Contract
             {
                 Script = CreateMultiSigRedeemScript(publicKey1, publicKey2),
@@ -143,7 +120,6 @@ namespace Trinity.BlockChain
 
         public static byte[] CreateMultiSigRedeemScript(string publicKey1, string publicKey2)
         {
-            Console.WriteLine(222222222222);
             string pubkey_large;
             string pubkey_small;
             if (publicKey1.CompareTo(publicKey2) > 0)
@@ -181,8 +157,6 @@ namespace Trinity.BlockChain
         {
             ECPoint ECPointPublicKey = ECPoint.DecodePoint(PublicKey.HexToBytes(), ECCurve.Secp256r1);
             UInt160 ScriptHash = Contract.CreateSignatureRedeemScript(ECPointPublicKey).ToScriptHash();
-            //Console.WriteLine("ScriptHash：");
-            //Console.WriteLine(ScriptHash);
             return ScriptHash;
         }
 
@@ -216,9 +190,9 @@ namespace Trinity.BlockChain
             op_data += method;
             op_data += "67";  // APPCALL
             Console.WriteLine("asset_id:");
-            Console.WriteLine(contract_hash.Substring(2).HexToBytes().Reverse().ToArray().ToHexString());
-            op_data += contract_hash.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();                   //好像多去了2位
-            op_data += "f1";  // maybe THROWIFNOT
+            Console.WriteLine(contract_hash.HexToBytes().Reverse().ToArray().ToHexString());
+            op_data += contract_hash.HexToBytes().Reverse().ToArray().ToHexString();
+            op_data += "f1";  // THROWIFNOT
 
             return op_data;
         }
@@ -336,14 +310,9 @@ namespace Trinity.BlockChain
                                       "c766b58c39c6c766b5c527ac46c766b5cc3640e00516c766b5d527ac4624a00616c766b5ac351936c766b5a52" +
                                       "7ac46c766b5ac36c766b59c3c09f6393ff616c766b56c351936c766b56527ac46c766b56c36c766b55c3c09f6" +
                                       "326ff006c766b5d527ac46203006c766b5dc3616c7566";
-            //Console.WriteLine("e66f32b647a7a8e0626d1b9330b107894dd4302c");
             string ScriptHashSelf = hashSelf.ToString().Substring(2).HexToBytes().Reverse().ToArray().ToHexString();
-            //Console.WriteLine(ScriptHashSelf);
-            //Console.WriteLine("e8388a138b365fa4e48d763016e6d4002d9b7e8e");
             string ScriptHashOther = hashOther.ToString().Substring(2).HexToBytes().Reverse().ToArray().ToHexString();
-            //Console.WriteLine(ScriptHashOther);
             string RSMCContract = String.Format(contractTemplate, magicTimestamp, ScriptHashOther, pubkeySelf, pubkeyOther, pubkeyOther, pubkeySelf, ScriptHashSelf, pubkeySelf, pubkeyOther, pubkeyOther, pubkeySelf);
-            //Console.WriteLine(RSMCContract);
 
             JObject result = new JObject();
             result["script"] = RSMCContract;
@@ -411,9 +380,6 @@ namespace Trinity.BlockChain
             {
                 tmp = "0" + tmp;
             }
-            //string hex_len = tmp.HexToBytes().Reverse().ToArray().ToHexString();
-            //Console.WriteLine("hex_len");
-            //Console.WriteLine(hex_len);
             string[] array = { tmp, script };
             string verify_script = string.Join("", array);
 
