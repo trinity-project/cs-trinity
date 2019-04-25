@@ -23,15 +23,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Trinity.Channel
+using Neo.IO.Data.LevelDB;
+using Trinity.TrinityDB.Definitions;
+
+namespace Trinity.TrinityDB
 {
-    class TradeHistory
+    /// <summary>
+    /// record the transaction record by channel
+    /// </summary>
+    public class TransactionModel : BaseModel
     {
+        private readonly byte[] group;
+
+        public SliceBuilder record => SliceBuilder.Begin(ModelPrefix.MPTransaction).Add(this.group);
+        public SliceBuilder txid => SliceBuilder.Begin(ModelPrefix.MPTransaction).Add(this.group);
+
+        /// <summary>
+        /// Default Constructor
+        /// </summary>
+        /// <param name="path"></param>
+        public TransactionModel(string path, string channel) : base(path)
+        {
+        }
     }
 }

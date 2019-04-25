@@ -30,6 +30,7 @@ using System.Security.Cryptography;
 
 using Trinity.Network.TCP;
 using Trinity.BlockChain;
+using Trinity.ChannelSet;
 using Trinity.TrinityWallet.Templates.Messages;
 using Trinity.TrinityWallet.TransferHandler;
 
@@ -60,7 +61,7 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             UInt64 nonce, double deposit)
         {
             // TODO: need to be recorded in the database?????
-            this.Request.SetAttribute("ChannelName", this.GenerateChannelName());
+            this.Request.SetAttribute("ChannelName", Channel.NewChannel(sender, receiver));
             this.Request.MessageBody.SetAttribute("AssetType", asset);
             this.Request.MessageBody.SetAttribute("Deposit", deposit);
         }
@@ -119,16 +120,6 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 
             return nb.ToString();
         }
-
-        //public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        //{
-        //    this.GetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, out value);
-        //}
-
-        //public override void SetBodyAttribute<TValue>(string name, TValue value)
-        //{
-        //    this.SetMessageAttribute<RegisterBody, TValue>(this.Request.MessageBody, name, value);
-        //}
     }
 
     public class RegisterChannelFailHandler : TransferHandler<RegisterChannel, VoidHandler, VoidHandler>

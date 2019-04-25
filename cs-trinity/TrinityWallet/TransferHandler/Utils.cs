@@ -32,7 +32,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MessagePack;
 
-namespace Trinity.TrinityWallet.TransferHandler
+namespace Trinity.TrinityWallet
 {
     public static class Utils
     {

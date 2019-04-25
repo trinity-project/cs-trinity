@@ -23,57 +23,44 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Trinity.DB
+using Neo.IO.Data.LevelDB;
+
+using Trinity.TrinityDB.Definitions;
+
+namespace Trinity.TrinityDB
 {
-    // Basic class for LevelDB objects
-    public abstract class LevelDBBase : IDisposable
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ChannelModel : BaseModel
     {
-        public IntPtr Handler { protected set; get; }
-        public bool _disposed = false;
+        private readonly byte[] group;
+        private readonly byte[] peerGroup;
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+        public SliceBuilder keyword => SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
+        public SliceBuilder bothKeyword => SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group).Add(this.peerGroup);
+        public SliceBuilder summary => SliceBuilder.Begin(ModelPrefix.MPSummary);
 
-        protected virtual void FreeDisposedObject()
+        /// <summary>
+        /// Default Constructor
+        /// </summary>
+        /// <param name="path"></param>
+        /// 
+        public ChannelModel(string path, string uri, string peerUri=null) : base(path)
         {
-        }
+            this.group = uri.ToHashBytes();
 
-        protected virtual void FreeUnDisposedObject()
-        {
-        }
-
-        void Dispose(bool disposing)
-        {
-            if (!_disposed)
+            if (null != peerUri)
             {
-                if (disposing)
-                {
-                    FreeDisposedObject();
-                }
-
-                if (this.Handler != IntPtr.Zero)
-                {
-                    FreeUnDisposedObject();
-                    this.Handler = IntPtr.Zero;
-                }
-                _disposed = true;
+                this.peerGroup = uri.ToHashBytes();
             }
         }
-
-        // Free the LevelDB resources
-        ~LevelDBBase()
-        {
-            Dispose(false);
-        }
     }
-
 }

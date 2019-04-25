@@ -24,24 +24,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using Neo.IO.Data.LevelDB;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Trinity.DB
+namespace Trinity.TrinityDB.Definitions
 {
-    public class Cache : LevelDBBase
+    internal static class ModelPrefix
     {
-        /// <summary>
-        /// Create a new cache with a fixed size capacity.
-        /// </summary>
-        public Cache(int capacity)
-        {
-            this.Handler = Native.leveldb_cache_create_lru(capacity);
-        }
+        public const byte MPSummary = 0x1;
 
-        protected override void FreeUnDisposedObject()
-        {
-            Native.leveldb_cache_destroy(this.Handler);
-        }
-        
+        public const byte MPChannel = 0x10;
+
+        public const byte MPTransaction = 0x20;
+        public const byte MPTransactionTxId = 0x21;
     }
 }

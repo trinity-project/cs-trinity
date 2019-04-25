@@ -1,0 +1,59 @@
+/*
+Author: Trinity Core Team
+
+MIT License
+
+Copyright (c) 2018 Trinity
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using MessagePack;
+using Trinity.ChannelSet.Definitions;
+
+namespace Trinity.TrinityDB.Definitions
+{
+    [MessagePackObject(keyAsPropertyName:true)]
+    public struct ChannelTableContents
+    {
+        public string channel;
+        public string asset;
+        public string uri;
+        public string peer;
+        public string magic;
+        public EnumRole role;
+        public EnumChannelState state;
+        public UInt64 alive;
+        public Dictionary<string, double> deposit;
+        public Dictionary<string, double> balance;
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public struct ChannelSummaryContents
+    {
+        public UInt64 nonce;
+        public string peer;
+    }
+}

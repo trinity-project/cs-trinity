@@ -27,44 +27,21 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using Trinity.DB.NativePtr;
+using System.Threading.Tasks;
 
-namespace Trinity.DB
+namespace Trinity.ChannelSet.Definitions
 {
-    internal class SafeData<T> : SafeHandle
-        where T : struct
+    public enum EnumChannelState : byte
     {
-        private GCHandle SafeRawData;
+        INIT = 0,
+        OPENING = 0x10,  // in wait response state
+        OPENED = 0x11,
 
-        public SafeData(T[] arr)
-            : base(default(IntPtr), true)
-        {
-            SafeRawData = GCHandle.Alloc(arr, GCHandleType.Pinned);
+        SETTLING = 0x20,
+        SETTLED = 0x21,
 
-            // freed initialized GCHandles.
-            handle = SafeRawData.AddrOfPinnedObject();
-        }
-
-        public Ptr<T> Ptr
-        {
-            get { return (Ptr<T>)handle; }
-        }
-
-        public override bool IsInvalid
-        {
-            get { return handle == default(IntPtr); }
-        }
-
-        protected override bool ReleaseHandle()
-        {
-            if (handle != default(IntPtr))
-            {
-                SafeRawData.Free();
-                handle = default(IntPtr);
-            }
-            return true;
-        }
+        CLOSING = 0x30,
+        CLOSED = 0x31,
     }
 }

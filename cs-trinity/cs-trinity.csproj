@@ -277,14 +277,22 @@
     <Compile Include="BlockChain\Funding.cs" />
     <Compile Include="BlockChain\NeoInterface.cs" />
     <Compile Include="BlockChain\Monitor.cs" />
-    <Compile Include="Channel\Channel.cs" />
-    <Compile Include="Channel\TradeHistory.cs" />
+    <Compile Include="ChannelSet\Channel.cs" />
+    <Compile Include="ChannelSet\Definitions\EnumChannelState.cs" />
+    <Compile Include="ChannelSet\Definitions\EnumRole.cs" />
     <Compile Include="Network\RPC\TrinityRpcServer.cs" />
     <Compile Include="Network\Utils.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="TestProgram.cs" />
     <Compile Include="Properties\Settings1.cs" />
     <Compile Include="Properties\Settings1.Designer.cs" />
+    <Compile Include="TrinityDB\BaseModel.cs" />
+    <Compile Include="TrinityDB\ChannelModel.cs" />
+    <Compile Include="TrinityDB\DBManager.cs" />
+    <Compile Include="TrinityDB\Definitions\ChannelTableContents.cs" />
+    <Compile Include="TrinityDB\Definitions\ModelPrefix.cs" />
+    <Compile Include="TrinityDB\TransactionModel.cs" />
+    <Compile Include="TrinityDB\Utils.cs" />
     <Compile Include="TrinityWallet\TransferHandler\Utils.cs" />
     <Compile Include="TrinityWallet\Templates\Definitions\TransactionErrorCode.cs" />
     <Compile Include="TrinityWallet\TransferHandler\TransactionHandler\FounderHandler.cs" />
@@ -323,7 +331,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="3rdParty\" />
-    <Folder Include="DB\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
