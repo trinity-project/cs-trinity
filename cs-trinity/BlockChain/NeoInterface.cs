@@ -40,14 +40,62 @@ using Neo.SmartContract;
 using Neo.Wallets;
 using plugin_trinity;
 using System.Numerics;
+using VMArray = Neo.VM.Types.Array;
+using Neo.VM;
 
 namespace Trinity.BlockChain
 {
-    class NeoInterface
+    public class NeoInterface
     {
         private static readonly NeoSystem system;
+        static System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create();
 
-        public static JObject getBalance(string assetId)
+        private static UInt160 getPublicKeyHashFromAddress(string address)
+        {
+            var alldata = Base58.Decode(address);
+            if (alldata.Length != 25)
+                throw new Exception("error length.");
+            var data = alldata.Take(alldata.Length - 4).ToArray();
+            if (data[0] != 0x17)
+                throw new Exception("not a address");
+            var hash = sha256.ComputeHash(data);
+            hash = sha256.ComputeHash(hash);
+            var hashbts = hash.Take(4).ToArray();
+            var datahashbts = alldata.Skip(alldata.Length - 4).ToArray();
+            if (hashbts.SequenceEqual(datahashbts) == false)
+                throw new Exception("not match hash");
+            var pkhash = data.Skip(1).ToArray();
+            return new UInt160(pkhash);
+        }
+
+        private static BigDecimal getNep5Balance(UInt160 asset_id, UInt160 scriptHash)
+        {
+            if (asset_id is UInt160 asset_id_160)
+            {
+                byte[] script;
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    //foreach (UInt160 account in Plugin_trinity.api.CurrentWallet.GetAccounts().Where(p => !p.WatchOnly && p.ScriptHash == scriptHash).Select(p => p.ScriptHash)) 
+                        //sb.EmitAppCall(asset_id_160, "balanceOf", account);
+                    sb.EmitAppCall(asset_id_160, "balanceOf", scriptHash);
+                    sb.Emit(OpCode.DEPTH, OpCode.PACK);
+                    sb.EmitAppCall(asset_id_160, "decimals");
+                    script = sb.ToArray();
+                }
+                ApplicationEngine engine = ApplicationEngine.Run(script);
+                if (engine.State.HasFlag(VMState.FAULT))
+                    return new BigDecimal(0, 0);
+                byte decimals = (byte)engine.ResultStack.Pop().GetBigInteger();
+                BigInteger amount = ((VMArray)engine.ResultStack.Pop()).Aggregate(BigInteger.Zero, (x, y) => x + y.GetBigInteger());
+                return new BigDecimal(amount, decimals);
+            }
+            else
+            {
+                return new BigDecimal(0, 8);
+            }
+        }
+
+        public static JObject getBalance(string assetId, string accountAddress)
         {
             if (Plugin_trinity.api.CurrentWallet == null)
             {
@@ -56,13 +104,16 @@ namespace Trinity.BlockChain
             else
             {
                 JObject json = new JObject();
+                UInt160 scriptHash = getPublicKeyHashFromAddress(accountAddress);
+                UInt160[] account = { scriptHash };
+                IEnumerable<UInt160> accounts = account;
                 switch (UIntBase.Parse(assetId))
                 {
                     case UInt160 asset_id_160: //NEP-5 balance
-                        json["balance"] = Plugin_trinity.api.CurrentWallet.GetAvailable(asset_id_160).ToString();
+                        json["balance"] = getNep5Balance(asset_id_160, scriptHash).ToString();
                         break;
                     case UInt256 asset_id_256: //Global Assets balance
-                        IEnumerable<Coin> coins = Plugin_trinity.api.CurrentWallet.GetCoins().Where(p => !p.State.HasFlag(CoinState.Spent) && p.Output.AssetId.Equals(asset_id_256));
+                        IEnumerable<Coin> coins = Plugin_trinity.api.CurrentWallet.GetCoins(accounts).Where(p => !p.State.HasFlag(CoinState.Spent) && p.Output.AssetId.Equals(asset_id_256));
                         json["balance"] = coins.Sum(p => p.Output.Value).ToString();
                         json["confirmed"] = coins.Where(p => p.State.HasFlag(CoinState.Confirmed)).Sum(p => p.Output.Value).ToString();
                         break;
@@ -186,8 +237,6 @@ namespace Trinity.BlockChain
             }
             return outd;
         }
-
-        static System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create();
 
         public static string Sign(string messageData, byte[] prikey)
         {
