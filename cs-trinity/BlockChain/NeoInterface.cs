@@ -38,7 +38,6 @@ using Neo.Network.RPC;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.Wallets;
-using plugin_trinity;
 using System.Numerics;
 using VMArray = Neo.VM.Types.Array;
 using Neo.VM;
@@ -51,24 +50,6 @@ namespace Trinity.BlockChain
         private static readonly NeoSystem system;
         static System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create();
 
-        private static UInt160 getPublicKeyHashFromAddress(string address)
-        {
-            var alldata = Base58.Decode(address);
-            if (alldata.Length != 25)
-                throw new Exception("error length.");
-            var data = alldata.Take(alldata.Length - 4).ToArray();
-            if (data[0] != 0x17)
-                throw new Exception("not a address");
-            var hash = sha256.ComputeHash(data);
-            hash = sha256.ComputeHash(hash);
-            var hashbts = hash.Take(4).ToArray();
-            var datahashbts = alldata.Skip(alldata.Length - 4).ToArray();
-            if (hashbts.SequenceEqual(datahashbts) == false)
-                throw new Exception("not match hash");
-            var pkhash = data.Skip(1).ToArray();
-            return new UInt160(pkhash);
-        }
-
         private static BigDecimal getNep5Balance(UInt160 asset_id, UInt160 scriptHash)
         {
             if (asset_id is UInt160 asset_id_160)
@@ -76,8 +57,6 @@ namespace Trinity.BlockChain
                 byte[] script;
                 using (ScriptBuilder sb = new ScriptBuilder())
                 {
-                    //foreach (UInt160 account in Plugin_trinity.api.CurrentWallet.GetAccounts().Where(p => !p.WatchOnly && p.ScriptHash == scriptHash).Select(p => p.ScriptHash)) 
-                        //sb.EmitAppCall(asset_id_160, "balanceOf", account);
                     sb.EmitAppCall(asset_id_160, "balanceOf", scriptHash);
                     sb.Emit(OpCode.DEPTH, OpCode.PACK);
                     sb.EmitAppCall(asset_id_160, "decimals");
@@ -96,16 +75,16 @@ namespace Trinity.BlockChain
             }
         }
 
-        public static JObject getBalance(string assetId, string accountAddress)
+        public static JObject getBalance(string assetId, string publicKey)
         {
-            if (Plugin_trinity.api.CurrentWallet == null)
+            if (startTrinity.currentWallet == null)
             {
                 throw new RpcException(-400, "Wallet didn't open.");
             }
             else
             {
                 JObject json = new JObject();
-                UInt160 scriptHash = getPublicKeyHashFromAddress(accountAddress);
+                UInt160 scriptHash = PublicKeyToScriptHash(startTrinity.currentAccountPublicKey);
                 UInt160[] account = { scriptHash };
                 IEnumerable<UInt160> accounts = account;
                 switch (UIntBase.Parse(assetId))
@@ -114,7 +93,7 @@ namespace Trinity.BlockChain
                         json["balance"] = getNep5Balance(asset_id_160, scriptHash).ToString();
                         break;
                     case UInt256 asset_id_256: //Global Assets balance
-                        IEnumerable<Coin> coins = Plugin_trinity.api.CurrentWallet.GetCoins(accounts).Where(p => !p.State.HasFlag(CoinState.Spent) && p.Output.AssetId.Equals(asset_id_256));
+                        IEnumerable<Coin> coins = startTrinity.currentWallet.GetCoins(accounts).Where(p => !p.State.HasFlag(CoinState.Spent) && p.Output.AssetId.Equals(asset_id_256));
                         json["balance"] = coins.Sum(p => p.Output.Value).ToString();
                         json["confirmed"] = coins.Where(p => p.State.HasFlag(CoinState.Confirmed)).Sum(p => p.Output.Value).ToString();
                         break;
@@ -151,13 +130,13 @@ namespace Trinity.BlockChain
 
         public static uint getWalletBlockHeight()
         {
-            if (Plugin_trinity.api.CurrentWallet == null)
+            if (startTrinity.currentWallet == null)
             {
                 throw new RpcException(-400, "Wallet didn't open.");
             }
             else
             {
-                return (Plugin_trinity.api.CurrentWallet.WalletHeight > 0)? Plugin_trinity.api.CurrentWallet.WalletHeight-1 : 0;
+                return (startTrinity.currentWallet.WalletHeight > 0)? startTrinity.currentWallet.WalletHeight-1 : 0;
             }            
         }
 
@@ -185,32 +164,9 @@ namespace Trinity.BlockChain
         public static JObject sendRawTransaction(string trans)
         {
             Transaction tx = Transaction.DeserializeFrom(trans.HexToBytes());
-            RelayResultReason reason = Plugin_trinity.api.NeoSystem.Blockchain.Ask<RelayResultReason>(tx).Result;
+            RelayResultReason reason = startTrinity.NeoSystem.Blockchain.Ask<RelayResultReason>(tx).Result;
             return GetRelayResult(reason);
         }
-
-        /*
-        public static string sign(string data)
-        {
-            byte[] raw, signedData = null;
-
-            raw = Encoding.UTF8.GetBytes(data);  //input as string
-            //raw = data.HexToBytes(); //input as hex
-            //UInt160 addressHash = comboBox1.Text.ToScriptHash();
-            //var account = Plugin_trinity.api.CurrentWallet.GetAccount(addressHash);
-            var account = Plugin_trinity.api.CurrentWallet.GetAccounts().FirstOrDefault();           
-            var keys = account.GetKey();
-            try
-            {
-                signedData = Crypto.Default.Sign(raw, keys.PrivateKey, keys.PublicKey.EncodePoint(false).Skip(1).ToArray());
-            }
-            catch (Exception err)
-            {
-                return null;
-            }
-            return signedData?.ToHexString();
-        }
-        */
 
         public static byte[] GetPublicKeyFromPrivateKey(byte[] privateKey)
         {
@@ -281,28 +237,6 @@ namespace Trinity.BlockChain
             var num2 = new BigInteger(b2);
             var hash = sha256.ComputeHash(message);
             return ecdsa.VerifySignature(hash, num1, num2);
-            //var PublicKey = ThinNeo.Cryptography.ECC.ECPoint.DecodePoint(pubkey, ThinNeo.Cryptography.ECC.ECCurve.Secp256r1);
-            //var usepk = PublicKey.EncodePoint(false).Skip(1).ToArray();
-
-            ////byte[] first = { 0x45, 0x43, 0x53, 0x31, 0x20, 0x00, 0x00, 0x00 };
-            ////usepk = first.Concat(usepk).ToArray();
-
-            ////using (System.Security.Cryptography.CngKey key = System.Security.Cryptography.CngKey.Import(usepk, System.Security.Cryptography.CngKeyBlobFormat.EccPublicBlob))
-            ////using (System.Security.Cryptography.ECDsaCng ecdsa = new System.Security.Cryptography.ECDsaCng(key))
-
-            //using (var ecdsa = System.Security.Cryptography.ECDsa.Create(new System.Security.Cryptography.ECParameters
-            //{
-            //    Curve = System.Security.Cryptography.ECCurve.NamedCurves.nistP256,
-            //    Q = new System.Security.Cryptography.ECPoint
-            //    {
-            //        X = usepk.Take(32).ToArray(),
-            //        Y = usepk.Skip(32).ToArray()
-            //    }
-            //}))
-            //{
-            //    var hash = sha256.ComputeHash(message);
-            //    return ecdsa.VerifyHash(hash, signature);
-            //}
         }
 
         ///<summary>
