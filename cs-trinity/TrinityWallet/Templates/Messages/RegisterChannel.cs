@@ -37,9 +37,6 @@ namespace Trinity.TrinityWallet.Templates.Messages
         public string AssetType { get; set; }
         public double Deposit { get; set; }
         public string Comments { get; set; }
-
-        // Just for RegisterChannelFail
-        public string OriginalMessage { get; set; }
     }
 
     [MessagePackObject(keyAsPropertyName: true)]

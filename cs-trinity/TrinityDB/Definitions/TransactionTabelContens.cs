@@ -29,30 +29,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MessagePack;
 
-using Neo.IO.Data.LevelDB;
-using Trinity.TrinityDB.Definitions;
+using Trinity.TrinityWallet.Templates.Definitions;
 
-namespace Trinity.TrinityDB
+namespace Trinity.TrinityDB.Definitions
 {
-    /// <summary>
-    /// record the transaction record by channel
-    /// </summary>
-    public class TransactionModel : BaseModel
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class TransactionTabelContens
     {
-        private readonly byte[] group;
+        public UInt64 nonce;
+        public string monitorTxId;
+        public FundingSignTx founder;
+        public CommitmentSignTx commitment;// { get; set; }
+        public RevocableDeliverySignTx revocableDelivery;// { get; set; }
+    }
 
-        public SliceBuilder record => SliceBuilder.Begin(ModelPrefix.MPTransaction).Add(this.group);
-        public SliceBuilder txid => SliceBuilder.Begin(ModelPrefix.MPTransactionTxId);//.Add(this.group);
-
-        /// <summary>
-        /// Default Constructor
-        /// </summary>
-        /// <param name="path"></param>
-        public TransactionModel(string path, string channel) : base(path)
-        {
-            this.group = channel.ToHashBytes();
-        }
-        
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class TransactionTabelSummary
+    {
+        public UInt64 nonce;// { get; set; }
+        public string channel;// { get; set; }
     }
 }

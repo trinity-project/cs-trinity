@@ -29,9 +29,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using Trinity.Network.TCP;
-
-
+using Trinity.TrinityWallet.Templates.Definitions;
+using Trinity.TrinityWallet.Templates.Messages;
+using Trinity.ChannelSet;
 
 namespace Trinity.TrinityWallet.TransferHandler
 {
@@ -47,6 +49,15 @@ namespace Trinity.TrinityWallet.TransferHandler
         private string MessageName => typeof(TMessage).Name;
         protected TSHandler SHandler;
         protected TFHandler FHandler;
+
+        private TrinityTcpClient client;
+        public Channel channelDbInterface;
+
+        private string pubKey;
+        private string peerPubKey;
+
+        // Record current Header
+        public TransactionHeader header;
 
         /// <summary>
         /// Virtual Method sets. Should be overwritten in child classes.
@@ -76,6 +87,11 @@ namespace Trinity.TrinityWallet.TransferHandler
         {
         }
 
+        public TransferHandler(string message)
+        {
+            this.Request = message.Deserialize<TMessage>();
+        }
+
         public virtual TValue GetHeaderValue<TValue>(string name)
         {
             return this.Request.GetAttribute<TMessage, TValue>(name);
@@ -98,10 +114,56 @@ namespace Trinity.TrinityWallet.TransferHandler
         {
             if (null != msg) {
                 this.Request = msg.Deserialize<TMessage>();
+                this.header = msg.Deserialize<TransactionHeader>();
+                this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
                 return true;
             }
 
             return false;
+        }
+
+        public virtual bool Handle()
+        {
+            return true;
+        }
+
+        public void SetClient(TrinityTcpClient client)
+        {
+            this.client = client;
+        }
+
+        public TrinityTcpClient GetClient()
+        {
+            return this.client;
+        }
+
+        public void ParsePubkeyPair(string uri, string peerUri)
+        {
+            this.pubKey = uri.Split('@').First();
+            this.peerPubKey = peerUri.Split('@').First();
+        }
+
+        public string GetPubKey()
+        {
+            return this.pubKey;
+        }
+
+        public string GetPeerPubKey()
+        {
+            return this.peerPubKey;
+        }
+
+        public void SetChannelInterface(string uri, string peerUri, string channel, string asset)
+        {
+            if (null == this.channelDbInterface)
+            {
+                this.channelDbInterface = new Channel(asset, uri, peerUri, channel);
+            } 
+        }
+
+        public Channel GetChannelInterface()
+        {
+            return this.channelDbInterface;
         }
 
         /// <summary>
@@ -113,29 +175,29 @@ namespace Trinity.TrinityWallet.TransferHandler
         private readonly int Role_3 = 3;
         private readonly int Role_Fail = -1;
 
-        public bool IsFailRole(int Role)
+        public bool IsFailRole(int role)
         {
-            return Role_0 > Role || Role_3 < Role;
+            return Role_0 > role || Role_3 < role;
         }
 
-        public bool IsFounderRoleZero(int role)
+        public bool IsRole0(int role)
         {
-            return Role_0 == role;
+            return role.Equals(Role_0);
         }
 
-        public bool IsPartnerRoleZero(int role)
+        public bool IsRole1(int role)
         {
-            return Role_1 == role;
+            return role.Equals(Role_1);
         }
 
-        public bool IsFounderRoleOne(int role)
+        public bool IsRole2(int role)
         {
-            return Role_2 == role;
+            return role.Equals(Role_2);
         }
 
-        public bool IsPartnerRoleOne(int role)
+        public bool IsRole3(int role)
         {
-            return Role_3 == role;
+            return role.Equals(Role_3);
         }
     }
 }

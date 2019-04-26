@@ -43,5 +43,7 @@ namespace Trinity.ChannelSet.Definitions
 
         CLOSING = 0x30,
         CLOSED = 0x31,
+
+        ERROR = 0xFF
     }
 }

@@ -32,6 +32,13 @@ using System.Text;
 using System.Threading.Tasks;
 using MessagePack;
 
+using Neo;
+using Neo.Wallets;
+using Neo.Cryptography.ECC;
+using Neo.SmartContract;
+
+using Trinity.TrinityWallet.Templates.Definitions;
+
 namespace Trinity.TrinityWallet
 {
     public static class Utils
@@ -76,6 +83,75 @@ namespace Trinity.TrinityWallet
         public static TMessage Deserialize<TMessage>(this string msg)
         {
             return MessagePackSerializer.Deserialize<TMessage>(MessagePackSerializer.FromJson(msg));
+        }
+
+        /////////////////////////////////////////////////////////////////////////////
+        ///
+        public static UInt160 ToScriptHash(this string pubKey)
+        {
+            ECPoint ECPointPublicKey = ECPoint.DecodePoint(pubKey.HexToBytes(), ECCurve.Secp256r1);
+            UInt160 ScriptHash = Contract.CreateSignatureRedeemScript(ECPointPublicKey).ToScriptHash();
+            return ScriptHash;
+        }
+
+        /////////////////////////////////////////////////////////////////////////////
+        ///
+        public static string ToAssetId(this string assetType, bool isTestNet=true)
+        {
+            if (isTestNet)
+            {
+                return ToAssetIDTestNet(assetType);
+            }
+            else
+            {
+                return ToAssetIDMainNet(assetType);
+            }
+        }
+
+        private static string ToAssetIDTestNet(string assetType)
+        {
+            switch (assetType.ToUpper())
+            {
+                case AssetTypeTemplate.NEO:
+                    return AssetIDTemplate.NEO;
+                case AssetTypeTemplate.GAS:
+                    return AssetIDTemplate.GAS;
+                case AssetTypeTemplate.TNC:
+                    return AssetIDTemplate.TNC;
+                default:
+                    return null;
+            }
+        }
+
+        private static string ToAssetIDMainNet(string assetType)
+        {
+            switch (assetType.ToUpper())
+            {
+                case AssetTypeTemplate.NEO:
+                    return AssetIDTemplateMainNet.NEO;
+                case AssetTypeTemplate.GAS:
+                    return AssetIDTemplateMainNet.GAS;
+                case AssetTypeTemplate.TNC:
+                    return AssetIDTemplateMainNet.TNC;
+                default:
+                    return null;
+            }
+        }
+
+        public static string ToAssetType(this string assetId)
+        {
+            switch (assetId)
+            {
+                case AssetIDTemplate.NEO:
+                    return AssetTypeTemplate.NEO;
+                case AssetIDTemplate.GAS:
+                    return AssetTypeTemplate.GAS;
+                case AssetIDTemplate.TNC:
+                case AssetIDTemplateMainNet.TNC:
+                    return AssetTypeTemplate.TNC;
+                default:
+                    return null;
+            }
         }
     }
 }

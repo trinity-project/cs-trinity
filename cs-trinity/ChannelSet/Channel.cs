@@ -41,7 +41,7 @@ using Trinity.TrinityWallet;
 
 namespace Trinity.ChannelSet
 {
-    class Channel
+    public class Channel
     {
         private string uri;
         private string peerUri;
@@ -134,18 +134,23 @@ namespace Trinity.ChannelSet
             return this.TableTransaction.Db.Get(this.TableTransaction.txid, txid);
         }
 
-        public List<ChannelTableContents> GetTransactionList()
+        public List<TransactionTabelContens> GetTransactionList()
         {
             // Fuzzy get
-            return this.TableTransaction.Db.FuzzyGet<ChannelTableContents>(this.TableTransaction.record);
+            return this.TableTransaction.Db.FuzzyGet<TransactionTabelContens>(this.TableTransaction.record);
         }
 
-        public void AddTransaction(UInt64 nonce, ChannelTableContents value)
+        public void AddTransaction(UInt64 nonce, TransactionTabelContens value)
         {
             this.TableTransaction.Db.Add(this.TableTransaction.record, nonce.ToString(), value);
         }
 
-        public void UpdateTransaction(UInt64 nonce, ChannelTableContents value)
+        public void AddTransaction(string txId, TransactionTabelSummary value)
+        {
+            this.TableTransaction.Db.Add(this.TableTransaction.record, txId, value);
+        }
+
+        public void UpdateTransaction(UInt64 nonce, TransactionTabelContens value)
         {
             this.TableTransaction.Db.Update(this.TableTransaction.record, nonce.ToString(), value);
         }

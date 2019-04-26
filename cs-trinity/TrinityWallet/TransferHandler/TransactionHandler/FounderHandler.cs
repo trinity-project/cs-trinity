@@ -24,10 +24,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 using System;
+
+using Neo.IO.Json;
+using Neo.Wallets;
+using Neo.IO.Data.LevelDB;
+
+using Trinity.TrinityWallet;
+using Trinity.TrinityDB.Definitions;
 using Trinity.BlockChain;
 using Trinity.TrinityWallet.Templates.Definitions;
 using Trinity.TrinityWallet.Templates.Messages;
-using Neo.IO.Json;
 
 namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 {
@@ -36,8 +42,13 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
     /// </summary>
     public class FounderHandler : TransferHandler<Founder, FounderSignHandler, FounderFailHandler>
     {
+        private readonly double Deposit;
+        private readonly UInt64 Nonce;
+
         public int RoleIndex;
-        public JObject FundingTx;
+        public JObject fundingTx;
+        public JObject commTx;
+        public JObject rdTx;
 
         public FounderHandler() : base()
         {
@@ -51,6 +62,7 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
                 }
             };
         }
+        
 
         public FounderHandler(string sender, string receiver, string channel, string asset, 
             string magic, UInt64 nonce, double deposit, int role=0) : base()
@@ -72,22 +84,35 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
                     Founder = new FundingTx(),
                     Commitment = new CommitmentTx(),
                     RevocableDelivery = new RevocableDeliveryTx()
-                },
+                }
             };
-            this.Request.MessageBody.SetAttribute("AssetType", asset);
-            this.Request.MessageBody.SetAttribute("Deposit", deposit);
-            this.Request.MessageBody.SetAttribute("RoleIndex", role);
+
+            this.ParsePubkeyPair(sender, receiver);
+            this.SetChannelInterface(sender, receiver, channel, asset);
         }
 
-        public override bool Handle(string msg)
+        public FounderHandler(string message) : base(message)
         {
-            base.Handle(msg);
+            this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
+                this.Request.ChannelName, this.Request.MessageBody.AssetType);
+        }
 
-            if (!this.SignFundingTx())
+        public override bool Handle()
+        {
+            if (!base.Handle())
             {
                 return false;
             }
 
+            // MessageType is not Founder
+            if (!(this.Request is Founder))
+            {
+                return false;
+            }
+
+            // judge the role
+            //if (this.IsRole0())
 
             return true;
         }
@@ -108,20 +133,36 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             return true;
         }
 
-        public bool SignFundingTx()
+        private bool SignFundingTx()
         {
             // Sign C1A / C1B by role index
-            if (this.IsFounderRoleZero(this.RoleIndex))
+            if (this.IsRole0(this.RoleIndex))
             {
+                string deposit = this.Request.MessageBody.Deposit.ToString();
                 // Because this is triggered by the RegisterChannel, the founder of this channel is value of Receiver;
-                this.FundingTx = Funding.createFundingTx("", "0", "", "0", "");
+                this.fundingTx = Funding.createFundingTx(this.GetPubKey(), deposit,
+                    this.GetPeerPubKey(), deposit, this.Request.MessageBody.AssetType.ToAssetId());
                 return true;
             }
-            else if (this.IsPartnerRoleOne(this.RoleIndex))
+            else if (this.IsRole1(this.RoleIndex))
             {
                 // TODO: Read from the database
-                this.FundingTx = null;
-                return true;
+                Slice content = this.GetChannelInterface().GetTransaction(this.Request.TxNonce);
+                if (default != content)
+                {
+                    TransactionTabelContens transactionContent = content.ToString().Deserialize<TransactionTabelContens>();
+                    this.fundingTx["txData"] = transactionContent.founder.originalData.txData;
+                    this.fundingTx["txId"] = transactionContent.founder.originalData.txId;
+                    this.fundingTx["witness"] = transactionContent.founder.originalData.witness;
+                    this.fundingTx["addressFunding"] = transactionContent.founder.originalData.addressFunding;
+                    this.fundingTx["scriptFunding"] = transactionContent.founder.originalData.scriptFunding;
+                    return true;
+                }
+                else {
+                    this.fundingTx = null;
+                }
+
+                return false;
             }
             else
             {
@@ -131,38 +172,85 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             return false;
         }
 
-        //public override void GetBodyAttribute<TValue>(string name, out TValue value)
-        //{
-        //    this.GetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, out value);
-        //}
-
-        //public override void SetBodyAttribute<TValue>(string name, TValue value)
-        //{
-        //    this.SetMessageAttribute<FounderBody, TValue>(this.Request.MessageBody, name, value);
-        //}
-
-        public void SetCommitment()
+        public void SignAndSetMessageAttribute()
         {
-            //this.SetBodyAttribute("Commitment", new CommitmentScript {
-            //    txData = "1",
-            //    addressRSMC = "2",
-            //    scriptRSMC = "3",
-            //    txId = "4",
-            //    witness = "script"
-            //});
+            string deposit = this.Request.MessageBody.Deposit.ToString();
 
-            this.Request.MessageBody.Commitment.SetAttribute("txId", "Testtxid-222222222222");
-            Console.WriteLine("txID is {0}", this.Request.MessageBody.Commitment.txId);
+            if (!this.SignFundingTx())
+            {
+                return;
+            }
+            
+            this.commTx = Funding.createCTX(this.fundingTx["addressFunding"].ToString(), deposit,
+                deposit, this.GetPubKey(), this.GetPeerPubKey(),
+                this.fundingTx["scriptFunding"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
 
-            //this.Request.MessageBody.Commitment.Set(new CommitmentScript {
-            //    txId = "TestTxID-11111"
-            //});
-            //this.Request.MessageBody.Commitment = new CommitmentScript
-            //{
-            //    txId = "TestTxID-11111"
-            //};
+            string address = this.GetPubKey().ToScriptHash().ToAddress();
+            this.rdTx = Funding.createRDTX(this.commTx["addressRSMC"].ToString(), address,
+                this.Request.MessageBody.Deposit.ToString(), this.commTx["txId"].ToString(),
+                this.commTx["scriptRSMC"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
 
-            Console.WriteLine(this.ToJson());
+            this.Request.MessageBody.Founder.SetAttribute("txId", this.fundingTx["txId"].ToString());
+            this.Request.MessageBody.Founder.SetAttribute("txData", this.fundingTx["txData"].ToString());
+            this.Request.MessageBody.Founder.SetAttribute("addressRSMC", this.fundingTx["addressFunding"].ToString());
+            this.Request.MessageBody.Founder.SetAttribute("scriptRSMC", this.fundingTx["scriptFunding"].ToString());
+            this.Request.MessageBody.Founder.SetAttribute("witness", this.fundingTx["witness"].ToString());
+
+            this.Request.MessageBody.Commitment.SetAttribute("txId", this.commTx["txId"].ToString());
+            this.Request.MessageBody.Commitment.SetAttribute("txData", this.commTx["txData"].ToString());
+            this.Request.MessageBody.Commitment.SetAttribute("addressRSMC", this.commTx["addressRSMC"].ToString());
+            this.Request.MessageBody.Commitment.SetAttribute("scriptRSMC", this.commTx["scriptRSMC"].ToString());
+            this.Request.MessageBody.Commitment.SetAttribute("witness", this.commTx["witness"].ToString());
+            
+            this.Request.MessageBody.RevocableDelivery.SetAttribute("txId", this.rdTx["txId"].ToString());
+            this.Request.MessageBody.RevocableDelivery.SetAttribute("txData", this.rdTx["txData"].ToString());
+            this.Request.MessageBody.RevocableDelivery.SetAttribute("witness", this.rdTx["witness"].ToString());
+
+            // record the item to database
+            this.AddTransaction();
+        }
+
+        public void AddTransaction()
+        {
+
+            TransactionTabelContens transactionContent = new TransactionTabelContens
+            {
+                nonce = this.Request.TxNonce,
+                monitorTxId = this.commTx["txId"].ToString(),
+                founder = new FundingSignTx
+                {
+                    originalData = new FundingTx
+                    {
+                        txData = this.fundingTx["txData"].ToString(),
+                        txId = this.fundingTx["txId"].ToString(),
+                        witness = this.fundingTx["witness"].ToString(),
+                        addressFunding = this.fundingTx["addressFunding"].ToString(),
+                        scriptFunding = this.fundingTx["scriptFunding"].ToString()
+                    },
+                },
+                commitment = new CommitmentSignTx
+                {
+                    originalData = new CommitmentTx
+                    {
+                        txData = this.commTx["txData"].ToString(),
+                        txId = this.commTx["txId"].ToString(),
+                        witness = this.commTx["witness"].ToString(),
+                        addressRSMC = this.commTx["addressRSMC"].ToString(),
+                        scriptRSMC = this.commTx["scriptRSMC"].ToString(),
+                    },
+                },
+                revocableDelivery = new RevocableDeliverySignTx
+                {
+                    originalData = new RevocableDeliveryTx
+                    {
+                        txData = this.rdTx["txData"].ToString(),
+                        txId = this.rdTx["txId"].ToString(),
+                        witness = this.rdTx["witness"].ToString(),
+                    }
+                }
+            };
+
+            this.GetChannelInterface().AddTransaction(this.Request.TxNonce, transactionContent);
         }
     }
 
@@ -177,6 +265,16 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             this.Request.MessageBody.SetAttribute("AssetType", asset);
             this.Request.MessageBody.SetAttribute("Deposit", deposit);
             this.Request.MessageBody.SetAttribute("RoleIndex", role);
+
+            this.ParsePubkeyPair(sender, receiver);
+            this.SetChannelInterface(sender, receiver, channel, asset);
+        }
+
+        public FounderSignHandler(string message) : base(message)
+        {
+            this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
+                this.Request.ChannelName, this.Request.MessageBody.AssetType);
         }
 
         public override bool Handle(string msg)
@@ -208,6 +306,16 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             this.Request.MessageBody.SetAttribute("AssetType", asset);
             this.Request.MessageBody.SetAttribute("Deposit", deposit);
             this.Request.MessageBody.SetAttribute("RoleIndex", role);
+
+            this.ParsePubkeyPair(sender, receiver);
+            this.SetChannelInterface(sender, receiver, channel, asset);
+        }
+
+        public FounderFailHandler(string message) : base(message)
+        {
+            this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
+                this.Request.ChannelName, this.Request.MessageBody.AssetType);
         }
 
         public override bool Handle(string msg)

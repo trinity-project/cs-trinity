@@ -25,12 +25,15 @@ SOFTWARE.
 */
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography;
 
 using Trinity.Network.TCP;
 using Trinity.BlockChain;
 using Trinity.ChannelSet;
+using Trinity.ChannelSet.Definitions;
+using Trinity.TrinityDB.Definitions;
 using Trinity.TrinityWallet.Templates.Messages;
 using Trinity.TrinityWallet.TransferHandler;
 
@@ -42,6 +45,8 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
     /// </summary>
     public class RegisterChannelHandler : TransferHandler<RegisterChannel, FounderHandler, RegisterChannelFailHandler>
     {
+        private readonly double Deposit;
+
         // Default Constructor
         public RegisterChannelHandler(): base()
         {
@@ -58,21 +63,51 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
         /// <param name="nonce"></param>
         /// <param name="deposit"></param>
         public RegisterChannelHandler(string sender, string receiver, string channel, string asset, string magic, 
-            UInt64 nonce, double deposit)
+            double deposit) : base()
         {
-            // TODO: need to be recorded in the database?????
-            this.Request.SetAttribute("ChannelName", Channel.NewChannel(sender, receiver));
-            this.Request.MessageBody.SetAttribute("AssetType", asset);
-            this.Request.MessageBody.SetAttribute("Deposit", deposit);
+            this.Deposit = deposit;
+
+            if (null == channel)
+            {
+                channel = Channel.NewChannel(sender, receiver);
+            }
+
+            this.Request = new RegisterChannel
+            {
+                Sender = sender,
+                Receiver = receiver,
+                ChannelName = channel,
+                AssetType = asset,
+                NetMagic = magic,
+                MessageBody = new RegisterChannelBody
+                {
+                    AssetType = asset,
+                    Deposit = deposit,
+                }
+            };
+
+            this.ParsePubkeyPair(sender, receiver);
+            this.SetChannelInterface(sender, receiver, channel, asset);
+        }
+
+        public RegisterChannelHandler(string message) : base(message)
+        {
+            this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
+                this.Request.ChannelName, this.Request.MessageBody.AssetType);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override bool Handle(string msg)
+        public override bool Handle()
         {
-            base.Handle(msg);
+            if (!base.Handle())
+            {
+                return false;
+            }
+
             if (!(this.Request is RegisterChannel))
             {
                 return false;
@@ -92,52 +127,116 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 
         public override void FailStep()
         {
-            this.FHandler = null;
-            
+            this.FHandler = new RegisterChannelFailHandler(
+                this.header.Receiver, this.header.Sender, this.header.ChannelName,
+                this.Request.MessageBody.AssetType, this.header.NetMagic, this.Request.MessageBody);
+            this.FHandler.MakeTransaction(this.GetClient());
+
+            ChannelTableContents content = new ChannelTableContents
+            {
+                channel = this.Request.ChannelName,
+                state = EnumChannelState.ERROR
+            };
+            this.GetChannelInterface().AddChannel(this.Request.ChannelName, content);
         }
 
         public override void SucceedStep()
         {
-            ;
+            this.SHandler = new FounderHandler(
+                this.header.Receiver, this.header.Sender, this.header.ChannelName,
+                this.Request.MessageBody.AssetType, this.header.NetMagic, 0, this.Request.MessageBody.Deposit);
+            this.SHandler.MakeTransaction(this.GetClient());
+
+            // Add channel to database
+            this.AddChannel();
         }
 
-        private string GenerateChannelName()
+        public void AddChannel()
         {
-            MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
-            byte[] SBytes = md5.ComputeHash(Encoding.ASCII.GetBytes("" + DateTime.Now.ToString()));
-
-            StringBuilder nb = new StringBuilder();
-            for (int i = 0; i < SBytes.Length; i++)
+            ChannelTableContents content = new ChannelTableContents
             {
-                nb.AppendFormat("{0:x2}", SBytes[i]);
-            }
-
-            byte[] RBytes = md5.ComputeHash(Encoding.ASCII.GetBytes("" + DateTime.Now.ToString()));
-            for (int i = 0; i < RBytes.Length; i++)
-            {
-                nb.AppendFormat("{0:x2}", RBytes[i]);
-            }
-
-            return nb.ToString();
+                channel = this.Request.ChannelName,
+                asset = this.Request.MessageBody.AssetType,
+                uri = this.Request.Receiver,
+                peer = this.Request.Sender,
+                magic = this.Request.NetMagic,
+                role = EnumRole.PARTNER,
+                state = EnumChannelState.INIT,
+                alive = 0,
+                deposit = new Dictionary<string, double> {
+                    { this.Request.Receiver, this.Request.MessageBody.Deposit},
+                    { this.Request.Sender, this.Request.MessageBody.Deposit},
+                },
+                balance = new Dictionary<string, double> {
+                    { this.Request.Receiver, this.Request.MessageBody.Deposit},
+                    { this.Request.Sender, this.Request.MessageBody.Deposit},
+                }
+            };
+            this.GetChannelInterface().AddChannel(this.Request.ChannelName, content);
         }
     }
 
-    public class RegisterChannelFailHandler : TransferHandler<RegisterChannel, VoidHandler, VoidHandler>
+    public class RegisterChannelFailHandler : TransferHandler<RegisterChannelFail, VoidHandler, VoidHandler>
     {
         // Default Constructor
         public RegisterChannelFailHandler() : base()
         {
         }
 
-        public override bool Handle(string msg)
+        public RegisterChannelFailHandler(string sender, string receiver, string channel, string asset,
+            string magic, RegisterChannelBody original) : base()
         {
+            this.Request = new RegisterChannelFail
+            {
+                Sender = sender,
+                Receiver = receiver,
+                ChannelName = channel,
+                AssetType = asset,
+                NetMagic = magic,
+                MessageBody = new RegisterChannelFailBody
+                {
+                    OriginalMessage = original
+                }
+            };
+
+            this.ParsePubkeyPair(sender, receiver);
+            this.SetChannelInterface(sender, receiver, channel, asset);
+        }
+
+        public RegisterChannelFailHandler(string message) : base(message)
+        {
+            this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
+                this.Request.ChannelName, this.Request.MessageBody.OriginalMessage.AssetType);
+        }
+
+        public override bool Handle()
+        {
+            if (!base.Handle())
+            {
+                return false;
+            }
+
+            if (!(this.Request is RegisterChannelFail))
+            {
+                return false;
+            }
+            else
+            {
+                ChannelTableContents content = new ChannelTableContents
+                {
+                    channel = this.Request.ChannelName,
+                    state = EnumChannelState.ERROR
+                };
+                this.GetChannelInterface().UpdateChannel(this.Request.ChannelName, content);
+                Console.WriteLine("Failed to register channel {0}", this.Request.ChannelName);
+            }
             return false;
         }
 
         public override void FailStep()
         {
-            this.FHandler = null;
-
+            throw new NotImplementedException();
         }
 
         public override void SucceedStep()
