@@ -522,14 +522,8 @@ namespace Trinity.BlockChain
         {
             string OpCode = "";
             string Value1 = BigInteger.Parse(Value).ToByteArray().ToHexString();
-            Console.WriteLine("Value1:");
-            Console.WriteLine(Value1);
             string ScriptHashFrom = ToScriptHash1(AddressFrom).ToArray().ToHexString();
-            Console.WriteLine("ScriptHashFrom:");
-            Console.WriteLine(ScriptHashFrom);
             string ScriptHashTo = ToScriptHash1(AddressTo).ToArray().ToHexString();
-            Console.WriteLine("ScriptHashTo:");
-            Console.WriteLine(ScriptHashTo);
             string method = StringToHexString("transfer");            //7472616e73666572
             string[] invoke_args = { Value1, ScriptHashTo, ScriptHashFrom };
             foreach (var item in invoke_args)
@@ -537,15 +531,11 @@ namespace Trinity.BlockChain
                 string[] args = { intToHex(item.Length / 2), item };
                 OpCode += string.Join("", args);
             }
-            Console.WriteLine("OpCode:");
-            Console.WriteLine(OpCode);
             OpCode += "53";  // PUSH3
             OpCode += "c1";  // PACK
             OpCode += intToHex(method.Length / 2);
             OpCode += method;
             OpCode += "67";  // APPCALL
-            Console.WriteLine("AssetID:");
-            Console.WriteLine(AssetID.HexToBytes().Reverse().ToArray().ToHexString());
             OpCode += AssetID.HexToBytes().Reverse().ToArray().ToHexString();
             OpCode += "f1";  // THROWIFNOT
 
@@ -565,16 +555,10 @@ namespace Trinity.BlockChain
         ///</returns>
         public static JObject createRSMCContract(UInt160 HashSelf, string PubkeySelf, UInt160 HashOther, string PubkeyOther, string Timestamp)
         {
-            //string Timestamp = t.ToString();
-            Console.WriteLine("Timestamp:");
             Timestamp = NeoInterface.StringToHexString(Timestamp);
-            Console.WriteLine(Timestamp);
             byte[] TimestampByte = Encoding.UTF8.GetBytes(Timestamp);
-            Console.WriteLine(TimestampByte.Length);
             string length = NeoInterface.intToHex(TimestampByte.Length / 2).PadLeft(2, '0');
-            Console.WriteLine(length);
             string magicTimestamp = length + Timestamp;
-            Console.WriteLine(magicTimestamp);
 
             string contractTemplate = "5dc56b6c766b00527ac46c766b51527ac46c766b52527ac461{0}6c766b53527ac4616829537" +
                                       "97374656d2e457865637574696f6e456e67696e652e476574536372697074436f6e7461696e65726c766b5452" +

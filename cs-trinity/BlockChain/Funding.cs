@@ -63,19 +63,8 @@ namespace Trinity.BlockChain
         {
             Contract contract = NeoInterface.CreateMultiSigContract(PublicKeySelf, PublicKeyOther);
             string contractAddress = NeoInterface.ToAddress1(contract.ScriptHash);
-            Console.WriteLine("contract：");
-            Console.WriteLine(contract.GetHashCode());
-            Console.WriteLine(contract.Script.ToHexString());
-            Console.WriteLine("地址hash：");
-            Console.WriteLine(contract.ScriptHash);
-            Console.WriteLine("合约地址：");
-            Console.WriteLine(NeoInterface.ToAddress1(contract.ScriptHash));
-
-
-            // 双方Scripthash
             UInt160 ScriptHashSelf = NeoInterface.PublicKeyToScriptHash(PublicKeySelf);
             UInt160 ScriptHashOther = NeoInterface.PublicKeyToScriptHash(PublicKeyOther);
-            // 双方地址
             string AddressSelf = NeoInterface.ToAddress1(ScriptHashSelf);
             string AddressOther = NeoInterface.ToAddress1(ScriptHashOther);
             //string address = script_hash.ToAddress();       //无法获取gui的参数，暂不使用             
