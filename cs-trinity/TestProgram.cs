@@ -46,7 +46,11 @@ namespace Trinity
     {
         public static void TempTest()
         {
-            Channel channel = new Channel("testChannel-xxxx", "TNC", "02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.5:8089");
+            string channelName = Channel.NewChannel("02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.5:8089",
+                "02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.6:8089");
+            Channel channel = new Channel(channelName, "TNC", 
+                "02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.5:8089",
+                "02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.6:8089");
             TransactionTabelSummary txcontent = new TransactionTabelSummary
             {
                 nonce = 0,
@@ -56,6 +60,12 @@ namespace Trinity
             channel.AddTransaction("123456789", txcontent);
             TransactionTabelSummary content = channel.GetTransaction("123456789");
             Console.WriteLine("type = {0}, channel = {1}, nonce = {2}", content.txType, content.channel, content.nonce);
+
+            TransactionTabelContens txtcontent = new TransactionTabelContens();
+            channel.AddTransaction(1, txtcontent);
+
+            ChannelTableContents channelContent = new ChannelTableContents();
+            channel.AddChannel(channelName, channelContent);
 
             Console.ReadKey();
         }

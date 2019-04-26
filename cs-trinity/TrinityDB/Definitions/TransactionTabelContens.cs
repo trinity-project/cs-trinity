@@ -42,7 +42,10 @@ namespace Trinity.TrinityDB.Definitions
         public string monitorTxId;
         public FundingSignTx founder;
         public CommitmentSignTx commitment;// { get; set; }
+        public CommitmentSignTx peerCommitment;// { get; set; }
         public RevocableDeliverySignTx revocableDelivery;// { get; set; }
+        public RevocableDeliverySignTx peerRevocableDelivery;// { get; set; }
+
     }
 
     [MessagePackObject(keyAsPropertyName: true)]

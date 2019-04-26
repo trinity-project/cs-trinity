@@ -43,6 +43,7 @@ using VMArray = Neo.VM.Types.Array;
 using Neo.VM;
 using Neo.Cryptography.ECC;
 
+
 namespace Trinity.BlockChain
 {
     public class NeoInterface

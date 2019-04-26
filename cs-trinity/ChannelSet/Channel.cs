@@ -144,13 +144,25 @@ namespace Trinity.ChannelSet
                 return txContent.ToString().Deserialize<TransactionTabelContens>();
             }
 
-            return default;
+            return null;
         }
 
         public TransactionTabelSummary GetTransaction(string txid)
         {
             Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid);
             if (null != txContent.ToString())
+            {
+                return txContent.ToString().Deserialize<TransactionTabelSummary>();
+            }
+
+            return default;
+        }
+
+        public TransactionTabelSummary TryGetTransaction(UInt64 nonce)
+        {
+            this.TableTransaction.Db.TryGet(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()),
+                nonce.ToString(), out Slice txContent);
+            if (default != txContent)
             {
                 return txContent.ToString().Deserialize<TransactionTabelSummary>();
             }
