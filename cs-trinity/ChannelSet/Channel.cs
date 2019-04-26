@@ -76,9 +76,15 @@ namespace Trinity.ChannelSet
             this.TableTransaction = new TransactionModel(dbPath, channel);
         }
 
-        public Slice GetChannel(string channel)
+        public ChannelTableContents GetChannel(string channel)
         {
-            return this.TableChannel.Db.Get(this.TableChannel.bothKeyword, channel);
+            Slice channelContent = this.TableChannel.Db.Get(this.TableChannel.bothKeyword, channel);
+            if (default != channelContent)
+            {
+                return channelContent.ToString().Deserialize<ChannelTableContents>();
+            }
+
+            return default;
         }
 
         public List<ChannelTableContents> GetChannelListOfThisWallet()
@@ -103,9 +109,15 @@ namespace Trinity.ChannelSet
         }
 
         // channel summary info
-        public Slice GetChannelSummary(string channel)
+        public ChannelSummaryContents GetChannelSummary(string channel)
         {
-            return this.TableChannel.Db.Get(this.TableChannel.summary, channel);
+            Slice channelSummaryContent = this.TableChannel.Db.Get(this.TableChannel.summary, channel);
+            if (default != channelSummaryContent)
+            {
+                return channelSummaryContent.ToString().Deserialize<ChannelSummaryContents>();
+            }
+
+            return default;
         }
 
         public void AddChannelSummary(string channel, ChannelSummaryContents value)
@@ -118,20 +130,32 @@ namespace Trinity.ChannelSet
             this.TableChannel.Db.Update(this.TableChannel.summary, channel, value);
         }
 
-        private void DeleteChannelSummary(string channel)
+        public void DeleteChannelSummary(string channel)
         {
             this.TableChannel.Db.Delete(this.TableChannel.summary, channel);
         }
 
         // transaction info
-        public Slice GetTransaction(UInt64 nonce)
+        public TransactionTabelContens GetTransaction(UInt64 nonce)
         {
-            return this.TableTransaction.Db.Get(this.TableTransaction.record, nonce.ToString());
+            Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.record, nonce.ToString());
+            if (default != txContent)
+            {
+                return txContent.ToString().Deserialize<TransactionTabelContens>();
+            }
+
+            return default;
         }
 
-        public Slice GetTransaction(string txid)
+        public TransactionTabelSummary GetTransaction(string txid)
         {
-            return this.TableTransaction.Db.Get(this.TableTransaction.txid, txid);
+            Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.txid, txid);
+            if (default != txContent)
+            {
+                return txContent.ToString().Deserialize<TransactionTabelSummary>();
+            }
+
+            return default;
         }
 
         public List<TransactionTabelContens> GetTransactionList()
@@ -155,9 +179,14 @@ namespace Trinity.ChannelSet
             this.TableTransaction.Db.Update(this.TableTransaction.record, nonce.ToString(), value);
         }
 
-        private void DeleteTransaction(UInt64 nonce)
+        public void DeleteTransaction(UInt64 nonce)
         {
             this.TableTransaction.Db.Delete(this.TableTransaction.record, nonce.ToString());
+        }
+
+        public void DeleteTransaction(string txid)
+        {
+            this.TableTransaction.Db.Delete(this.TableTransaction.txid, txid);
         }
 
         //public bool IsFounder(string sender)

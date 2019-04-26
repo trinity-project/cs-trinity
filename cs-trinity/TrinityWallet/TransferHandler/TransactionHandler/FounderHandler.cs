@@ -45,7 +45,7 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
         private readonly double Deposit;
         private readonly UInt64 Nonce;
 
-        public int RoleIndex;
+        public UInt64 RoleIndex;
         public JObject fundingTx;
         public JObject commTx;
         public JObject rdTx;
@@ -147,10 +147,9 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             else if (this.IsRole1(this.RoleIndex))
             {
                 // TODO: Read from the database
-                Slice content = this.GetChannelInterface().GetTransaction(this.Request.TxNonce);
-                if (default != content)
+                TransactionTabelContens transactionContent = this.GetChannelInterface().GetTransaction(this.Request.TxNonce);
+                if (default != transactionContent)
                 {
-                    TransactionTabelContens transactionContent = content.ToString().Deserialize<TransactionTabelContens>();
                     this.fundingTx["txData"] = transactionContent.founder.originalData.txData;
                     this.fundingTx["txId"] = transactionContent.founder.originalData.txId;
                     this.fundingTx["witness"] = transactionContent.founder.originalData.witness;
@@ -158,7 +157,8 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
                     this.fundingTx["scriptFunding"] = transactionContent.founder.originalData.scriptFunding;
                     return true;
                 }
-                else {
+                else
+                {
                     this.fundingTx = null;
                 }
 
@@ -207,7 +207,11 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             this.Request.MessageBody.RevocableDelivery.SetAttribute("witness", this.rdTx["witness"].ToString());
 
             // record the item to database
-            this.AddTransaction();
+            if (IsRole0(this.Request.TxNonce))
+            {
+                this.AddTransaction();
+            }
+            
         }
 
         public void AddTransaction()
@@ -251,6 +255,18 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             };
 
             this.GetChannelInterface().AddTransaction(this.Request.TxNonce, transactionContent);
+        }
+
+        public void AddTransactionSummary(UInt64 nonce, string txId, string channel, EnumTxType type)
+        {
+            TransactionTabelSummary txContent = new TransactionTabelSummary
+            {
+                nonce = nonce,
+                channel = channel,
+                type = type.ToString()
+            };
+
+            this.GetChannelInterface().AddTransaction(txId, txContent);
         }
     }
 

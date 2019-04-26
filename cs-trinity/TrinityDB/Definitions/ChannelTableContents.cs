@@ -55,5 +55,6 @@ namespace Trinity.TrinityDB.Definitions
     {
         public UInt64 nonce;
         public string peer;
+        public string type;
     }
 }

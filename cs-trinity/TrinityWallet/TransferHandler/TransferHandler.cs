@@ -169,33 +169,32 @@ namespace Trinity.TrinityWallet.TransferHandler
         /// <summary>
         /// Trinity Transaction Role define here.
         /// </summary>
-        private readonly int Role_0 = 0;
-        private readonly int Role_1 = 1;
-        private readonly int Role_2 = 2;
-        private readonly int Role_3 = 3;
-        private readonly int Role_Fail = -1;
+        private readonly UInt64 Role_0 = 0;
+        private readonly UInt64 Role_1 = 1;
+        private readonly UInt64 Role_2 = 2;
+        private readonly UInt64 Role_3 = 3;
 
-        public bool IsFailRole(int role)
+        public bool IsFailRole(UInt64 role)
         {
             return Role_0 > role || Role_3 < role;
         }
 
-        public bool IsRole0(int role)
+        public bool IsRole0(UInt64 role)
         {
             return role.Equals(Role_0);
         }
 
-        public bool IsRole1(int role)
+        public bool IsRole1(UInt64 role)
         {
             return role.Equals(Role_1);
         }
 
-        public bool IsRole2(int role)
+        public bool IsRole2(UInt64 role)
         {
             return role.Equals(Role_2);
         }
 
-        public bool IsRole3(int role)
+        public bool IsRole3(UInt64 role)
         {
             return role.Equals(Role_3);
         }

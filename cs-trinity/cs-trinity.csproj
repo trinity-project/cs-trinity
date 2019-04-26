@@ -290,6 +290,7 @@
     <Compile Include="TrinityDB\ChannelModel.cs" />
     <Compile Include="TrinityDB\DBManager.cs" />
     <Compile Include="TrinityDB\Definitions\ChannelTableContents.cs" />
+    <Compile Include="TrinityDB\Definitions\EnumTxType.cs" />
     <Compile Include="TrinityDB\Definitions\ModelPrefix.cs" />
     <Compile Include="TrinityDB\Definitions\TransactionTabelContens.cs" />
     <Compile Include="TrinityDB\TransactionModel.cs" />
