@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{4FBC62ED-FE13-4FE5-B1B1-1048AB4978DF}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Trinity</RootNamespace>
     <AssemblyName>Trinity</AssemblyName>
@@ -283,6 +283,7 @@
     <Compile Include="Network\RPC\TrinityRpcServer.cs" />
     <Compile Include="Network\Utils.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="startTrinity.cs" />
     <Compile Include="TestProgram.cs" />
     <Compile Include="Properties\Settings1.cs" />
     <Compile Include="Properties\Settings1.Designer.cs" />
