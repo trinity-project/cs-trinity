@@ -64,7 +64,7 @@ namespace Trinity.ChannelSet
         /// <param name="uri"></param>
         /// <param name="peerUri"></param>
         /// <param name="channel"></param>
-        public Channel(string asset, string uri, string peerUri=null, string channel=null)
+        public Channel(string channel, string asset, string uri, string peerUri=null)
         {
             this.uri = uri;
             this.peerUri = peerUri;
@@ -95,23 +95,23 @@ namespace Trinity.ChannelSet
 
         public void AddChannel(string channel, ChannelTableContents value)
         {
-            this.TableChannel.Db.Add(this.TableChannel.bothKeyword, channel, value);
+            this.TableChannel.Db.Add(this.TableChannel.bothKeyword.Add(channel.ToBytesUtf8()), channel, value);
         }
 
         public void UpdateChannel(string channel, ChannelTableContents value)
         {
-            this.TableChannel.Db.Update(this.TableChannel.bothKeyword, channel, value);
+            this.TableChannel.Db.Update(this.TableChannel.bothKeyword.Add(channel.ToBytesUtf8()), channel, value);
         }
 
         public void DeleteChannel(string channel)
         {
-            this.TableChannel.Db.Delete(this.TableChannel.bothKeyword, channel);
+            this.TableChannel.Db.Delete(this.TableChannel.bothKeyword.Add(channel.ToBytesUtf8()), channel);
         }
 
         // channel summary info
         public ChannelSummaryContents GetChannelSummary(string channel)
         {
-            Slice channelSummaryContent = this.TableChannel.Db.Get(this.TableChannel.summary, channel);
+            Slice channelSummaryContent = this.TableChannel.Db.Get(this.TableChannel.summary.Add(channel.ToBytesUtf8()), channel);
             if (default != channelSummaryContent)
             {
                 return channelSummaryContent.ToString().Deserialize<ChannelSummaryContents>();
@@ -122,23 +122,23 @@ namespace Trinity.ChannelSet
 
         public void AddChannelSummary(string channel, ChannelSummaryContents value)
         {
-            this.TableChannel.Db.Add(this.TableChannel.summary, channel, value);
+            this.TableChannel.Db.Add(this.TableChannel.summary.Add(channel.ToBytesUtf8()), channel, value);
         }
 
         public void UpdateChannelSummary(string channel, ChannelSummaryContents value)
         {
-            this.TableChannel.Db.Update(this.TableChannel.summary, channel, value);
+            this.TableChannel.Db.Update(this.TableChannel.summary.Add(channel.ToBytesUtf8()), channel, value);
         }
 
         public void DeleteChannelSummary(string channel)
         {
-            this.TableChannel.Db.Delete(this.TableChannel.summary, channel);
+            this.TableChannel.Db.Delete(this.TableChannel.summary.Add(channel.ToBytesUtf8()), channel);
         }
 
         // transaction info
         public TransactionTabelContens GetTransaction(UInt64 nonce)
         {
-            Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.record, nonce.ToString());
+            Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString());
             if (default != txContent)
             {
                 return txContent.ToString().Deserialize<TransactionTabelContens>();
@@ -149,7 +149,18 @@ namespace Trinity.ChannelSet
 
         public TransactionTabelSummary GetTransaction(string txid)
         {
-            Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.txid, txid);
+            Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid);
+            if (null != txContent.ToString())
+            {
+                return txContent.ToString().Deserialize<TransactionTabelSummary>();
+            }
+
+            return default;
+        }
+
+        public TransactionTabelSummary TryGetTransaction(string txid)
+        {
+            this.TableTransaction.Db.TryGet(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid, out Slice txContent);
             if (default != txContent)
             {
                 return txContent.ToString().Deserialize<TransactionTabelSummary>();
@@ -166,27 +177,27 @@ namespace Trinity.ChannelSet
 
         public void AddTransaction(UInt64 nonce, TransactionTabelContens value)
         {
-            this.TableTransaction.Db.Add(this.TableTransaction.record, nonce.ToString(), value);
+            this.TableTransaction.Db.Add(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString(), value);
         }
 
-        public void AddTransaction(string txId, TransactionTabelSummary value)
+        public void AddTransaction(string txid, TransactionTabelSummary value)
         {
-            this.TableTransaction.Db.Add(this.TableTransaction.record, txId, value);
+            this.TableTransaction.Db.Add(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid, value);
         }
 
         public void UpdateTransaction(UInt64 nonce, TransactionTabelContens value)
         {
-            this.TableTransaction.Db.Update(this.TableTransaction.record, nonce.ToString(), value);
+            this.TableTransaction.Db.Update(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString(), value);
         }
 
         public void DeleteTransaction(UInt64 nonce)
         {
-            this.TableTransaction.Db.Delete(this.TableTransaction.record, nonce.ToString());
+            this.TableTransaction.Db.Delete(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString());
         }
 
         public void DeleteTransaction(string txid)
         {
-            this.TableTransaction.Db.Delete(this.TableTransaction.txid, txid);
+            this.TableTransaction.Db.Delete(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid);
         }
 
         //public bool IsFounder(string sender)

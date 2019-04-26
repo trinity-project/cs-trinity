@@ -157,7 +157,7 @@ namespace Trinity.TrinityWallet.TransferHandler
         {
             if (null == this.channelDbInterface)
             {
-                this.channelDbInterface = new Channel(asset, uri, peerUri, channel);
+                this.channelDbInterface = new Channel(channel, asset, uri, peerUri);
             } 
         }
 

@@ -35,14 +35,35 @@ using Trinity.TrinityWallet.TransferHandler.TransactionHandler;
 using Trinity.Network.TCP;
 using Trinity.TrinityWallet.Tests;
 
+using Neo.IO.Data.LevelDB;
+using Trinity.ChannelSet;
+using Trinity.TrinityDB.Definitions;
+
+
 namespace Trinity
 {
     class TestProgram
     {
+        public static void TempTest()
+        {
+            Channel channel = new Channel("testChannel-xxxx", "TNC", "02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.5:8089");
+            TransactionTabelSummary txcontent = new TransactionTabelSummary
+            {
+                nonce = 0,
+                txType = "funding",
+                channel = "testChannel-xxxx"
+            };
+            channel.AddTransaction("123456789", txcontent);
+            TransactionTabelSummary content = channel.GetTransaction("123456789");
+            Console.WriteLine("type = {0}, channel = {1}, nonce = {2}", content.txType, content.channel, content.nonce);
+
+            Console.ReadKey();
+        }
+
         public static void TestMain()
         {
             // Output the message body to verify it's correct ??
-            TestVerifyMessageBody();
+            // TestVerifyMessageBody();
 
             // create the transport for following message tests
             // TrinityTcpClient client = new TrinityTcpClient("47.98.228.81", "8089");
@@ -77,7 +98,7 @@ namespace Trinity
         /// Message Flow Test : RegisterKeepAlive
         /// </summary>
         /// <param name="client">Tcp client</param>
-        public static void MFTestRegisterKeepAlive(TrinityTcpClient client)
+        private static void MFTestRegisterKeepAlive(TrinityTcpClient client)
         {
             TestRegisterKeepAlive TestRKA = new TestRegisterKeepAlive(client);
             TestRKA.RegisterToGateWay();
@@ -87,7 +108,7 @@ namespace Trinity
         /// Message Flow Test : SyncWalletData
         /// </summary>
         /// <param name="client"></param>
-        public static void MFTestSyncWalletData(TrinityTcpClient client)
+        private static void MFTestSyncWalletData(TrinityTcpClient client)
         {
             TestSyncWalletData TestSWD = new TestSyncWalletData(client);
             TestSWD.SyncWalletData();

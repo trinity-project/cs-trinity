@@ -37,7 +37,6 @@ namespace Trinity
     {
         public static void Main()
         {
-            
         }
     }
 }

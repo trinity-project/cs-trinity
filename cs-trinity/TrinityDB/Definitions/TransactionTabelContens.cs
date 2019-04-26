@@ -50,6 +50,6 @@ namespace Trinity.TrinityDB.Definitions
     {
         public UInt64 nonce;// { get; set; }
         public string channel;// { get; set; }
-        public string type;
+        public string txType;
     }
 }

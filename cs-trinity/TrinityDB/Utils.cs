@@ -81,10 +81,20 @@ namespace Trinity.TrinityDB
         {
             if (null != item)
             {
-                return db.Get(ReadOptions.Default, slice.Add(item.ToBytesUtf8()));
+                return db.Get(ReadOptions.Default, slice);
             }
 
             return default;
+        }
+
+        public static bool TryGet(this DB db, SliceBuilder slice, string item, out Slice value)
+        {
+            if (null != item)
+            {
+                return db.TryGet(ReadOptions.Default, slice, out value);
+            }
+
+            return false;
         }
 
         public static List<TValue> FuzzyGet<TValue>(this DB db, SliceBuilder slice)
@@ -107,10 +117,10 @@ namespace Trinity.TrinityDB
 
         public static void Add<TValue>(this DB db, SliceBuilder slice, string item, TValue value)
         {
-            if (default != Get(db, slice, item))
+            if (TryGet(db, slice, item, out Slice itemvalue))
             {
                 // TODO: add logs here
-                Console.WriteLine("Items {0} already exists in database", item);
+                Console.WriteLine("Items {0} already exists in database:", item);
                 return;
             }
 
@@ -120,14 +130,15 @@ namespace Trinity.TrinityDB
         public static void Update<TValue>(this DB db, SliceBuilder slice, string item, TValue value)
         {
             WriteBatch batch = new WriteBatch();
-            batch.Put(slice.Add(item.ToBytesUtf8()), value.Serialize());
+            string content = value.Serialize();
+            batch.Put(slice, value.Serialize());
             db.Write(WriteOptions.Default, batch);
         }
 
         public static void Delete(this DB db, SliceBuilder slice, string item)
         {
             WriteBatch batch = new WriteBatch();
-            batch.Delete(slice.Add(item.ToBytesUtf8()));
+            batch.Delete(slice);
             db.Write(WriteOptions.Default, batch);
         }
     }

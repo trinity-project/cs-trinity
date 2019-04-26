@@ -51,7 +51,10 @@ namespace Trinity.TrinityDB
         /// <param name="path"></param>
         public TransactionModel(string path, string channel) : base(path)
         {
-            this.group = channel.ToHashBytes();
+            if (null != channel)
+            {
+                this.group = channel.ToHashBytes();
+            }
         }
         
     }

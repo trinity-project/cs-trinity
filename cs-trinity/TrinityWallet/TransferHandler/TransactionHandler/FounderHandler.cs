@@ -263,7 +263,7 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             {
                 nonce = nonce,
                 channel = channel,
-                type = type.ToString()
+                txType = type.ToString()
             };
 
             this.GetChannelInterface().AddTransaction(txId, txContent);
