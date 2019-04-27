@@ -93,6 +93,11 @@ namespace Trinity.Network.TCP
             }
         }
 
+        public Socket GetConnection()
+        {
+            return this.clientSocket;
+        }
+
         public void SendData(string msg)
         {
             try
@@ -301,6 +306,20 @@ namespace Trinity.Network.TCP
                 {
                     Console.WriteLine(ex.ToString());
                 }
+            }
+        }
+
+        public bool GetMessageFromQueue(out string message)
+        {
+
+            if (!messageQueue.IsEmpty)
+            {
+                return messageQueue.TryDequeue(out message);
+            }
+            else
+            {
+                message = null;
+                return false;
             }
         }
 

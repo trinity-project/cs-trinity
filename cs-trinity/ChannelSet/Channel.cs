@@ -45,14 +45,14 @@ namespace Trinity.ChannelSet
     {
         private string uri;
         private string peerUri;
-        private string pubKey;
-        private string adress;
-        private string peerPubKey;
-        private string peerAddress;
         private string assetType;
         private string channelName;
-        private Dictionary<string, double> Deposit;
-        private Dictionary<string, double> Balance;
+        //private string pubKey;
+        //private string address;
+        //private string peerPubKey;
+        //private string peerAddress;
+        //private Dictionary<string, double> Deposit;
+        //private Dictionary<string, double> Balance;
         
         private ChannelModel TableChannel;
         private TransactionModel TableTransaction;

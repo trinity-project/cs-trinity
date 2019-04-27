@@ -35,6 +35,11 @@ namespace Trinity.Wallets.Templates.Messages
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionHeader
     {
+        /// <summary>
+        /// Mandatory contents in the message header
+        /// </summary>
+        public string MessageType => this.GetType().Name;
+
         public string Sender { get; set; }
         public string Receiver { get; set; }
         public string ChannelName { get; set; }
@@ -50,11 +55,6 @@ namespace Trinity.Wallets.Templates.Messages
     [MessagePackObject(keyAsPropertyName: true)]
     public class Header<TBody> : TransactionHeader
     {
-        /// <summary>
-        /// Mandatory contents in the message header
-        /// </summary>
-        public string MessageType => this.GetType().Name;
-
         public TBody MessageBody { get; set; }
     }
 

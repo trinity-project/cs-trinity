@@ -48,7 +48,7 @@ namespace Trinity.BlockChain
 {
     public class NeoInterface
     {
-        private static readonly NeoSystem system;
+        
         static System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create();
 
         private static BigDecimal getNep5Balance(UInt160 asset_id, UInt160 scriptHash)

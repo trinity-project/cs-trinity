@@ -55,7 +55,7 @@ namespace Trinity.Wallets.TransferHandler
         private TrinityTcpClient client;
         public Channel channelDbInterface;
 
-        private string priKey;
+        //private string priKey;
         private string pubKey;
         private string peerPubKey;
 
