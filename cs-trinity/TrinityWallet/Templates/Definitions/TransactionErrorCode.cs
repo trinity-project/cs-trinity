@@ -37,18 +37,29 @@ namespace Trinity.TrinityWallet.Templates.Definitions
         Ok = 0,
 
         // Common Error code for all messages
-        InvalidUrl = 0x10,
-        InvalidAssetTypeOrID = 0x11,
-        InvalidChannelNameOrID = 0x12,
-        InvalidNetMagicID = 0x13,
-        InvalidTxNonce = 0x14,
+        Invalid_Url = 0x10,
+        Invalid_Asset_Type_Or_ID = 0x11,
+        Invalid_ChannelName_Or_ID = 0x12,
+        Invalid_NetMagic_ID = 0x13,
+        Invalid_Nonce = 0x14,
 
-        // Error Code for "RegisterChannel" Message
-        RegisterChannelUnkownError = 0x100,
-        RegisterChannelInvalidUrl = 0x101,
-        RegisterChannelInvalidDeposit = 0x102,
+        // Error Code for RegisterChannel Message
+        RegisterChannel_Unkown_Error = 0x100,
+        RegisterChannel_Invalid_Url = 0x101,
+        RegisterChannel_Invalid_Deposit = 0x102,
 
-        // Error Code for "Founder" Message
+        // Error Code for Founder Message
+        FounderSign_Unkown_Error = 0x200,
+
+        // Error Code for RSMC Message
+        RsmcSign_Unkown_Error = 0x400,
+
+        // Error Code for HTLC Message
+        HtlcSign_Unkown_Error = 0x600,
+
+        // Error Code for Settle Message
+        SettleSign_Unkown_Error = 0x800,
+        SettleSign_Balance_Not_Compatible = 0x801,
 
         Fail = 0xFFFF
     }

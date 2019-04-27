@@ -36,16 +36,15 @@ using Trinity.TrinityWallet.Templates.Definitions;
 namespace Trinity.TrinityDB.Definitions
 {
     [MessagePackObject(keyAsPropertyName: true)]
-    public class TransactionTabelContens
+    public class TransactionTabelContent
     {
         public UInt64 nonce;
         public string monitorTxId;
         public FundingSignTx founder;
         public CommitmentSignTx commitment;// { get; set; }
-        public CommitmentSignTx peerCommitment;// { get; set; }
         public RevocableDeliverySignTx revocableDelivery;// { get; set; }
-        public RevocableDeliverySignTx peerRevocableDelivery;// { get; set; }
-
+        // public Dictionary<string, double> balance; // Not used this time
+        public string state;
     }
 
     [MessagePackObject(keyAsPropertyName: true)]

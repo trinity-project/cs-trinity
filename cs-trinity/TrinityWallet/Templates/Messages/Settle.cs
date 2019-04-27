@@ -24,7 +24,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System.Collections.Generic;
 using MessagePack;
+
+using Trinity.TrinityWallet.Templates.Definitions;
 
 namespace Trinity.TrinityWallet.Templates.Messages
 {
@@ -34,7 +37,13 @@ namespace Trinity.TrinityWallet.Templates.Messages
     [MessagePackObject(keyAsPropertyName: true)]
     public class SettleBody
     {
-        public string Settlement { get; set; }
-        public string Balance { get; set; }
+        public TxContents Settlement { get; set; }
+        public Dictionary<string, double> Balance { get; set; }
+        public string AssetType { get; set; }
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class Settle : Header<SettleBody>
+    {
     }
 }

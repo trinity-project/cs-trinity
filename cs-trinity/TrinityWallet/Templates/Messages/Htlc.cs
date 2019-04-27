@@ -44,4 +44,11 @@ namespace Trinity.TrinityWallet.Templates.Messages
         public string HTRDTX { get; set; }
         public int RoleIndex { get; set; }
     }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class Htlc : Header<HtlcBody>
+    {
+        public string Router { get; set; }
+        public string Next { get; set; }
+    }
 }

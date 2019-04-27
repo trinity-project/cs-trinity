@@ -36,7 +36,7 @@ using Trinity.ChannelSet.Definitions;
 namespace Trinity.TrinityDB.Definitions
 {
     [MessagePackObject(keyAsPropertyName:true)]
-    public struct ChannelTableContents
+    public class ChannelTableContent
     {
         public string channel;
         public string asset;

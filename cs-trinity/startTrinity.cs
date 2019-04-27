@@ -14,11 +14,15 @@ namespace Trinity
         public static string currentAccountPublicKey = "";
         public static NeoSystem NeoSystem;
 
+        public static TntWallet tntWallet;
+
         public static void trinityConfigure(NeoSystem neoSystem, Wallet wallet, string publicKey)
         {
             NeoSystem = neoSystem;
             currentWallet = wallet;
             currentAccountPublicKey = publicKey;
+
+            tntWallet = new TntWallet(neoSystem, wallet, publicKey);
         }
 
         /*

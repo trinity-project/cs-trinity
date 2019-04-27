@@ -30,33 +30,6 @@ using Trinity.TrinityWallet.Templates.Messages;
 namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 {
     ///// <summary>
-    ///// Prototype for Rsmc / RsmcSign / RsmcFail message
-    ///// </summary>
-    //public class Rsmc : Header<RsmcBody>
-    //{
-    //    //public Rsmc(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-    //    //    base(sender, receiver, channel, asset, magic, nonce)
-    //    //{
-    //    //    this.MessageBody.AssetType = asset;
-    //    //    this.MessageBody.Value = value;
-    //    //}
-    //}
-
-    //public class RsmcSign : Rsmc
-    //{
-    //    //public RsmcSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-    //    //    base(sender, receiver, channel, asset, magic, nonce, value)
-    //    //    { }
-    //}
-
-    //public class RsmcFail : Rsmc
-    //{
-    //    //public RsmcFail(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce, string value) :
-    //    //    base(sender, receiver, channel, asset, magic, nonce, value)
-    //    //    { }
-    //}
-
-    ///// <summary>
     ///// Class Handler for handling Rsmc Message
     ///// </summary>
     //public class RsmcHandler : TrinityTransaction<Rsmc, RsmcSignHandler, RsmcFailHandler>
@@ -116,16 +89,6 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
     //    {
     //        throw new NotImplementedException();
     //    }
-
-    //    //public override void GetBodyAttribute<TValue>(string name, out TValue value)
-    //    //{
-    //    //    this.GetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, out value);
-    //    //}
-
-    //    //public override void SetBodyAttribute<TValue>(string name, TValue value)
-    //    //{
-    //    //    this.SetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, value);
-    //    //}
     //}
 
     ///// <summary>
@@ -152,15 +115,5 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
     //    {
     //        throw new NotImplementedException();
     //    }
-
-    //    //public override void GetBodyAttribute<TValue>(string name, out TValue value)
-    //    //{
-    //    //    this.GetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, out value);
-    //    //}
-
-    //    //public override void SetBodyAttribute<TValue>(string name, TValue value)
-    //    //{
-    //    //    this.SetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, value);
-    //    //}
     //}
 }

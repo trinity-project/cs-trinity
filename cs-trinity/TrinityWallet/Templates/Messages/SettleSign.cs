@@ -24,26 +24,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using MessagePack;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Trinity.TrinityWallet.Templates.Definitions
+using MessagePack;
+using Trinity.TrinityWallet.Templates.Definitions;
+
+namespace Trinity.TrinityWallet.Templates.Messages
 {
     [MessagePackObject(keyAsPropertyName: true)]
-    public class TxContents
+    public class SettleSignBody
     {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txData { get; set; }
-        public string txId { get; set; }
-        public string witness { get; set; }
+        public TxContentsSign Settlement { get; set; }
+        public Dictionary<string, double> Balance { get; set; }
+        public string AssetType { get; set; }
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class TxContentsSign
+    public class SettleSign : Header<SettleSignBody>
     {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txDataSign { get; set; }
-        public TxContents originalData { get; set; }
+        public string Error;
     }
 }

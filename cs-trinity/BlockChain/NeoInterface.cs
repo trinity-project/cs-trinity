@@ -291,7 +291,7 @@ namespace Trinity.BlockChain
         ///</returns>
         public static string ScriptToAddress(string Script)
         {
-            //UInt160 ScriptHash = Script.ToScriptHash();
+            //UInt160 ScriptHash = Script.ConvertToScriptHash();
             UInt160 ScriptHash = ScriptToScriptHash(Script.HexToBytes());
             string Address = ToAddress1(ScriptHash);
             //string AddressOther = ToAddress1(ScriptHashOther);

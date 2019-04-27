@@ -58,31 +58,31 @@ namespace Trinity.TrinityWallet.Templates.Messages
         public TBody MessageBody { get; set; }
     }
 
-    [MessagePackObject(keyAsPropertyName: true)]
-    public abstract class ResponseHeader<TBody> : Header<TBody>
-    {
-        /// <summary>
-        /// Optional contents in the message header
-        /// </summary>
-        public string Error { get; set; }
-        public string Comments { get; set; }
-    }
+    //[MessagePackObject(keyAsPropertyName: true)]
+    //public abstract class ResponseHeader<TBody> : Header<TBody>
+    //{
+    //    /// <summary>
+    //    /// Optional contents in the message header
+    //    /// </summary>
+    //    public string Error { get; set; }
+    //    public string Comments { get; set; }
+    //}
 
-    [MessagePackObject(keyAsPropertyName: true)]
-    public abstract class HtlcHeader<TBody> : Header<TBody>
-    {
-        // Just exists only for HTLC message
-        public string Router { get; set; }
-        public string Next { get; set; }
-    }
+    //[MessagePackObject(keyAsPropertyName: true)]
+    //public abstract class HtlcHeader<TBody> : Header<TBody>
+    //{
+    //    // Just exists only for HTLC message
+    //    public string Router { get; set; }
+    //    public string Next { get; set; }
+    //}
 
-    [MessagePackObject(keyAsPropertyName: true)]
-    public abstract class HtlcResponseHeader<TBody> : HtlcHeader<TBody>
-    {
-        /// <summary>
-        /// Optional contents in the message header
-        /// </summary>
-        public string Error { get; set; }
-        public string Comments { get; set; }
-    }
+    //[MessagePackObject(keyAsPropertyName: true)]
+    //public abstract class HtlcResponseHeader<TBody> : HtlcHeader<TBody>
+    //{
+    //    /// <summary>
+    //    /// Optional contents in the message header
+    //    /// </summary>
+    //    public string Error { get; set; }
+    //    public string Comments { get; set; }
+    //}
 }

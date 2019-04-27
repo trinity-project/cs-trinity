@@ -29,13 +29,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography;
 
-using Trinity.Network.TCP;
-using Trinity.BlockChain;
 using Trinity.ChannelSet;
 using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
 using Trinity.TrinityWallet.Templates.Messages;
-using Trinity.TrinityWallet.TransferHandler;
 
 
 namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
@@ -103,44 +100,27 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
         /// <returns></returns>
         public override bool Handle()
         {
-            if (!base.Handle())
-            {
-                return false;
-            }
-
-            if (!(this.Request is RegisterChannel))
-            {
-                return false;
-            }
-
-            /// TODO: need add some verification in future
-            if (!this.Verify())
-            {
-                this.FailStep();
-                return false;
-            }
-
-            this.SucceedStep();
-            
-            return true;
+            return base.Handle();
         }
 
-        public override void FailStep()
+        public override bool FailStep()
         {
             this.FHandler = new RegisterChannelFailHandler(
                 this.header.Receiver, this.header.Sender, this.header.ChannelName,
                 this.Request.MessageBody.AssetType, this.header.NetMagic, this.Request.MessageBody);
             this.FHandler.MakeTransaction(this.GetClient());
 
-            ChannelTableContents content = new ChannelTableContents
+            ChannelTableContent content = new ChannelTableContent
             {
                 channel = this.Request.ChannelName,
                 state = EnumChannelState.ERROR
             };
             this.GetChannelInterface().AddChannel(this.Request.ChannelName, content);
+
+            return true;
         }
 
-        public override void SucceedStep()
+        public override bool SucceedStep()
         {
             this.SHandler = new FounderHandler(
                 this.header.Receiver, this.header.Sender, this.header.ChannelName,
@@ -149,11 +129,13 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 
             // Add channel to database
             this.AddChannel();
+
+            return true;
         }
 
         public void AddChannel()
         {
-            ChannelTableContents content = new ChannelTableContents
+            ChannelTableContent content = new ChannelTableContent
             {
                 channel = this.Request.ChannelName,
                 asset = this.Request.MessageBody.AssetType,
@@ -223,7 +205,7 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             }
             else
             {
-                ChannelTableContents content = new ChannelTableContents
+                ChannelTableContent content = new ChannelTableContent
                 {
                     channel = this.Request.ChannelName,
                     state = EnumChannelState.ERROR
@@ -234,14 +216,14 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             return false;
         }
 
-        public override void FailStep()
+        public override bool FailStep()
         {
-            throw new NotImplementedException();
+            return false;
         }
 
-        public override void SucceedStep()
+        public override bool SucceedStep()
         {
-            throw new NotImplementedException();
+            return true;
         }
     }
 }

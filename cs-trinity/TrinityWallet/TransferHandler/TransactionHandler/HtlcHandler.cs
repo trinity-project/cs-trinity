@@ -31,32 +31,6 @@ using Trinity.TrinityWallet.Templates.Messages;
 namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 {
     ///// <summary>
-    ///// Class Handler for handling Htlc Message
-    ///// </summary>
-    //public class HtlcHandler : TransferHandler<Htlc, HtlcSignHandler, HtlcFail>
-    //{
-    //    public HtlcHandler(string msg) : base(msg)
-    //    {
-    //    }
-
-    //    public override bool Handle()
-    //    {
-    //        return false;
-    //    }
-
-    //    public override void FailStep()
-    //    {
-    //        this.FHandler = null;
-
-    //    }
-
-    //    public override void SucceedStep()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
-
-    ///// <summary>
     ///// Class Handler for handling HtlcSign Message
     ///// </summary>
     //public class HtlcSignHandler : TrinityTransaction<HtlcSign, HtlcHandler, HtlcFailHandler>

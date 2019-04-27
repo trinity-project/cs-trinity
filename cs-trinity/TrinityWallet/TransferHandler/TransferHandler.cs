@@ -31,9 +31,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Trinity.Network.TCP;
-using Trinity.TrinityWallet.Templates.Definitions;
 using Trinity.TrinityWallet.Templates.Messages;
 using Trinity.ChannelSet;
+using Trinity.TrinityDB.Definitions;
 
 namespace Trinity.TrinityWallet.TransferHandler
 {
@@ -45,6 +45,8 @@ namespace Trinity.TrinityWallet.TransferHandler
     /// <typeparam name="TFHandler"></typeparam>
     public abstract class TransferHandler<TMessage, TSHandler, TFHandler> : IDisposable
     {
+        private readonly TntWallet wallet;
+
         protected TMessage Request;
         private string MessageName => typeof(TMessage).Name;
         protected TSHandler SHandler;
@@ -53,6 +55,7 @@ namespace Trinity.TrinityWallet.TransferHandler
         private TrinityTcpClient client;
         public Channel channelDbInterface;
 
+        private string priKey;
         private string pubKey;
         private string peerPubKey;
 
@@ -69,15 +72,17 @@ namespace Trinity.TrinityWallet.TransferHandler
         public virtual bool VerifySignature() { return true; }
         public virtual bool VerifyBalance() { return true; }
         public virtual bool VerifyNetMagic() { return true; }
+        public virtual bool VerifyRoleIndex() { return true; }
 
-        public virtual void SucceedStep() { }
-        public virtual void FailStep() { }
+        public virtual bool SucceedStep() { return true; }
+        public virtual bool FailStep() { return true; }
 
         /// <summary>
         /// Dispose method to release memory
         /// </summary>
         public virtual void Dispose()
         {
+            
         }
 
         /// <summary>
@@ -85,10 +90,12 @@ namespace Trinity.TrinityWallet.TransferHandler
         /// </summary>
         public TransferHandler()
         {
+            this.wallet = startTrinity.tntWallet;
         }
 
         public TransferHandler(string message)
         {
+            this.wallet = startTrinity.tntWallet;
             this.Request = message.Deserialize<TMessage>();
         }
 
@@ -102,7 +109,20 @@ namespace Trinity.TrinityWallet.TransferHandler
 
         public virtual void MakeTransaction(TrinityTcpClient client)
         {
-            client?.SendData(this.Request.Serialize());
+            this.MakeupMessage();
+
+            if (null != this.Request)
+            {
+                client?.SendData(this.Request.Serialize());
+            }
+            else
+            {
+                Console.WriteLine("Void Message is found");
+            }
+        }
+
+        public virtual void MakeupMessage()
+        {
         }
 
         public string ToJson()
@@ -110,20 +130,35 @@ namespace Trinity.TrinityWallet.TransferHandler
             return this.Request.Serialize();
         }
 
-        public virtual bool Handle(string msg)
-        {
-            if (null != msg) {
-                this.Request = msg.Deserialize<TMessage>();
-                this.header = msg.Deserialize<TransactionHeader>();
-                this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
-                return true;
-            }
+        //public virtual bool Handle(string msg)
+        //{
+        //    if (null != msg) {
+        //        this.Request = msg.Deserialize<TMessage>();
+        //        this.header = msg.Deserialize<TransactionHeader>();
+        //        this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+        //        return true;
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
         public virtual bool Handle()
         {
+            // MessageType is not Founder
+            if (!(this.Request is TMessage))
+            {
+                return false;
+            }
+
+            // lack of verification steps
+            if (!this.Verify())
+            {
+                this.FailStep();
+                return false;
+            }
+
+            this.SucceedStep();
+
             return true;
         }
 
@@ -198,6 +233,16 @@ namespace Trinity.TrinityWallet.TransferHandler
         public bool IsRole3(int role)
         {
             return role.Equals(Role3);
+        }
+
+        public string Sign(string content)
+        {
+            return this.wallet.Sign(content);
+        }
+
+        public bool VerifySignarture(string content, string contentSign)
+        {
+            return this.wallet.VerifySignarture(content, contentSign);
         }
     }
 }

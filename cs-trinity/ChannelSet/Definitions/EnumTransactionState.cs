@@ -24,26 +24,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using MessagePack;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Trinity.TrinityWallet.Templates.Definitions
+namespace Trinity.ChannelSet.Definitions
 {
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class TxContents
+    public enum EnumTransactionState : byte
     {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txData { get; set; }
-        public string txId { get; set; }
-        public string witness { get; set; }
-    }
+        initial = 0x1, // the transaction could be deleted or overwrite.
 
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class TxContentsSign
-    {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txDataSign { get; set; }
-        public TxContents originalData { get; set; }
+        confirming = 0x10,
+        confirmed = 0x11
     }
 }

@@ -24,97 +24,220 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 using System;
+
+using Neo.IO.Json;
+using Neo.Wallets;
+
+using Trinity.ChannelSet.Definitions;
+using Trinity.TrinityDB.Definitions;
 using Trinity.BlockChain;
+using Trinity.TrinityWallet.Templates.Definitions;
 using Trinity.TrinityWallet.Templates.Messages;
+using Trinity.Network.TCP;
 
 namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 {
-    ///// <summary>
-    ///// Prototype for Settle / SettleSign message
-    ///// </summary>
-    //public class Settle : Header<SettleBody>
-    //{
-    //    //public Settle(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
-    //    //    base(sender, receiver, channel, asset, magic, nonce)
-    //    //{ }
-    //}
+    /// <summary>
+    /// Class Handler for handling Settle Message
+    /// </summary>
+    public class SettleHandler : TransferHandler<Settle, SettleSignHandler, SettleSignHandler>
+    {
+        private readonly TransactionTabelContent fundingTrade;
+        private readonly ChannelTableContent channelContent;
 
-    //public class SettleSign : Settle
-    //{
-    //    //public SettleSign(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
-    //    //    base(sender, receiver, channel, asset, magic, nonce)
-    //    //{ }
-    //}
+        /// <summary>
+        /// Constructors
+        /// </summary>
+        /// <param name="message"></param>
+        public SettleHandler(string message) : base(message)
+        {
+            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
+            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
+                this.Request.ChannelName, null);
+            this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
+            this.channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
+        }
 
-    ///// <summary>
-    ///// Class Handler for handling Settle Message
-    ///// </summary>
-    //public class SettleHandler : TrinityTransaction<Settle, SettleSignHandler, VoidHandler>
-    //{
-    //    public SettleHandler(string msg) : base(msg)
-    //    {
-    //    }
+        /// <summary>
+        /// Default Constructor
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="receiver"></param>
+        /// <param name="channel"></param>
+        /// <param name="asset"></param>
+        /// <param name="magic"></param>
+        public SettleHandler(string sender, string receiver, string channel, string asset, string magic) : base()
+        {
+            this.Request = new Settle
+            {
+                Sender = sender,
+                Receiver = receiver,
+                ChannelName = channel,
+                AssetType = asset,
+                NetMagic = magic,
+                MessageBody = new SettleBody(),
+            };
 
-    //    public override bool Handle()
-    //    {
-    //        return false;
-    //    }
+            this.ParsePubkeyPair(sender, receiver);
+            this.SetChannelInterface(sender, receiver, channel, asset);
+            this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
+            this.channelContent = this.GetChannelInterface().TryGetChannel(channel);
+        }
 
-    //    public override void FailStep()
-    //    {
-    //        this.FHandler = null;
+        public override bool Handle()
+        {
+            base.Handle();
 
-    //    }
+            return true;
+        }
 
-    //    public override void SucceedStep()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public override bool FailStep()
+        {
+            this.FHandler = new SettleSignHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
+                    this.Request.MessageBody.AssetType, this.Request.NetMagic);
 
-    //    //public override void GetBodyAttribute<TValue>(string name, out TValue value)
-    //    //{
-    //    //    this.GetMessageAttribute<SettleBody, TValue>(this.Request.MessageBody, name, out value);
-    //    //}
+            this.FHandler.MakeTransaction(this.GetClient());
 
-    //    //public override void SetBodyAttribute<TValue>(string name, TValue value)
-    //    //{
-    //    //    this.SetMessageAttribute<SettleBody, TValue>(this.Request.MessageBody, name, value);
-    //    //}
-    //}
+            return true;
+        }
 
-    ///// <summary>
-    ///// Class Handler for handling SettleSign Message
-    ///// </summary>
-    //public class SettleSignHandler : TrinityTransaction<SettleSign, VoidHandler, VoidHandler>
-    //{
-    //    public SettleSignHandler(string msg) : base(msg)
-    //    {
-    //    }
+        public override bool SucceedStep()
+        {
 
-    //    public override bool Handle()
-    //    {
-    //        return false;
-    //    }
+            // create SettleSign handler for send response to peer
+            this.SHandler = new SettleSignHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
+                    this.Request.MessageBody.AssetType, this.Request.NetMagic);
+            this.SHandler.MakeupRefundTxSign(this.Request.MessageBody.Settlement);
 
-    //    public override void FailStep()
-    //    {
-    //        this.FHandler = null;
+            // send SettleSign to peer
+            this.SHandler.MakeTransaction(this.GetClient());
 
-    //    }
+            return true;
+        }
 
-    //    public override void SucceedStep()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+        public override void MakeTransaction(TrinityTcpClient client)
+        {
+            // makeup the message
+            if (this.MakeupRefundTx())
+            {
+                base.MakeTransaction(client);
+            }
+        }
 
-    //    //public override void GetBodyAttribute<TValue>(string name, out TValue value)
-    //    //{
-    //    //    this.GetMessageAttribute<SettleBody, TValue>(this.Request.MessageBody, name, out value);
-    //    //}
+        private bool MakeupRefundTx()
+        {
+            // makeup refund trade
+            if (null == this.fundingTrade || null == this.channelContent)
+            {
+                Console.WriteLine("No funding trade is found for channel: {}", this.Request.ChannelName);
+                return false;
+            }
 
-    //    //public override void SetBodyAttribute<TValue>(string name, TValue value)
-    //    //{
-    //    //    this.SetMessageAttribute<SettleBody, TValue>(this.Request.MessageBody, name, value);
-    //    //}
-    //}
+            // Start to create refund trade
+            this.channelContent.balance.TryGetValue(this.Request.Sender, out double balance);
+            this.channelContent.balance.TryGetValue(this.Request.Sender, out double peerBalance);
+            JObject refundTx = Funding.createSettle(
+                this.fundingTrade.founder.originalData.addressFunding,
+                balance.ToString(), peerBalance.ToString(),
+                this.GetPubKey(), this.GetPeerPubKey(),
+                this.fundingTrade.founder.originalData.scriptFunding,
+                this.channelContent.asset.ToAssetId()
+                );
+
+            if (null == refundTx)
+            {
+                Console.WriteLine("Failed to create refunding trade for channel: {}", this.Request.ChannelName);
+                return false;
+            }
+
+            // set the message body
+            this.Request.MessageBody.Settlement = refundTx.ToString().Deserialize<TxContents>();
+            this.Request.MessageBody.Balance = this.channelContent.balance;
+            this.Request.MessageBody.AssetType = this.channelContent.asset;
+
+            return true;
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    /// SettleSignHandler Prototype
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>
+    /// Class Handler for handling SettleSign Message
+    /// </summary>
+    public class SettleSignHandler : TransferHandler<SettleSign, VoidHandler, VoidHandler>
+    {
+        private readonly TransactionTabelContent fundingTrade;
+        private readonly ChannelTableContent channelContent;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        public SettleSignHandler(string message) : base(message)
+        {
+            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
+            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
+                this.Request.ChannelName, null);
+            this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
+            this.channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="receiver"></param>
+        /// <param name="channel"></param>
+        /// <param name="asset"></param>
+        /// <param name="magic"></param>
+        public SettleSignHandler(string sender, string receiver, string channel, string asset, string magic) : base()
+        {
+            this.RoleMax = 1;
+
+            this.Request = new SettleSign
+            {
+                Sender = sender,
+                Receiver = receiver,
+                ChannelName = channel,
+                AssetType = asset,
+                NetMagic = magic,
+                
+                MessageBody = new SettleSignBody()
+            };
+
+            this.ParsePubkeyPair(sender, receiver);
+            this.SetChannelInterface(sender, receiver, channel, asset);
+            this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
+            this.channelContent = this.GetChannelInterface().TryGetChannel(channel);
+        }
+
+        public override bool Handle()
+        {
+            return false;
+        }
+
+        public override bool FailStep()
+        {
+            Console.WriteLine(this.Request.Error);
+            return true;
+        }
+
+        public override bool SucceedStep()
+        {
+            // Broadcast this transaction
+            throw new NotImplementedException();
+        }
+
+        public bool MakeupRefundTxSign(TxContents settlement)
+        {
+            return true;
+        }
+
+        public void SetErrorCode(TransactionErrorCode error)
+        {
+            this.Request.Error = error.ToString();
+        }
+    }
 }

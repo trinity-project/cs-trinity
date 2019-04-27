@@ -27,9 +27,8 @@ using System;
 
 using Neo.IO.Json;
 using Neo.Wallets;
-using Neo.IO.Data.LevelDB;
 
-using Trinity.TrinityWallet;
+using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
 using Trinity.BlockChain;
 using Trinity.TrinityWallet.Templates.Definitions;
@@ -43,8 +42,8 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
     /// </summary>
     public class FounderHandler : TransferHandler<Founder, FounderSignHandler, FounderFailHandler>
     {
-        private readonly double Deposit;
-        private readonly UInt64 Nonce;
+        //private readonly double Deposit;
+        //private readonly UInt64 Nonce;
 
         public int RoleIndex;
         public JObject fundingTx;
@@ -108,20 +107,7 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             {
                 return false;
             }
-
-            // MessageType is not Founder
-            if (!(this.Request is Founder))
-            {
-                return false;
-            }
-
-            // lack of verification steps
-            if (!this.Verify())
-            {
-                this.FailStep();
-                return false;
-            }
-
+            
             // Add txid for monitor
             this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Founder.txId,
                 this.Request.ChannelName, EnumTxType.FUNDING);
@@ -135,27 +121,35 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             return true;
         }
 
-        public override void FailStep()
+        public override bool FailStep()
         {
             this.FHandler = new FounderFailHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                     this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Deposit);
             this.FHandler.MakeTransaction(this.GetClient());
+
+            return true;
         }
 
-        public override void SucceedStep()
+        public override bool SucceedStep()
         {
             if (this.IsIllegalRole(this.Request.MessageBody.RoleIndex))
             {
                 this.FailStep();
                 Console.WriteLine("Invalid nonce for founder. Nonce: {0}", this.Request.TxNonce);
-                return;
+                return false;
             }
 
             // create FoudnerSign handler for send response to peer
+            #region New_FounderSignHandler
             this.SHandler = new FounderSignHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                     this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Deposit,
                     this.Request.MessageBody.RoleIndex);
+            this.SHandler.MakeupFundingTx(this.Request.MessageBody.Founder);
+            this.SHandler.MakeupCommitmentTx(this.Request.MessageBody.Commitment);
+            this.SHandler.MakeupRevocableDeliveryTx(this.Request.MessageBody.RevocableDelivery);
+            #endregion
 
+            #region New_FounderHandler
             FounderHandler founderHandler = null;
             if (this.IsRole0(this.Request.MessageBody.RoleIndex))
             {
@@ -167,21 +161,19 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
                         this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Deposit,
                         1);
             }
+            #endregion
 
             // send FounderSign to peer
             this.SHandler.MakeTransaction(this.GetClient());
             founderHandler.MakeTransaction(this.GetClient());
+
+            return true;
         }
 
         public override void MakeTransaction(TrinityTcpClient client)
         {
-            this.SignAndSetMessageAttribute();
+            this.MakeupMessage();
             base.MakeTransaction(client);
-        }
-
-        public override bool Verify()
-        {
-            return true;
         }
 
         private bool SignFundingTx()
@@ -198,7 +190,7 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             else if (this.IsRole1(this.Request.MessageBody.RoleIndex))
             {
                 // TODO: Read from the database
-                TransactionTabelContens transactionContent = this.GetChannelInterface().GetTransaction(this.Request.TxNonce);
+                TransactionTabelContent transactionContent = this.GetChannelInterface().GetTransaction(this.Request.TxNonce);
                 if (default != transactionContent)
                 {
                     this.fundingTx["txData"] = transactionContent.founder.originalData.txData;
@@ -223,7 +215,29 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             return false;
         }
 
-        public void SignAndSetMessageAttribute()
+        // Todo: impmentation this method in the base class in future
+        public override bool VerifyRoleIndex()
+        {
+            if (this.IsIllegalRole(this.Request.MessageBody.RoleIndex))
+            {
+                Console.WriteLine("Invalid nonce for founder. Nonce: {0}", this.Request.TxNonce);
+                return false;
+            }
+
+            return true;
+        }
+
+        public override bool Verify()
+        {
+            return this.VerifyRoleIndex();
+        }
+
+        public override void MakeupMessage()
+        {
+            this.MakeupTransactionBody();
+        }
+
+        public void MakeupTransactionBody()
         {
             string deposit = this.Request.MessageBody.Deposit.ToString();
 
@@ -236,7 +250,7 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
                 deposit, this.GetPubKey(), this.GetPeerPubKey(),
                 this.fundingTx["scriptFunding"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
 
-            string address = this.GetPubKey().ToScriptHash().ToAddress();
+            string address = this.GetPubKey().ConvertToScriptHash().ToAddress();
             this.rdTx = Funding.createRDTX(this.commTx["addressRSMC"].ToString(), address,
                 this.Request.MessageBody.Deposit.ToString(), this.commTx["txId"].ToString(),
                 this.commTx["scriptRSMC"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
@@ -262,36 +276,43 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             {
                 this.AddTransaction();
             }
-            else if (IsRole0(this.Request.MessageBody.RoleIndex))
+            else if (IsRole1(this.Request.MessageBody.RoleIndex))
             {
-                this.AddTransaction();
+                // update this records of founder
+                TransactionTabelContent txUpdateContent = this.GetChannelInterface().TryGetTransaction(this.Request.TxNonce);
+                if (null != txUpdateContent)
+                {
+                    txUpdateContent.commitment.originalData = this.Request.MessageBody.Commitment;
+                    txUpdateContent.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
+                    this.GetChannelInterface().UpdateTransaction(this.Request.TxNonce, txUpdateContent);
+                    Console.WriteLine("Success update the founder trade records. channel: {0}", this.Request.ChannelName);
+                }
             }
 
+            return;
         }
 
-        public void AddTransaction(bool isPeer = false)
+        private void AddTransaction(bool isPeer = false)
         {
-            TransactionTabelContens txContent = new TransactionTabelContens
+            TransactionTabelContent txContent = new TransactionTabelContent
             {
                 nonce = this.Request.TxNonce,
-                monitorTxId = this.Request.MessageBody.Founder.txId,
-
                 founder = new FundingSignTx(),
                 commitment = new CommitmentSignTx(),
-                peerCommitment = new CommitmentSignTx(),
                 revocableDelivery = new RevocableDeliverySignTx(),
-                peerRevocableDelivery = new RevocableDeliverySignTx()
+
+                state = EnumTransactionState.initial.ToString()
             };
 
             // both sides have same founder 
             txContent.founder.originalData = this.Request.MessageBody.Founder;
+            
 
             // add peer information from the message
             if (isPeer)
             {
-                // add peer information
-                txContent.peerCommitment.originalData = this.Request.MessageBody.Commitment;
-                txContent.peerRevocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
+                // add monitor tx id
+                txContent.monitorTxId = this.Request.MessageBody.Commitment.txId;
             }
             else
             {
@@ -302,23 +323,18 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
             this.GetChannelInterface().AddTransaction(this.Request.TxNonce, txContent);
         }
 
-        public void UpdataTransaction()
-        {
-            this.GetChannelInterface();
-        }
-
         //public void AddTransaction(bool isPeer=false)
         //{
-        //    TransactionTabelContens transactionContent;
+        //    TransactionTabelContent transactionContent;
         //    // add peer information from the message
         //    if (isPeer)
         //    {
-        //        transactionContent = new TransactionTabelContens();
+        //        transactionContent = new TransactionTabelContent();
         //        transactionContent.nonce = this.Request.TxNonce;
         //    }
         //    else
         //    {
-        //        transactionContent = new TransactionTabelContens
+        //        transactionContent = new TransactionTabelContent
         //        {
         //            nonce = this.Request.TxNonce,
         //            monitorTxId = this.commTx["txId"].ToString(),
@@ -359,7 +375,7 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
         //    this.GetChannelInterface().AddTransaction(this.Request.TxNonce, transactionContent);
         //}
 
-        public void AddTransactionSummary(UInt64 nonce, string txId, string channel, EnumTxType type)
+        private void AddTransactionSummary(UInt64 nonce, string txId, string channel, EnumTxType type)
         {
             TransactionTabelSummary txContent = new TransactionTabelSummary
             {
@@ -372,17 +388,47 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /// FounderSignHandler start
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// Class Handler for handling FounderSign Message
     /// </summary>
-    public class FounderSignHandler : TransferHandler<FounderSign, VoidHandler, VoidHandler>
+    public class FounderSignHandler : TransferHandler<FounderSign, VoidHandler, FounderFailHandler>
     {
+        //private FundingSignTx fstContent;
+        //private CommitmentSignTx cstContent;
+        //private RevocableDeliverySignTx rdstContent;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="receiver"></param>
+        /// <param name="channel"></param>
+        /// <param name="asset"></param>
+        /// <param name="magic"></param>
+        /// <param name="nonce"></param>
+        /// <param name="deposit"></param>
+        /// <param name="role"></param>
         public FounderSignHandler(string sender, string receiver, string channel, string asset,
             string magic, UInt64 nonce, double deposit, int role = 0)
         {
-            this.Request.MessageBody.SetAttribute("AssetType", asset);
-            this.Request.MessageBody.SetAttribute("Deposit", deposit);
-            this.Request.MessageBody.SetAttribute("RoleIndex", role);
+            this.Request = new FounderSign
+            {
+                Sender = sender,
+                Receiver = receiver,
+                ChannelName = channel,
+                AssetType = asset,
+                NetMagic = magic,
+                TxNonce = nonce,
+
+                MessageBody = new FounderSignBody
+                {
+                    Deposit = deposit,
+                    RoleIndex = role,
+                    AssetType = asset,
+                },
+            };
 
             this.ParsePubkeyPair(sender, receiver);
             this.SetChannelInterface(sender, receiver, channel, asset);
@@ -390,29 +436,102 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 
         public FounderSignHandler(string message) : base(message)
         {
-            this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
             this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
                 this.Request.ChannelName, this.Request.MessageBody.AssetType);
         }
 
-        public override bool Handle(string msg)
+        public override bool FailStep()
         {
-            base.Handle(msg);
-            return false;
+            this.FHandler = new FounderFailHandler(this.Request.Receiver, this.Request.Sender, 
+                this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.NetMagic, 
+                this.Request.TxNonce, this.Request.MessageBody.Deposit, this.Request.MessageBody.RoleIndex);
+            this.FHandler.MakeTransaction(this.GetClient());
+
+            return true;
         }
 
-        public override void FailStep()
+        public override bool SucceedStep()
         {
-            this.FHandler = null;
+            // Just only update the transaction history
+            this.UpdateTransaction();
 
+            return true;
         }
 
-        public override void SucceedStep()
+        private void UpdateTransaction()
         {
-            throw new NotImplementedException();
+            TransactionTabelContent content = this.GetChannelInterface().TryGetTransaction(this.Request.TxNonce);
+
+            if (null == content)
+            {
+                return;
+            }
+
+            // start update the transaction
+            content.founder.txDataSign = this.Request.MessageBody.Founder.txDataSign;
+            content.commitment.txDataSign = this.Request.MessageBody.Commitment.txDataSign;
+            content.revocableDelivery.txDataSign = this.Request.MessageBody.RevocableDelivery.txDataSign;
+
+            this.GetChannelInterface().UpdateTransaction(this.Request.TxNonce, content);
+        }
+        
+        public void MakeupFundingTx(FundingTx txContent)
+        {
+            string txDataSign = this.Sign(txContent.txData);
+
+            this.Request.MessageBody.Founder = new FundingSignTx
+            {
+                txDataSign = txDataSign,
+                originalData = txContent
+            };
+        }
+
+        // Below 2 mothods could be move to base class
+        public void MakeupCommitmentTx(CommitmentTx txContent)
+        {
+            string txDataSign = this.Sign(txContent.txData);
+
+            this.Request.MessageBody.Commitment = new CommitmentSignTx
+            {
+                txDataSign = txDataSign,
+                originalData = txContent
+            };
+        }
+
+        public void MakeupRevocableDeliveryTx(RevocableDeliveryTx txContent)
+        {
+            string txDataSign = this.Sign(txContent.txData);
+
+            this.Request.MessageBody.RevocableDelivery = new RevocableDeliverySignTx
+            {
+                txDataSign = txDataSign,
+                originalData = txContent
+            };
+        }
+
+        // Todo: impmentation this method in the base class in future
+        public override bool VerifyRoleIndex()
+        {
+            if (this.IsIllegalRole(this.Request.MessageBody.RoleIndex))
+            {
+                Console.WriteLine("Invalid nonce for founder sign. Nonce: {0}", this.Request.TxNonce);
+                return false;
+            }
+
+            return true;
+        }
+
+        public override bool Verify()
+        {
+            return this.VerifyRoleIndex();
         }
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /// FounderFailHandler start
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// Class Handler for handling FounderFail Message
     /// </summary>
@@ -421,6 +540,22 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
         public FounderFailHandler(string sender, string receiver, string channel, string asset,
             string magic, UInt64 nonce, double deposit, int role = 0)
         {
+            this.Request = this.Request = new FounderFail
+            {
+                Sender = sender,
+                Receiver = receiver,
+                ChannelName = channel,
+                AssetType = asset,
+                NetMagic = magic,
+                TxNonce = nonce,
+
+                MessageBody = new FounderBody
+                {
+                    Deposit = deposit,
+                    RoleIndex = role,
+                    AssetType = asset,
+                },
+            };
             this.Request.MessageBody.SetAttribute("AssetType", asset);
             this.Request.MessageBody.SetAttribute("Deposit", deposit);
             this.Request.MessageBody.SetAttribute("RoleIndex", role);
@@ -436,21 +571,22 @@ namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
                 this.Request.ChannelName, this.Request.MessageBody.AssetType);
         }
 
-        public override bool Handle(string msg)
+        public override bool Handle()
         {
-            base.Handle(msg);
+            Console.WriteLine("Failed to reate channel {0}", this.Request.ChannelName);
+            base.Handle();
             return false;
         }
 
-        public override void FailStep()
+        public override bool FailStep()
         {
-            this.FHandler = null;
-
+            return false;
         }
 
-        public override void SucceedStep()
+        public override bool SucceedStep()
         {
-            throw new NotImplementedException();
+            // TODO add some logs here in future
+            return true;
         }
     }
 }

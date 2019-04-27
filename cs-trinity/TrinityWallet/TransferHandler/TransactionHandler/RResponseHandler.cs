@@ -30,16 +30,6 @@ using Trinity.TrinityWallet.Templates.Messages;
 namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
 {
     ///// <summary>
-    ///// Prototype for RResponse message
-    ///// </summary>
-    //public class RResponse : Header<RResponseBody>
-    //{
-    //    //public RResponse(string sender, string receiver, string channel, string asset, string magic, UInt64 nonce) :
-    //    //    base(sender, receiver, channel, asset, magic, nonce)
-    //    //{ }
-    //}
-
-    ///// <summary>
     ///// Class Handler for handling RResponse Message
     ///// </summary>
     //public class RResponseHandler : TrinityTransaction<RResponse, RsmcHandler, VoidHandler>

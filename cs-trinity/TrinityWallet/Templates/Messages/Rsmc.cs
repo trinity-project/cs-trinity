@@ -41,4 +41,9 @@ namespace Trinity.TrinityWallet.Templates.Messages
         public string BreachRemedy { get; set; }
         public int RoleIndex { get; set; }
     }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class Rsmc : Header<RsmcBody>
+    {
+    }
 }

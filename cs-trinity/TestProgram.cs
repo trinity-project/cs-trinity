@@ -61,10 +61,10 @@ namespace Trinity
             TransactionTabelSummary content = channel.GetTransaction("123456789");
             Console.WriteLine("type = {0}, channel = {1}, nonce = {2}", content.txType, content.channel, content.nonce);
 
-            TransactionTabelContens txtcontent = new TransactionTabelContens();
+            TransactionTabelContent txtcontent = new TransactionTabelContent();
             channel.AddTransaction(1, txtcontent);
 
-            ChannelTableContents channelContent = new ChannelTableContents();
+            ChannelTableContent channelContent = new ChannelTableContent();
             channel.AddChannel(channelName, channelContent);
 
             Console.ReadKey();
