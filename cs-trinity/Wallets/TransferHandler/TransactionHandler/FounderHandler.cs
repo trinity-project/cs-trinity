@@ -453,10 +453,26 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool SucceedStep()
         {
-            // Just only update the transaction history
+            // update the transaction history
             this.UpdateTransaction();
 
+            // broadcast this transaction
+            if (IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                //this.BroadcastTransaction();
+            }
             return true;
+        }
+
+        private void BroadcastTransaction()
+        {
+            string peerFundSign = this.Request.MessageBody.Founder.txDataSign;
+            string fundSign = this.Sign(this.Request.MessageBody.Founder.originalData.txData);
+            string witness = this.Request.MessageBody.Founder.originalData.witness
+                .Replace("{signOther}", peerFundSign)
+                .Replace("{signSelf}", peerFundSign);
+
+            NeoInterface.sendRawTransaction(this.Request.MessageBody.Founder.originalData.txData + witness);
         }
 
         private void UpdateTransaction()

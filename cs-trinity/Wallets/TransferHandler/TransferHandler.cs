@@ -90,12 +90,12 @@ namespace Trinity.Wallets.TransferHandler
         /// </summary>
         public TransferHandler()
         {
-            this.wallet = startTrinity.tntWallet;
+            this.wallet = startTrinity.trinityWallet;
         }
 
         public TransferHandler(string message)
         {
-            this.wallet = startTrinity.tntWallet;
+            this.wallet = startTrinity.trinityWallet;
             this.Request = message.Deserialize<TMessage>();
         }
 

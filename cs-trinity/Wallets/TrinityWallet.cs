@@ -107,7 +107,7 @@ namespace Trinity
         public bool VerifySignarture(string content, string contentSign)
         {
             return NeoInterface.VerifySignature(content, contentSign,
-                this.walletKey.PublicKey.EncodePoint(false).ToArray());
+                this.pubKey.ConvertToScriptHash().ToArray());
         }
 
      #region private_method_sets

@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{4FBC62ED-FE13-4FE5-B1B1-1048AB4978DF}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Trinity</RootNamespace>
     <AssemblyName>Trinity</AssemblyName>
@@ -286,6 +286,10 @@
     <Compile Include="Program.cs" />
     <Compile Include="startTrinity.cs" />
     <Compile Include="Trinity.cs" />
+    <Compile Include="Wallets\Tests\TestCloseChannel.cs" />
+    <Compile Include="Wallets\Tests\TestConfiguration.cs" />
+    <Compile Include="Wallets\Tests\TestCreateChannel.cs" />
+    <Compile Include="Wallets\Tests\TestTrintyWallet.cs" />
     <Compile Include="Wallets\TrinityWallet.cs" />
     <Compile Include="TestProgram.cs" />
     <Compile Include="Properties\Settings1.cs" />
