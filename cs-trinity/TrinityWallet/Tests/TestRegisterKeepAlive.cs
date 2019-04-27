@@ -25,10 +25,10 @@ SOFTWARE.
 */
 
 using System;
-using Trinity.TrinityWallet.TransferHandler.ControlHandler;
+using Trinity.Wallets.TransferHandler.ControlHandler;
 using Trinity.Network.TCP;
 
-namespace Trinity.TrinityWallet.Tests
+namespace Trinity.Wallets.Tests
 {
     public class TestRegisterKeepAlive : IDisposable
     {

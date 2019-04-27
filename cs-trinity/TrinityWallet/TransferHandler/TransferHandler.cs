@@ -31,11 +31,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Trinity.Network.TCP;
-using Trinity.TrinityWallet.Templates.Messages;
+using Trinity.Wallets.Templates.Messages;
 using Trinity.ChannelSet;
 using Trinity.TrinityDB.Definitions;
 
-namespace Trinity.TrinityWallet.TransferHandler
+namespace Trinity.Wallets.TransferHandler
 {
     /// <summary>
     /// 
@@ -45,7 +45,7 @@ namespace Trinity.TrinityWallet.TransferHandler
     /// <typeparam name="TFHandler"></typeparam>
     public abstract class TransferHandler<TMessage, TSHandler, TFHandler> : IDisposable
     {
-        private readonly TntWallet wallet;
+        private readonly TrinityWallet wallet;
 
         protected TMessage Request;
         private string MessageName => typeof(TMessage).Name;

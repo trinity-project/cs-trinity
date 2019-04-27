@@ -27,9 +27,9 @@ SOFTWARE.
 using System.Collections.Generic;
 using MessagePack;
 
-using Trinity.TrinityWallet.Templates.Definitions;
+using Trinity.Wallets.Templates.Definitions;
 
-namespace Trinity.TrinityWallet.Templates.Messages
+namespace Trinity.Wallets.Templates.Messages
 {
     /// <summary>
     /// Body for Settle Message

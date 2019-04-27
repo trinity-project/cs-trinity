@@ -31,11 +31,11 @@ using Neo.Wallets;
 using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
 using Trinity.BlockChain;
-using Trinity.TrinityWallet.Templates.Definitions;
-using Trinity.TrinityWallet.Templates.Messages;
+using Trinity.Wallets.Templates.Definitions;
+using Trinity.Wallets.Templates.Messages;
 using Trinity.Network.TCP;
 
-namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
+namespace Trinity.Wallets.TransferHandler.TransactionHandler
 {
     /// <summary>
     /// Class Handler for handling Settle Message

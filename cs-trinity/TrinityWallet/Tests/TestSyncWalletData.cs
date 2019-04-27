@@ -29,10 +29,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Trinity.TrinityWallet.TransferHandler.ControlHandler;
+using Trinity.Wallets.TransferHandler.ControlHandler;
 using Trinity.Network.TCP;
 
-namespace Trinity.TrinityWallet.Tests
+namespace Trinity.Wallets.Tests
 {
     public class TestSyncWalletData : IDisposable
     {

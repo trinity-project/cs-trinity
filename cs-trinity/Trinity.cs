@@ -1,4 +1,4 @@
-﻿/*
+/*
 Author: Trinity Core Team
 
 MIT License
@@ -23,53 +23,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Neo;
-using Neo.Wallets;
-
-using Trinity.TrinityWallet;
-using Trinity.BlockChain;
 
 namespace Trinity
 {
-    public class TntWallet
+    class Trinity
     {
-        private readonly NeoSystem neoSystem;
-        private readonly Wallet neoWallet;
-        private readonly KeyPair walletKey;
-        public string pubKey;
-
-        public TntWallet(NeoSystem system, Wallet wallet, string pubKey)
-        {
-            this.neoSystem = system;
-            this.neoWallet = wallet;
-            this.pubKey = pubKey;
-            this.walletKey = this.neoWallet?.GetAccount(pubKey.ConvertToScriptHash()).GetKey();
-        }
-
-        public void Start()
-        {
-
-        }
-
-        private void Handle(string message)
-        {
-
-        }
-
-        public string Sign(string content)
-        {
-            return NeoInterface.Sign(content, this.walletKey.PrivateKey);
-        }
-
-        public bool VerifySignarture(string content, string contentSign)
-        {
-            return NeoInterface.VerifySignature(content, contentSign,
-                this.walletKey.PublicKey.EncodePoint(false).ToArray());
-        }
     }
 }

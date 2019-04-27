@@ -25,9 +25,9 @@ SOFTWARE.
 */
 using System;
 using Trinity.BlockChain;
-using Trinity.TrinityWallet.Templates.Messages;
+using Trinity.Wallets.Templates.Messages;
 
-namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
+namespace Trinity.Wallets.TransferHandler.TransactionHandler
 {
     ///// <summary>
     ///// Class Handler for handling Rsmc Message

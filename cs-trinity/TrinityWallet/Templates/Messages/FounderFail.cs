@@ -30,7 +30,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Trinity.TrinityWallet.Templates.Messages
+namespace Trinity.Wallets.Templates.Messages
 {
     public class FounderFail : Founder
     {

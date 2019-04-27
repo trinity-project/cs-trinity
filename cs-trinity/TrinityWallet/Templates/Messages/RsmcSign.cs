@@ -32,7 +32,7 @@ using System.Threading.Tasks;
 
 using MessagePack;
 
-namespace Trinity.TrinityWallet.Templates.Messages
+namespace Trinity.Wallets.Templates.Messages
 {
     [MessagePackObject(keyAsPropertyName:true)]
     public class RsmcSign : Rsmc

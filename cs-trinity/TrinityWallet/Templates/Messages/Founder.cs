@@ -25,9 +25,9 @@ SOFTWARE.
 */
 
 using MessagePack;
-using Trinity.TrinityWallet.Templates.Definitions;
+using Trinity.Wallets.Templates.Definitions;
 
-namespace Trinity.TrinityWallet.Templates.Messages
+namespace Trinity.Wallets.Templates.Messages
 {
     /// <summary>
     /// This file define Founder Message

@@ -26,7 +26,7 @@ SOFTWARE.
 
 using MessagePack;
 
-namespace Trinity.TrinityWallet.Templates.Messages
+namespace Trinity.Wallets.Templates.Messages
 {
     /// <summary>
     /// Body for RResponse Message

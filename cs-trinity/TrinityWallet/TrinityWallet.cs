@@ -1,4 +1,4 @@
-/*
+﻿/*
 Author: Trinity Core Team
 
 MIT License
@@ -23,21 +23,53 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MessagePack;
+using Neo;
+using Neo.Wallets;
 
-namespace Trinity.Wallets.Templates.Messages
+using Trinity.Wallets;
+using Trinity.BlockChain;
+
+namespace Trinity
 {
-    [MessagePackObject(keyAsPropertyName:true)]
-    public class RegisterKeepAlive
+    public class TrinityWallet
     {
-        public string MessageType { get { return this.GetType().Name; } }
-        public string Ip { get; set; }
-        public string Protocol { get; set; }
+        private readonly NeoSystem neoSystem;
+        private readonly Wallet neoWallet;
+        private readonly KeyPair walletKey;
+        public string pubKey;
+
+        public TrinityWallet(NeoSystem system, Wallet wallet, string pubKey)
+        {
+            this.neoSystem = system;
+            this.neoWallet = wallet;
+            this.pubKey = pubKey;
+            this.walletKey = this.neoWallet?.GetAccount(pubKey.ConvertToScriptHash()).GetKey();
+        }
+
+        public void Start()
+        {
+
+        }
+
+        private void Handle(string message)
+        {
+
+        }
+
+        public string Sign(string content)
+        {
+            return NeoInterface.Sign(content, this.walletKey.PrivateKey);
+        }
+
+        public bool VerifySignarture(string content, string contentSign)
+        {
+            return NeoInterface.VerifySignature(content, contentSign,
+                this.walletKey.PublicKey.EncodePoint(false).ToArray());
+        }
     }
 }

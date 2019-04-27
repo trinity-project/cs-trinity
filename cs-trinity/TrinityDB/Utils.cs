@@ -32,7 +32,7 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 
 using Neo.IO.Data.LevelDB;
-using Trinity.TrinityWallet;
+using Trinity.Wallets;
 
 namespace Trinity.TrinityDB
 {

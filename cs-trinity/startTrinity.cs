@@ -14,7 +14,7 @@ namespace Trinity
         public static string currentAccountPublicKey = "";
         public static NeoSystem NeoSystem;
 
-        public static TntWallet tntWallet;
+        public static TrinityWallet tntWallet;
 
         public static void trinityConfigure(NeoSystem neoSystem, Wallet wallet, string publicKey)
         {
@@ -22,7 +22,7 @@ namespace Trinity
             currentWallet = wallet;
             currentAccountPublicKey = publicKey;
 
-            tntWallet = new TntWallet(neoSystem, wallet, publicKey);
+            tntWallet = new TrinityWallet(neoSystem, wallet, publicKey);
         }
 
         /*

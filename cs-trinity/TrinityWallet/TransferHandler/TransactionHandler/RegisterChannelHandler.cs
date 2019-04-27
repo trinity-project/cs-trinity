@@ -32,10 +32,10 @@ using System.Security.Cryptography;
 using Trinity.ChannelSet;
 using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
-using Trinity.TrinityWallet.Templates.Messages;
+using Trinity.Wallets.Templates.Messages;
 
 
-namespace Trinity.TrinityWallet.TransferHandler.TransactionHandler
+namespace Trinity.Wallets.TransferHandler.TransactionHandler
 {
     /// <summary>
     /// This handler will process the message -- RegisterChannel

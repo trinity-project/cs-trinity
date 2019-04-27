@@ -29,10 +29,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Trinity.TrinityWallet.Templates.Messages;
-using Trinity.TrinityWallet.TransferHandler;
+using Trinity.Wallets.Templates.Messages;
+using Trinity.Wallets.TransferHandler;
 
-namespace Trinity.TrinityWallet.TransferHandler.ControlHandler
+namespace Trinity.Wallets.TransferHandler.ControlHandler
 {
     public class SyncWalletHandler : TransferHandler<SyncWalletData, VoidHandler, VoidHandler>
     {

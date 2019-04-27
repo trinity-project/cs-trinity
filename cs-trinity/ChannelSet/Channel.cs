@@ -37,7 +37,7 @@ using Newtonsoft.Json;
 using Neo.IO.Data.LevelDB;
 using Trinity.TrinityDB;
 using Trinity.TrinityDB.Definitions;
-using Trinity.TrinityWallet;
+using Trinity.Wallets;
 
 namespace Trinity.ChannelSet
 {

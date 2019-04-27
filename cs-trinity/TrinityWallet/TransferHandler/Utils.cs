@@ -37,9 +37,9 @@ using Neo.Wallets;
 using Neo.Cryptography.ECC;
 using Neo.SmartContract;
 
-using Trinity.TrinityWallet.Templates.Definitions;
+using Trinity.Wallets.Templates.Definitions;
 
-namespace Trinity.TrinityWallet
+namespace Trinity.Wallets
 {
     public static class Utils
     {

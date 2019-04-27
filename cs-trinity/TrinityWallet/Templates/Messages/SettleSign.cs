@@ -31,9 +31,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using MessagePack;
-using Trinity.TrinityWallet.Templates.Definitions;
+using Trinity.Wallets.Templates.Definitions;
 
-namespace Trinity.TrinityWallet.Templates.Messages
+namespace Trinity.Wallets.Templates.Messages
 {
     [MessagePackObject(keyAsPropertyName: true)]
     public class SettleSignBody

@@ -27,7 +27,7 @@ SOFTWARE.
 using System;
 using MessagePack;
 
-namespace Trinity.TrinityWallet.Templates.Messages
+namespace Trinity.Wallets.Templates.Messages
 {
     /// <summary>
     /// This file define the prototype of the message header.

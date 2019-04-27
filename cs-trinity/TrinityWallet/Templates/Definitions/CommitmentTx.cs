@@ -26,7 +26,7 @@ SOFTWARE.
 
 using MessagePack;
 
-namespace Trinity.TrinityWallet.Templates.Definitions
+namespace Trinity.Wallets.Templates.Definitions
 {
     [MessagePackObject(keyAsPropertyName: true)]
     public class CommitmentTx : TxContents

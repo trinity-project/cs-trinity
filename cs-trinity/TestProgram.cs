@@ -30,10 +30,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Trinity.TrinityWallet.Templates.Definitions;
-using Trinity.TrinityWallet.TransferHandler.TransactionHandler;
+using Trinity.Wallets.Templates.Definitions;
+using Trinity.Wallets.TransferHandler.TransactionHandler;
 using Trinity.Network.TCP;
-using Trinity.TrinityWallet.Tests;
+using Trinity.Wallets.Tests;
 
 using Neo.IO.Data.LevelDB;
 using Trinity.ChannelSet;
