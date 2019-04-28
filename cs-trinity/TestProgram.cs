@@ -48,7 +48,7 @@ namespace Trinity
         {
             string channelName = Channel.NewChannel("02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.5:8089",
                 "02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.6:8089");
-            Channel channel = new Channel("test", "TNC", 
+            Channel channel = new Channel(channelName, "TNC", 
                 "02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.5:8089",
                 "02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.6:8089");
             //TransactionTabelSummary txcontent = new TransactionTabelSummary
@@ -64,11 +64,14 @@ namespace Trinity
             //TransactionTabelContent txtcontent = new TransactionTabelContent();
             //channel.AddTransaction(1, txtcontent);
 
-            ChannelTableContent channelContent = new ChannelTableContent();
+            ChannelTableContent channelContent = new ChannelTableContent() {
+                channel = channelName,
+                asset = "TNC"
+            };
             channelContent.balance = new Dictionary<string, double>();
             channelContent.balance.Add("founder", 100);
             channelContent.balance.Add("partner", 100);
-            channel.AddChannel("test", channelContent);
+            channel.AddChannel(channelName, channelContent);
 
             List<ChannelTableContent> channelList = channel.GetChannelListOfThisWallet();
 
