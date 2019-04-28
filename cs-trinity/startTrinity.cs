@@ -22,7 +22,7 @@ namespace Trinity
             currentWallet = wallet;
             currentAccountPublicKey = publicKey;
 
-            trinityWallet = new TrinityWallet(neoSystem, wallet, publicKey, ip, port);
+            trinityWallet = new TrinityWallet(neoSystem, wallet, publicKey, TrinityWalletConfig.ip, TrinityWalletConfig.port);
         }
 
         /*
