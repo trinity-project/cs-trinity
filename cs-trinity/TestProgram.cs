@@ -83,6 +83,8 @@ namespace Trinity
 
             List<ChannelTableContent> channelList = channel.GetChannelListOfThisWallet();
 
+            ChannelTableContent channelItem = channel.TryGetChannel(channelName);
+
             Console.ReadKey();
         }
 

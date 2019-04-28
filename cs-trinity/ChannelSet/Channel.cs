@@ -80,7 +80,7 @@ namespace Trinity.ChannelSet
         {
             try
             {
-                Slice channelContent = this.TableChannel.Db.Get(this.TableChannel.bothKeyword, channel);
+                Slice channelContent = this.TableChannel.Db.Get(this.TableChannel.bothKeyword.Add(channel.ToBytesUtf8()), channel);
                 return channelContent.ToString().Deserialize<ChannelTableContent>();
             }
             catch (Exception ExpInfo)
@@ -93,7 +93,7 @@ namespace Trinity.ChannelSet
 
         public ChannelTableContent TryGetChannel(string channel)
         {
-            if (this.TableChannel.Db.TryGet(this.TableChannel.bothKeyword, channel, out Slice chContent))
+            if (this.TableChannel.Db.TryGet(this.TableChannel.bothKeyword.Add(channel.ToBytesUtf8()), channel, out Slice chContent))
             {
                 return chContent.ToString().Deserialize<ChannelTableContent>();
             }

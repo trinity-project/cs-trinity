@@ -191,7 +191,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 // TODO: Read from the database
                 TransactionTabelContent transactionContent = this.GetChannelInterface().GetTransaction(this.Request.TxNonce);
-                if (default != transactionContent)
+                if (null != transactionContent)
                 {
                     this.fundingTx["txData"] = transactionContent.founder.originalData.txData;
                     this.fundingTx["txId"] = transactionContent.founder.originalData.txId;
