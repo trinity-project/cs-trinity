@@ -1,0 +1,329 @@
+/*
+Author: Trinity Core Team
+
+MIT License
+
+Copyright (c) 2018 Trinity
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using Trinity.Network.TCP;
+using Trinity.Wallets.Templates.Messages;
+using Trinity.Wallets.TransferHandler.ControlHandler;
+using Trinity.Wallets.TransferHandler.TransactionHandler;
+
+namespace Trinity.Wallets.Tests
+{
+    internal class TestRegisterWallet : RegisterWallet
+    {
+
+        public TestRegisterWallet() : base() { }
+        public TestRegisterWallet(TrinityWallet wallet, TrinityTcpClient client,
+            string ip, string port, string protocol) : base(ip, port, protocol)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public void SendMessage()
+        {
+            this.MakeTransaction();
+        }
+    }
+
+    internal class TestSyncWalletHandler : SyncWalletHandler
+    {
+        public TestSyncWalletHandler() : base()
+        {
+        }
+
+        public TestSyncWalletHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string sender, string magic) : base(sender, magic)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public void SendMessage()
+        {
+            this.MakeTransaction();
+        }
+    }
+
+    internal class TestRegisterChannelHandler : RegisterChannelHandler
+    {
+        public TestRegisterChannelHandler() : base()
+        {
+        }
+
+        public TestRegisterChannelHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string sender, string receiver, string channel, string asset, string magic,double deposit) 
+            : base(sender, receiver, channel, asset, magic, deposit)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public TestRegisterChannelHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string message) : base(message)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public void SendMessage()
+        {
+            this.MakeTransaction(this.GetClient());
+        }
+    }
+
+    internal class TestRegisterChannelFailHandler : RegisterChannelFailHandler
+    {
+        public TestRegisterChannelFailHandler() : base()
+        {
+        }
+
+        public TestRegisterChannelFailHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string sender, string receiver, string channel, string asset,
+            string magic, RegisterChannelBody original) 
+            : base(sender, receiver, channel, asset, magic, original)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public TestRegisterChannelFailHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string message) : base(message)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public void SendMessage()
+        {
+            this.MakeTransaction(this.GetClient());
+        }
+    }
+
+    internal class TestFounderHandler : FounderHandler
+    {
+        public TestFounderHandler(TrinityWallet wallet, TrinityTcpClient client) : base()
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public TestFounderHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string sender, string receiver, string channel, string asset,
+            string magic, UInt64 nonce, double deposit, int role = 0) : base()
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public TestFounderHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string message) : base(message)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public void SendMessage()
+        {
+            this.MakeTransaction(this.GetClient());
+        }
+    }
+
+    internal class TestFounderSignHandler : FounderSignHandler
+    {
+        public TestFounderSignHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string sender, string receiver, string channel, string asset,
+            string magic, UInt64 nonce, double deposit, int role = 0) 
+            : base(sender, receiver, channel, asset, magic, nonce, deposit, role)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public TestFounderSignHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string message) : base(message)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public void SendMessage()
+        {
+            this.MakeTransaction(this.GetClient());
+        }
+    }
+
+    internal class TestFounderFailHandler : FounderFailHandler
+    {
+        public TestFounderFailHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string sender, string receiver, string channel, string asset,
+            string magic, UInt64 nonce, double deposit, int role = 0) 
+            : base(sender, receiver, channel, asset, magic, nonce, deposit, role)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public TestFounderFailHandler(TrinityWallet wallet, TrinityTcpClient client, 
+            string message) : base(message)
+        {
+            this.SetClient(client);
+            this.SetWallet(wallet);
+        }
+
+        public void SendMessage()
+        {
+            this.MakeTransaction(this.GetClient());
+        }
+    }
+
+    public class TestCreateChannel
+    {
+        private readonly TrinityTcpClient client;
+        private readonly TrinityWallet wallet;
+
+        private readonly bool isPeer;
+
+        private readonly string ip;
+        private readonly string port;
+        private readonly string pubKey;
+        private readonly string priKey;
+        private readonly string uri;
+        private readonly string peerUri;
+        private readonly string netMagic;
+        private readonly string assetType;
+        private readonly double deposit;
+
+        private TestRegisterWallet registerWalletHndl;
+        private TestSyncWalletHandler sycnWalletHndl;
+
+        private TestRegisterChannelHandler registerChannelHndl;
+        private TestRegisterChannelFailHandler registerChannelFailHndl;
+
+        private TestFounderHandler founderHntl;
+        private TestFounderSignHandler founderSignHndl;
+        private TestFounderFailHandler foudnerFailHndl;
+
+        public TestCreateChannel(bool isPeer=false)
+        {
+            this.isPeer = isPeer;
+
+            this.netMagic = TestConfiguration.magic;
+            this.assetType = TestConfiguration.AssetType ;
+            this.deposit = TestConfiguration.deposit;
+
+            if (!isPeer)
+            {
+                this.ip = TestConfiguration.ip;
+                this.port = TestConfiguration.port;
+                this.pubKey = TestConfiguration.pubKey;
+                this.priKey = TestConfiguration.priKey;
+                this.uri = TestConfiguration.uri;
+                this.peerUri = TestConfiguration.peerUri;
+            }
+            else
+            {
+                this.ip = TestConfiguration.peerIp;
+                this.port = TestConfiguration.peerPort;
+                this.pubKey = TestConfiguration.peerPubKey;
+                this.priKey = TestConfiguration.peerPriKey;
+                this.uri = TestConfiguration.peerUri;
+                this.peerUri = TestConfiguration.uri;
+            }
+            this.client = new TrinityTcpClient(this.ip, this.port);
+            this.client.CreateConnetion();
+            this.wallet = new TestTrinityWallet(null, null, this.pubKey, this.priKey, this.ip, this.port);
+        }
+
+        public void WCCTestRegisterKeepAlive()
+        {
+            this.registerWalletHndl = new TestRegisterWallet(this.wallet, this.client, "localhost", "20556", "TCP");
+            //this.registerWalletHndl = new TestRegisterWallet(this.wallet, this.client, this.ip, this.port, "TCP");
+            Console.WriteLine("Send RegisterKeepAlive: {0}", this.registerWalletHndl.ToJson());
+            this.registerWalletHndl.SendMessage();
+        }
+
+        public void WCCTestSyncWallet()
+        {
+            TestRegisterKeepAlive TestRKA = new TestRegisterKeepAlive(client);
+            TestRKA.RegisterToGateWay();
+            TestSyncWalletData TestSWD = new TestSyncWalletData(client);
+            TestSWD.SyncWalletData();
+
+            this.sycnWalletHndl = new TestSyncWalletHandler(this.wallet, this.client, this.uri, this.netMagic);
+            this.sycnWalletHndl.SetPublicKey(this.pubKey);
+            this.sycnWalletHndl.SetAlias("NoAlias");
+            this.sycnWalletHndl.SetAutoCreate("0");
+            this.sycnWalletHndl.SetNetAddress("localhost:20556");
+            this.sycnWalletHndl.SetMaxChannel(10);
+            this.sycnWalletHndl.SetChannelInfo();
+
+            // Start to send RegisterKeepAlive to gateway
+            Console.WriteLine("Send SyncWalletData: {0}", this.sycnWalletHndl.ToJson());
+            this.sycnWalletHndl.SendMessage();
+
+            // received the expected messages
+            this.client.ReceiveMessage("AckSyncWallet");
+        }
+
+        public void WCCTestTriggerCreateChannel()
+        {
+            if (!this.isPeer)
+            {
+                this.registerChannelHndl = new TestRegisterChannelHandler(
+                this.wallet, this.client, this.uri, this.peerUri, null, this.assetType, this.netMagic, this.deposit
+                );
+
+                // send RegisterChannel
+                Console.WriteLine("Send RegisterChannel: {0}", this.registerChannelHndl.ToJson());
+                this.registerChannelHndl.SendMessage();
+
+                // expected the Founder message
+                this.client.ReceiveMessage("Founder");
+
+                // second message is FounderSign
+                this.client.ReceiveMessage("FounderSign");
+            }
+            else
+            {
+                // expected the Founder message
+                this.client.ReceiveMessage("RegisterChannel");
+                
+                // expected the Founder message
+                this.client.ReceiveMessage("FounderSign");
+
+                // second message is FounderSign
+                this.client.ReceiveMessage("Founder");
+            }
+            
+        }
+    }
+}
