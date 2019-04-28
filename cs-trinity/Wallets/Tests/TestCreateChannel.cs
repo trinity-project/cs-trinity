@@ -223,7 +223,7 @@ namespace Trinity.Wallets.Tests
         private readonly double deposit;
 
         private TestRegisterWallet registerWalletHndl;
-        private TestSyncWalletHandler sycnWalletHndl;
+        private TestSyncWalletHandler syncWalletHndl;
 
         private TestRegisterChannelHandler registerChannelHndl;
         private TestRegisterChannelFailHandler registerChannelFailHndl;
@@ -278,17 +278,17 @@ namespace Trinity.Wallets.Tests
             TestSyncWalletData TestSWD = new TestSyncWalletData(client);
             TestSWD.SyncWalletData();
 
-            this.sycnWalletHndl = new TestSyncWalletHandler(this.wallet, this.client, this.uri, this.netMagic);
-            this.sycnWalletHndl.SetPublicKey(this.pubKey);
-            this.sycnWalletHndl.SetAlias("NoAlias");
-            this.sycnWalletHndl.SetAutoCreate("0");
-            this.sycnWalletHndl.SetNetAddress("localhost:20556");
-            this.sycnWalletHndl.SetMaxChannel(10);
-            this.sycnWalletHndl.SetChannelInfo();
+            this.syncWalletHndl = new TestSyncWalletHandler(this.wallet, this.client, this.uri, this.netMagic);
+            this.syncWalletHndl.SetPublicKey(this.pubKey);
+            this.syncWalletHndl.SetAlias("NoAlias");
+            this.syncWalletHndl.SetAutoCreate("0");
+            this.syncWalletHndl.SetNetAddress("localhost:20556");
+            this.syncWalletHndl.SetMaxChannel(10);
+            this.syncWalletHndl.SetChannelInfo();
 
             // Start to send RegisterKeepAlive to gateway
-            Console.WriteLine("Send SyncWalletData: {0}", this.sycnWalletHndl.ToJson());
-            this.sycnWalletHndl.SendMessage();
+            Console.WriteLine("Send SyncWalletData: {0}", this.syncWalletHndl.ToJson());
+            this.syncWalletHndl.SendMessage();
 
             // received the expected messages
             this.client.ReceiveMessage("AckSyncWallet");

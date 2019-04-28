@@ -188,7 +188,7 @@ namespace Trinity.Wallets.TransferHandler
 
         public TrinityTcpClient GetClient()
         {
-            return this.client;
+            return this.wallet.GetClient();
         }
 
         public void ParsePubkeyPair(string uri, string peerUri)
