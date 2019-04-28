@@ -101,7 +101,7 @@ namespace Trinity.ChannelSet
         public List<ChannelTableContent> GetChannelListOfThisWallet()
         {
             // Fuzzy get
-            return this.TableChannel.Db.FuzzyGet<ChannelTableContent>(this.TableChannel.bothKeyword);
+            return this.TableChannel.Db.FuzzyGet<ChannelTableContent>(this.TableChannel.keyword);
         }
 
         public void AddChannel(string channel, ChannelTableContent value)
