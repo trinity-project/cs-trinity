@@ -323,7 +323,7 @@ namespace Trinity.Network.TCP
             }
         }
 
-        private void CloseConnection()
+        public void CloseConnection()
         {
             try
             {

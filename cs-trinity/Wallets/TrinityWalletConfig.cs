@@ -39,6 +39,7 @@ namespace Trinity
     {
         // Hardcode the ip:port for create the TrinityTcpClient instances
         public const string ip = "47.98.228.81";
+        //public const string ip = "10.0.0.5";
         public const string port = "8089";
     }
 }

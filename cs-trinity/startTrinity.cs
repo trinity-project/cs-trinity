@@ -16,13 +16,13 @@ namespace Trinity
 
         public static TrinityWallet trinityWallet;
 
-        public static void trinityConfigure(NeoSystem neoSystem, Wallet wallet, string publicKey, string ip=null, string port=null)
+        public static void trinityConfigure(NeoSystem neoSystem, Wallet wallet, string publicKey, string magic, string ip=null, string port=null)
         {
             NeoSystem = neoSystem;
             currentWallet = wallet;
             currentAccountPublicKey = publicKey;
 
-            trinityWallet = new TrinityWallet(neoSystem, wallet, publicKey, TrinityWalletConfig.ip, TrinityWalletConfig.port);
+            trinityWallet = new TrinityWallet(neoSystem, wallet, publicKey, magic, ip, port);
         }
 
         /*

@@ -50,7 +50,10 @@ namespace Trinity
         private readonly Wallet neoWallet;
         private readonly KeyPair walletKey;
 
-        private readonly TrinityTcpClient client;
+        private readonly string gatewayIp;
+        private readonly string gatewayPort;
+        private readonly string netMagic;
+        private TrinityTcpClient client;
 
         public string pubKey;
 
@@ -61,19 +64,23 @@ namespace Trinity
         /// <param name="system"></param>
         /// <param name="wallet"></param>
         /// <param name="pubKey"></param>
-        public TrinityWallet(NeoSystem system, Wallet wallet, string pubKey, string ip=null, string port=null)
+        public TrinityWallet(NeoSystem system, Wallet wallet, string pubKey, string magic, string ip=null, string port=null)
         {
             this.neoSystem = system;
             this.neoWallet = wallet;
             this.pubKey = pubKey;
+            this.netMagic = magic;
+            this.gatewayIp = ip ?? TrinityWalletConfig.ip;
+            this.gatewayPort = port ?? TrinityWalletConfig.port;
+
+            // get the wallet pair key by neo wallet instance
             this.walletKey = this.neoWallet?.GetAccount(pubKey.ConvertToScriptHash()).GetKey();
 
-            if (null != ip && null != port)
-            {
-                this.client = new TrinityTcpClient(ip, port);
-                this.client.CreateConnetion();
-            }
+            // create the Trinity Tcp client connection
+            this.CreateConnection();
         }
+
+
 
         public void StartThread()
         {
@@ -92,6 +99,13 @@ namespace Trinity
             };
             recvThread.Start();
             recvThread.Join();
+        }
+
+        public void CreateConnection()
+        {
+            this.client?.CloseConnection();
+            this.client = this.client ?? new TrinityTcpClient(this.gatewayIp, this.gatewayPort);
+            this.client.CreateConnetion();
         }
 
         public TrinityTcpClient GetClient()

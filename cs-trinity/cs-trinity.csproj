@@ -341,6 +341,7 @@
     <Compile Include="Wallets\Templates\Messages\RegisterKeepAlive.cs" />
     <Compile Include="Wallets\TransferHandler\TransferHandler.cs" />
     <Compile Include="Wallets\TransferHandler\ControlHandler\RegisterWallet.cs" />
+    <Compile Include="Wallets\TrinityWalletConfig.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="3rdParty\" />
