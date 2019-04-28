@@ -126,7 +126,7 @@ namespace Trinity.BlockChain
 
         public static uint getBlockHeight()
         {
-            return Blockchain.Singleton.Height + 1;
+            return Blockchain.Singleton.HeaderHeight;
         }
 
         public static uint getWalletBlockHeight()
