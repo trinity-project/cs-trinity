@@ -51,7 +51,10 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
                 Sender = sender,
                 NetMagic = magic,
 
-                MessageBody = new SyncWalletBody()
+                MessageBody = new SyncWalletBody
+                {
+                    Channel = new Dictionary<string, Dictionary<string, double>>(),
+                }
             };
         }
 

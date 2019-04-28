@@ -45,7 +45,7 @@ namespace Trinity.Wallets.TransferHandler
     /// <typeparam name="TFHandler"></typeparam>
     public abstract class TransferHandler<TMessage, TSHandler, TFHandler> : IDisposable
     {
-        private readonly TrinityWallet wallet;
+        private TrinityWallet wallet;
 
         protected TMessage Request;
         private string MessageName => typeof(TMessage).Name;
@@ -121,6 +121,20 @@ namespace Trinity.Wallets.TransferHandler
             }
         }
 
+        public virtual void MakeTransaction()
+        {
+            this.MakeupMessage();
+
+            if (null != this.Request)
+            {
+                this.wallet.GetClient()?.SendData(this.Request.Serialize());
+            }
+            else
+            {
+                Console.WriteLine("Void Message is found");
+            }
+        }
+
         public virtual void MakeupMessage()
         {
         }
@@ -160,6 +174,11 @@ namespace Trinity.Wallets.TransferHandler
             this.SucceedStep();
 
             return true;
+        }
+
+        public void SetWallet(TrinityWallet wallet)
+        {
+            this.wallet = wallet;
         }
 
         public void SetClient(TrinityTcpClient client)

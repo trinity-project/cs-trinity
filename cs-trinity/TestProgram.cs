@@ -77,12 +77,14 @@ namespace Trinity
 
             // create the transport for following message tests
             // TrinityTcpClient client = new TrinityTcpClient("47.98.228.81", "8089");
-            //TrinityTcpClient client = new TrinityTcpClient("10.0.0.5", "8089");
-            //client.CreateConnetion();
+            TrinityTcpClient client = new TrinityTcpClient("10.0.0.5", "8089");
+            client.CreateConnetion();
 
             //// Test sets
             //MFTestRegisterKeepAlive(client); // RegisterKeepAlive
             //MFTestSyncWalletData(client); // SyncWalletData
+
+            MFTestCreateChannel();
 
             Console.ReadKey();
         }
@@ -122,6 +124,17 @@ namespace Trinity
         {
             TestSyncWalletData TestSWD = new TestSyncWalletData(client);
             TestSWD.SyncWalletData();
+        }
+
+        private static void MFTestCreateChannel(bool isPeer = false)
+        {
+            TestCreateChannel TCCHHandler = new TestCreateChannel(isPeer);
+
+            TCCHHandler.WCCTestRegisterKeepAlive();
+
+            TCCHHandler.WCCTestSyncWallet();
+
+            TCCHHandler.WCCTestTriggerCreateChannel();
         }
     }
 }
