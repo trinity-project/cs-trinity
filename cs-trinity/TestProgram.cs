@@ -44,7 +44,7 @@ namespace Trinity
 {
     class TestProgram
     {
-        public static void TempTest()
+        private static void TempTest()
         {
             string channelName = Channel.NewChannel("02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.5:8089",
                 "02144bbcf3139f372fd680ae29847d76b778547becacaf8e700ff0afaf1e1c4f45@10.10.10.6:8089");
@@ -61,8 +61,16 @@ namespace Trinity
             //TransactionTabelSummary content = channel.GetTransaction("123456789");
             //Console.WriteLine("type = {0}, channel = {1}, nonce = {2}", content.txType, content.channel, content.nonce);
 
-            //TransactionTabelContent txtcontent = new TransactionTabelContent();
-            //channel.AddTransaction(1, txtcontent);
+            TransactionTabelContent txtcontent = new TransactionTabelContent()
+            {
+                nonce = 1,
+                monitorTxId = "0xtest_txid"
+            };
+            channel.AddTransaction(1, txtcontent);
+
+            TransactionTabelContent txContent = channel.GetTransaction(1);
+
+            txContent = channel.TryGetTransaction(2);
 
             ChannelTableContent channelContent = new ChannelTableContent() {
                 channel = channelName,
@@ -98,7 +106,7 @@ namespace Trinity
             Console.ReadKey();
         }
 
-        public static void TestVerifyMessageBody()
+        private static void TestVerifyMessageBody()
         {
             //    // Message : RegisterKeepAlive
             //    RegisterKeepAlive Request = new RegisterKeepAlive();

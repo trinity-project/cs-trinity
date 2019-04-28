@@ -78,10 +78,14 @@ namespace Trinity.ChannelSet
 
         public ChannelTableContent GetChannel(string channel)
         {
-            Slice channelContent = this.TableChannel.Db.Get(this.TableChannel.bothKeyword, channel);
-            if (default != channelContent)
+            try
             {
+                Slice channelContent = this.TableChannel.Db.Get(this.TableChannel.bothKeyword, channel);
                 return channelContent.ToString().Deserialize<ChannelTableContent>();
+            }
+            catch (Exception ExpInfo)
+            {
+                Console.WriteLine("Failed to get the channel: {0}. Exception: {1}", channel, ExpInfo);
             }
 
             return null;
@@ -89,8 +93,7 @@ namespace Trinity.ChannelSet
 
         public ChannelTableContent TryGetChannel(string channel)
         {
-            this.TableChannel.Db.TryGet(this.TableChannel.bothKeyword, channel, out Slice chContent);
-            if (default != chContent)
+            if (this.TableChannel.Db.TryGet(this.TableChannel.bothKeyword, channel, out Slice chContent))
             {
                 return chContent.ToString().Deserialize<ChannelTableContent>();
             }
@@ -122,13 +125,17 @@ namespace Trinity.ChannelSet
         // channel summary info
         public ChannelSummaryContents GetChannelSummary(string channel)
         {
-            Slice channelSummaryContent = this.TableChannel.Db.Get(this.TableChannel.summary.Add(channel.ToBytesUtf8()), channel);
-            if (default != channelSummaryContent)
+            try
             {
+                Slice channelSummaryContent = this.TableChannel.Db.Get(this.TableChannel.summary.Add(channel.ToBytesUtf8()), channel);
                 return channelSummaryContent.ToString().Deserialize<ChannelSummaryContents>();
             }
+            catch (Exception ExpInfo)
+            {
+                Console.WriteLine("Failed to get summary of the channel: {0}. Exception: {1}", channel, ExpInfo);
+            }
 
-            return default;
+            return null;
         }
 
         public void AddChannelSummary(string channel, ChannelSummaryContents value)
@@ -149,10 +156,14 @@ namespace Trinity.ChannelSet
         // transaction info
         public TransactionTabelContent GetTransaction(UInt64 nonce)
         {
-            Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString());
-            if (default != txContent)
+            try
             {
+                Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString());
                 return txContent.ToString().Deserialize<TransactionTabelContent>();
+            }
+            catch (Exception ExpInfo)
+            {
+                Console.WriteLine("Failed to get transaction with nonce: {0}. Exception: {1}", nonce, ExpInfo);
             }
 
             return null;
@@ -171,9 +182,8 @@ namespace Trinity.ChannelSet
 
         public TransactionTabelContent TryGetTransaction(UInt64 nonce)
         {
-            this.TableTransaction.Db.TryGet(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()),
-                nonce.ToString(), out Slice txContent);
-            if (default != txContent)
+            if (this.TableTransaction.Db.TryGet(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()),
+                nonce.ToString(), out Slice txContent))
             {
                 return txContent.ToString().Deserialize<TransactionTabelContent>();
             }
@@ -183,8 +193,7 @@ namespace Trinity.ChannelSet
 
         public TransactionTabelSummary TryGetTransaction(string txid)
         {
-            this.TableTransaction.Db.TryGet(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid, out Slice txContent);
-            if (default != txContent)
+            if (this.TableTransaction.Db.TryGet(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid, out Slice txContent))
             {
                 return txContent.ToString().Deserialize<TransactionTabelSummary>();
             }

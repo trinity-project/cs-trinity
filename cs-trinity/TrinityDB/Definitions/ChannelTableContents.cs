@@ -51,7 +51,7 @@ namespace Trinity.TrinityDB.Definitions
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public struct ChannelSummaryContents
+    public class ChannelSummaryContents
     {
         public UInt64 nonce;
         public string peer;
