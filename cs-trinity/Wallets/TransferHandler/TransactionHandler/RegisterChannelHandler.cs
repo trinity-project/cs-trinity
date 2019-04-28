@@ -106,14 +106,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public override bool FailStep()
         {
             this.FHandler = new RegisterChannelFailHandler(
-                this.header.Receiver, this.header.Sender, this.header.ChannelName,
+                this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                 this.Request.MessageBody.AssetType, this.header.NetMagic, this.Request.MessageBody);
             this.FHandler.MakeTransaction(this.GetClient());
 
             ChannelTableContent content = new ChannelTableContent
             {
+                uri = this.Request.Receiver,
+                peer = this.Request.Sender,
+                asset = this.Request.MessageBody.AssetType,
                 channel = this.Request.ChannelName,
-                state = EnumChannelState.ERROR
+                state = EnumChannelState.ERROR.ToString(),
             };
             this.GetChannelInterface().AddChannel(this.Request.ChannelName, content);
 
@@ -123,35 +126,41 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public override bool SucceedStep()
         {
             this.SHandler = new FounderHandler(
-                this.header.Receiver, this.header.Sender, this.header.ChannelName,
+                this.Request.Receiver, this.Request.Sender, this.header.ChannelName,
                 this.Request.MessageBody.AssetType, this.header.NetMagic, 0, this.Request.MessageBody.Deposit);
             this.SHandler.MakeTransaction(this.GetClient());
 
             // Add channel to database
-            this.AddChannel();
+            this.AddChannel(this.Request.Receiver, this.Request.Sender, EnumRole.PARTNER);
 
             return true;
         }
 
-        public void AddChannel()
+        public override void MakeTransaction()
+        {
+            this.AddChannel(this.Request.Sender, this.Request.Receiver);
+            base.MakeTransaction();
+        }
+
+        public void AddChannel(string uri, string peerUri, EnumRole role = EnumRole.PARTNER)
         {
             ChannelTableContent content = new ChannelTableContent
             {
                 channel = this.Request.ChannelName,
                 asset = this.Request.MessageBody.AssetType,
-                uri = this.Request.Receiver,
-                peer = this.Request.Sender,
+                uri = uri,
+                peer = peerUri,
                 magic = this.Request.NetMagic,
-                role = EnumRole.PARTNER,
-                state = EnumChannelState.INIT,
+                role = role.ToString(),
+                state = EnumChannelState.INIT.ToString(),
                 alive = 0,
                 deposit = new Dictionary<string, double> {
-                    { this.Request.Receiver, this.Request.MessageBody.Deposit},
-                    { this.Request.Sender, this.Request.MessageBody.Deposit},
+                    { uri, this.Request.MessageBody.Deposit},
+                    { peerUri, this.Request.MessageBody.Deposit},
                 },
                 balance = new Dictionary<string, double> {
-                    { this.Request.Receiver, this.Request.MessageBody.Deposit},
-                    { this.Request.Sender, this.Request.MessageBody.Deposit},
+                    { uri, this.Request.MessageBody.Deposit},
+                    { peerUri, this.Request.MessageBody.Deposit},
                 }
             };
             this.GetChannelInterface().AddChannel(this.Request.ChannelName, content);
@@ -205,15 +214,20 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
             else
             {
-                ChannelTableContent content = new ChannelTableContent
-                {
-                    channel = this.Request.ChannelName,
-                    state = EnumChannelState.ERROR
-                };
-                this.GetChannelInterface().UpdateChannel(this.Request.ChannelName, content);
+                this.UpdateChannel();
                 Console.WriteLine("Failed to register channel {0}", this.Request.ChannelName);
             }
             return false;
+        }
+
+        public void UpdateChannel()
+        {
+            ChannelTableContent content = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
+            if (null != content)
+            {
+                content.state = EnumChannelState.ERROR.ToString();
+                this.GetChannelInterface().UpdateChannel(this.Request.ChannelName, content);
+            }
         }
 
         public override bool FailStep()

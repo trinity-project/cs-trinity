@@ -43,8 +43,8 @@ namespace Trinity.TrinityDB.Definitions
         public string uri;
         public string peer;
         public string magic;
-        public EnumRole role;
-        public EnumChannelState state;
+        public string role;
+        public string state;
         public UInt64 alive;
         public Dictionary<string, double> deposit;
         public Dictionary<string, double> balance;
