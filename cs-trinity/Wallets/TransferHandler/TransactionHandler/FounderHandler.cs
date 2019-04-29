@@ -96,7 +96,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public FounderHandler(string message) : base(message)
         {
-            this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
             this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
                 this.Request.ChannelName, this.Request.MessageBody.AssetType);
         }
@@ -582,7 +582,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public FounderFailHandler(string message) : base(message)
         {
-            this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
             this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
                 this.Request.ChannelName, this.Request.MessageBody.AssetType);
         }

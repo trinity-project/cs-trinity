@@ -91,7 +91,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public RegisterChannelHandler(string message) : base(message)
         {
-            this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
             this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
                 this.Request.ChannelName, this.Request.MessageBody.AssetType);
         }
@@ -109,7 +109,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.FHandler = new RegisterChannelFailHandler(
                 this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                this.Request.MessageBody.AssetType, this.header.NetMagic, this.Request.MessageBody);
+                this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.MessageBody);
             this.FHandler.MakeTransaction(this.GetClient());
 
             ChannelTableContent content = new ChannelTableContent
@@ -128,8 +128,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public override bool SucceedStep()
         {
             this.SHandler = new FounderHandler(
-                this.Request.Receiver, this.Request.Sender, this.header.ChannelName,
-                this.Request.MessageBody.AssetType, this.header.NetMagic, 0, this.Request.MessageBody.Deposit);
+                this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
+                this.Request.MessageBody.AssetType, this.Request.NetMagic, 0, this.Request.MessageBody.Deposit);
             this.SHandler.MakeTransaction(this.GetClient());
 
             // Add channel to database
@@ -198,7 +198,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public RegisterChannelFailHandler(string message) : base(message)
         {
-            this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
+            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
             this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
                 this.Request.ChannelName, this.Request.MessageBody.OriginalMessage.AssetType);
         }

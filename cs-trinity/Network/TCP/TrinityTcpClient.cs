@@ -249,6 +249,7 @@ namespace Trinity.Network.TCP
                     int len = clientSocket.Receive(buffer);
                     if (0 >= len)
                     {
+                        Thread.Sleep(1000);
                         continue;
                     }
 
@@ -284,6 +285,8 @@ namespace Trinity.Network.TCP
                 {
                     Console.WriteLine(ex.ToString());
                 }
+
+                Thread.Sleep(1000);
             }
 
             return VerificationResult;

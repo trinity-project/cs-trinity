@@ -176,7 +176,8 @@ namespace Trinity
             switch (header.MessageType)
             {
                 case "RegisterChannel":
-                    new RegisterChannelHandler(message).Handle();
+                    RegisterChannelHandler registerChannelHndl = new RegisterChannelHandler(message);
+                    registerChannelHndl.Handle();
                     break;
                 case "RegisterChannelFail":
                     new RegisterChannelFailHandler(message).Handle();

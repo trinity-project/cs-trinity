@@ -471,7 +471,14 @@ namespace Trinity.BlockChain
             OpCode += intToHex(method.Length / 2);
             OpCode += method;
             OpCode += "67";  // APPCALL
-            OpCode += AssetID.HexToBytes().Reverse().ToArray().ToHexString();
+            if (AssetID.StartsWith("0x"))
+            {
+                OpCode += AssetID.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();
+            }
+            else
+            {
+                OpCode += AssetID.HexToBytes().Reverse().ToArray().ToHexString();
+            }
             OpCode += "f1";  // THROWIFNOT
 
             return OpCode;
