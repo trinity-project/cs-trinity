@@ -249,7 +249,7 @@ namespace Trinity.Network.TCP
                         if (msg.Contains(expected))
                         {
                             VerificationResult = true;
-                            Console.WriteLine("Received {0}: {1}", expected, msg);
+                            Log.Debug("Received {0}: {1}", msg, expected);
                             break;
                         }
                         messageQueue.Enqueue(msg);
