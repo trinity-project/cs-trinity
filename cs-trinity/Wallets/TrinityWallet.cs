@@ -78,6 +78,9 @@ namespace Trinity
 
             // create the Trinity Tcp client connection
             this.CreateConnection();
+
+            // start the Thread
+            this.StartThread();
         }
 
         public void StartThread()
@@ -167,6 +170,7 @@ namespace Trinity
         {
             TransactionHeader header = message.Deserialize<TransactionHeader>();
 
+            Log.Debug("Received {0}", header.MessageType, message);
             // To handle the message
             switch (header.MessageType)
             {
