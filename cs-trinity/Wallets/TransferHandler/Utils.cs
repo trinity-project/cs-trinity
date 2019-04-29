@@ -89,7 +89,7 @@ namespace Trinity.Wallets
         ///
         public static UInt160 ConvertToScriptHash(this string pubKey)
         {
-            ECPoint ECPointPublicKey = ECPoint.DecodePoint(pubKey.HexToBytes(), ECCurve.Secp256r1);
+            ECPoint ECPointPublicKey = ECPoint.DecodePoint(pubKey.Replace("0x", "").HexToBytes(), ECCurve.Secp256r1);
             UInt160 ScriptHash = Contract.CreateSignatureRedeemScript(ECPointPublicKey).ToScriptHash();
             return ScriptHash;
         }

@@ -46,7 +46,7 @@ namespace Trinity.Wallets.Tests
 
         public MockKeyPair(string priKey, string pubKey)
         {
-            this.PrivateKey = priKey.HexToBytes();
+            this.PrivateKey = priKey.Replace("0x", "").HexToBytes();
             this.PublicKey = pubKey;
         }
     }
