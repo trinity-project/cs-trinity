@@ -191,6 +191,11 @@ namespace Trinity.Wallets.TransferHandler
             return this.wallet.GetClient();
         }
 
+        public string GetNetMagic()
+        {
+            return this.wallet.GetNetMagic();
+        }
+
         public void ParsePubkeyPair(string uri, string peerUri)
         {
             this.pubKey = uri.Split('@').First();

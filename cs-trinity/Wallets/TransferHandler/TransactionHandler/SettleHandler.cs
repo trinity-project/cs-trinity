@@ -74,7 +74,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 Receiver = receiver,
                 ChannelName = channel,
                 AssetType = asset,
-                NetMagic = magic,
+                NetMagic = magic ?? this.GetNetMagic(),
                 MessageBody = new SettleBody(),
             };
 

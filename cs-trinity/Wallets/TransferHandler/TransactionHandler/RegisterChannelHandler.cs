@@ -43,6 +43,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     public class RegisterChannelHandler : TransferHandler<RegisterChannel, FounderHandler, RegisterChannelFailHandler>
     {
         private readonly double Deposit;
+        private readonly string NetMagic;
 
         // Default Constructor
         public RegisterChannelHandler(): base()
@@ -63,6 +64,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             double deposit) : base()
         {
             this.Deposit = deposit;
+            this.NetMagic = magic ?? this.GetNetMagic();
 
             if (null == channel)
             {
@@ -75,7 +77,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 Receiver = receiver,
                 ChannelName = channel,
                 AssetType = asset,
-                NetMagic = magic,
+                NetMagic = this.NetMagic,
                 MessageBody = new RegisterChannelBody
                 {
                     AssetType = asset,

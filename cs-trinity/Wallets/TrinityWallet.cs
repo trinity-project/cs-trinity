@@ -80,8 +80,6 @@ namespace Trinity
             this.CreateConnection();
         }
 
-
-
         public void StartThread()
         {
             Thread thread = new Thread(this.Handle)
@@ -111,6 +109,11 @@ namespace Trinity
         public TrinityTcpClient GetClient()
         {
             return this.client;
+        }
+
+        public string GetNetMagic()
+        {
+            return this.netMagic;
         }
         
         public string Sign(string content)
