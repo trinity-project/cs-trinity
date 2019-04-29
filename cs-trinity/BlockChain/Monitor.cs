@@ -32,11 +32,39 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Trinity;
+using Trinity.ChannelSet;
+using Trinity.TrinityDB.Definitions;
+using Trinity.BlockChain;
+using Trinity.ChannelSet.Definitions;
 
 namespace Trinity.BlockChain
 {
-    class Monitor
+    public class MonitorTransction
     {
+        private readonly string netMagic;
+        private string uri;
+        private Channel channel;
+
+        public MonitorTransction(string uri, string magic)
+        {
+            this.netMagic = magic;
+            this.uri = uri;
+            channel = new Channel(null, null, uri);
+        }
+
+        public bool SetWalletUri(string uri)
+        {
+            bool ret = this.uri.Equals(uri);
+
+            if (!ret)
+            {
+                this.uri = uri;
+            }
+
+            return !ret;
+        }
+
         public void monitorBlock()
         {
             while (true)
@@ -55,32 +83,31 @@ namespace Trinity.BlockChain
                 }
                 walletBlockHeitht = NeoInterface.getWalletBlockHeight();
                 deltaBlockHeitht = blockChainHeight - walletBlockHeitht;
-                if (deltaBlockHeitht >= 0)
+                try
                 {
-                    try
+                    if (deltaBlockHeitht >= 0 && deltaBlockHeitht < 2000)
                     {
-                        if (deltaBlockHeitht > 0 && deltaBlockHeitht < 2000)
-                        {
-                            //TODO jugement whether there is matched txId, then trigger function to handle it.
-                        }
-                        else if (deltaBlockHeitht >= 2000)
-                        {
-                            //TODO if there is matched txId, Then punishment would be meaningless.
-                        }
+                        //TODO jugement whether there is matched txId, then trigger function to handle it.
+                        //TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+                        //string t = cha.ToString();
+                        //Console.WriteLine("①本地块高:" + walletBlockHeitht + " 链上:" + blockChainHeight + " 当前时间:" + t);
+                        MonitorTxId(deltaBlockHeitht);
                     }
-                    catch (Exception ex)
+                    else if (deltaBlockHeitht >= 2000)
                     {
-                        throw ex;
+                        //TODO if there is matched txId, Then punishment would be meaningless.
+                        MonitorTxId(walletBlockHeitht - 2000);
                     }
                 }
-                else
+                catch (Exception ex)
                 {
+                    throw ex;
+                }
 
-                }
 
                 if (walletBlockHeitht < blockChainHeight)
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(5000);
                 }
                 else
                 {
@@ -97,6 +124,39 @@ namespace Trinity.BlockChain
         public void registerBlock(uint block, params string[] blockInfo)
         {
 
+        }
+
+        public void MonitorTxId(uint block)
+        {
+            List<string> txidList = NeoInterface.getBlockTxId(block);
+            foreach (string id in txidList)
+            {
+                string id1 = NeoInterface.FormatJObject(id).Substring(2);
+                List<ChannelTableContent> channelList = channel.GetChannelListOfThisWallet();
+                TransactionTabelSummary Summary = channel.TryGetTransaction(id1);
+                if (Summary != null)
+                {
+                    ConductEvent(Summary);
+                }
+
+            }
+        }
+
+        public void ConductEvent(TransactionTabelSummary Summary)
+        {
+            switch (Summary.txType)
+            {
+                case "funding":
+                    ChannelTableContent ChannelData = channel.TryGetChannel(Summary.channel);
+                    ChannelData.state = EnumChannelState.OPENED.ToString();
+                    channel.UpdateChannel(Summary.channel, ChannelData);
+                    Console.WriteLine("执行funding操作结束");
+                    break;
+                case "settle":
+                    channel.DeleteChannel(Summary.channel);
+                    Console.WriteLine("执行settle操作结束");
+                    break;
+            }
         }
     }
 }
