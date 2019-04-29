@@ -49,6 +49,23 @@ namespace Trinity.Wallets.Templates.Messages
         public UInt64 TxNonce { get; set; }
     }
 
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class ParsedHeader
+    {
+        /// <summary>
+        /// Mandatory contents in the message header
+        /// </summary>
+        public string MessageType { get; set; }
+
+        public string Sender { get; set; }
+        public string Receiver { get; set; }
+        public string ChannelName { get; set; }
+        public string AssetType { get; set; }
+
+        public string NetMagic { get; set; }
+        public UInt64 TxNonce { get; set; }
+    }
+
     /// <summary>
     /// This file define the prototype of the message header.
     /// </summary>

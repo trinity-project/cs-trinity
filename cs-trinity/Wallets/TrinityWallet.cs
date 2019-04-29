@@ -81,6 +81,7 @@ namespace Trinity
 
             // start the Thread
             this.StartThread();
+            
         }
 
         public void StartThread()
@@ -91,7 +92,7 @@ namespace Trinity
                 Name = "TrinityWallet.Channel.Transaction"
             };
             thread.Start();
-            thread.Join();
+            //thread.Join();
 
             Thread recvThread = new Thread(this.Receive)
             {
@@ -99,7 +100,7 @@ namespace Trinity
                 Name = "TrinityWallet.ReceiveMessage"
             };
             recvThread.Start();
-            recvThread.Join();
+            //recvThread.Join();
         }
 
         public void CreateConnection()
@@ -168,9 +169,9 @@ namespace Trinity
 
         private void ProcessMessage(string message)
         {
-            TransactionHeader header = message.Deserialize<TransactionHeader>();
+            ParsedHeader header = message.Deserialize<ParsedHeader>();
 
-            Log.Debug("Received {0}", header.MessageType, message);
+            Log.Debug("Received {0}, {1}", header.MessageType, message);
             // To handle the message
             switch (header.MessageType)
             {
