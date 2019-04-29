@@ -80,12 +80,14 @@ namespace Trinity.Network.TCP
                 clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 1000);
                 clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 1000);
 
+                /*
                 uint dummy = 0;
                 byte[] inOptionValues = new byte[Marshal.SizeOf(dummy) * 3];
                 BitConverter.GetBytes((uint)1).CopyTo(inOptionValues, 0);
                 BitConverter.GetBytes((uint)90000).CopyTo(inOptionValues, Marshal.SizeOf(dummy));  //首次探测时间90秒 
                 BitConverter.GetBytes((uint)60000).CopyTo(inOptionValues, Marshal.SizeOf(dummy) * 2); // 间隔侦测时间60秒
                 clientSocket.IOControl(IOControlCode.KeepAliveValues, inOptionValues, null);
+                */
 
                 //开启新的线程，不停的接收服务器发来的消息
                 //Thread receiveThread = new Thread(ReceiveMessage);
