@@ -40,18 +40,25 @@ namespace Trinity.Wallets.Tests
         public const double deposit = 10;
 
         // TrinityTcpClient definitions
-        public const string ip = "10.0.0.5";
-        public const string peerIp = "10.0.0.5";
+        //public const string ip = "10.0.0.5";
+        public const string ip = "10.149.23.108";
+        public const string localIp = "localhost";
         public const string port = "8089";
+        public const string LocalPort = "20666";
+
+        public const string peerIp = "10.149.23.108";
+        //public const string peerIp = "10.0.0.5";
+        public const string peerLocalIp = "localhost";
         public const string peerPort = "8089";
+        public const string peerLocalPort = "20777";
 
         // one side wallet configuration
         public const string priKey = "b608e267c8e5f1316b2229504ea93fb0d3b1bfc01230fb71648b4b2823f25eda";
         public const string pubKey = "02614f837dd7025ce133312b11e70c0fac76db48bfa255eada5e0b89d0bbdc33d8";
 
         // other side wallet
-        public const string peerPriKey = "6e6061004a2622684e92d595be9d4afc258d49a638d09832340bd35ae0c818e5";
-        public const string peerPubKey = "030b97a25f520b417e436d91cd849877ff1c02fff60d7a39a578a60f51fc6eccd8";
+        public const string peerPriKey = "ae1d14cfd598f30a91e84594e89ecb3f9f6d70b9567c40f9a6e97b24bdbf8d3a";
+        public const string peerPubKey = "023c72090418f5d4511e4a47f78db7e8d2483378dc644201e9ce597a2cfbf4a937";
         //public const string peerPriKey = "2b70128c49b8164921947ed7e9e1a5234d265880d381b7e72d595e952984fd20";
         //public const string peerPubKey = "03f082d73e5c1ed87c5d2b84ae726185ffc01b76490c1012f015b77162f5883333";
 

@@ -70,6 +70,7 @@ namespace Trinity.Wallets.Tests
             this.neoWallet = wallet;
             this.pubKey = pubKey;
             this.walletKey = new MockKeyPair(prikey, pubKey);
+            this.SetKeyPair(prikey);
 
             this.client = this.GetClient();
 
@@ -83,6 +84,11 @@ namespace Trinity.Wallets.Tests
         public override void ProcessMessage(string message)
         {
             ParsedHeader header = message.Deserialize<ParsedHeader>();
+
+            if (null == header)
+            {
+                return;
+            }
 
             Log.Info("Receive {0}: {1}", header.MessageType, message);
             // To handle the message

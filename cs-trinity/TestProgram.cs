@@ -88,7 +88,10 @@ namespace Trinity
             ChannelTableContent channelItem = channel.TryGetChannel(channelName);
 
             //string address = NeoInterface.ToAddress1("030b97a25f520b417e436d91cd849877ff1c02fff60d7a39a578a60f51fc6eccd8".ConvertToScriptHash());
-            
+
+            //string origin = "04" + "6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296" + "4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5";
+
+
         }
 
         public static void TestMain()
@@ -145,7 +148,7 @@ namespace Trinity
         private static void MFTestSyncWalletData(TrinityTcpClient client)
         {
             TestSyncWalletData TestSWD = new TestSyncWalletData(client);
-            TestSWD.SyncWalletData();
+            TestSWD.MakeupSyncWalletData();
         }
 
         private static void MFTestCreateChannel(bool isPeer = false)

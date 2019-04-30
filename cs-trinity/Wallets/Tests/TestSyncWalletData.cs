@@ -47,15 +47,15 @@ namespace Trinity.Wallets.Tests
         {
         }
 
-        public void SyncWalletData()
+        public void MakeupSyncWalletData()
         {
             SyncWalletHandler msgHandler = new SyncWalletHandler(
-                string.Format("{0}@{1}:{2}", TestConfiguration.pubKey, TestConfiguration.ip, TestConfiguration.port), null);
+                string.Format("{0}@{1}:{2}", TestConfiguration.pubKey, TestConfiguration.localIp, TestConfiguration.LocalPort), "19990331");
             
             msgHandler.SetPublicKey(TestConfiguration.pubKey);
             msgHandler.SetAlias("NoAlias");
             msgHandler.SetAutoCreate("0");
-            msgHandler.SetNetAddress("localhost:20556");
+            msgHandler.SetNetAddress(string.Format("{0}:{1}", TestConfiguration.localIp, TestConfiguration.LocalPort));
             msgHandler.SetMaxChannel(10);
             msgHandler.SetChannelInfo();
 

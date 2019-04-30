@@ -71,6 +71,19 @@ namespace Trinity.Wallets.Tests
         {
             this.MakeTransaction();
         }
+
+        public void MakeupSyncWalletData()
+        {
+            this.SetPublicKey(TestConfiguration.pubKey);
+            this.SetAlias("NoAlias");
+            this.SetAutoCreate("0");
+            this.SetNetAddress(string.Format("{0}:{1}", TestConfiguration.localIp, TestConfiguration.LocalPort));
+            this.SetMaxChannel(10);
+            this.SetChannelInfo();
+
+            // Start to send RegisterKeepAlive to gateway
+            Console.WriteLine("Send SyncWalletData: {0}", this.ToJson());
+        }
     }
 
     internal class TestRegisterChannelHandler : RegisterChannelHandler
@@ -265,7 +278,7 @@ namespace Trinity.Wallets.Tests
 
         public void WCCTestRegisterKeepAlive()
         {
-            this.registerWalletHndl = new TestRegisterWallet(this.wallet, this.client, "localhost", "20556", "TCP");
+            this.registerWalletHndl = new TestRegisterWallet(this.wallet, this.client, TestConfiguration.localIp, TestConfiguration.LocalPort, "TCP");
             //this.registerWalletHndl = new TestRegisterWallet(this.wallet, this.client, this.ip, this.port, "TCP");
             Console.WriteLine("Send RegisterKeepAlive: {0}", this.registerWalletHndl.ToJson());
             this.registerWalletHndl.SendMessage();
@@ -273,18 +286,20 @@ namespace Trinity.Wallets.Tests
 
         public void WCCTestSyncWallet()
         {
-            TestRegisterKeepAlive TestRKA = new TestRegisterKeepAlive(client);
-            TestRKA.RegisterToGateWay();
+            //TestRegisterKeepAlive TestRKA = new TestRegisterKeepAlive(client);
+            //TestRKA.RegisterToGateWay();
             TestSyncWalletData TestSWD = new TestSyncWalletData(client);
-            TestSWD.SyncWalletData();
+            //TestSWD.MakeupSyncWalletData();
 
-            this.syncWalletHndl = new TestSyncWalletHandler(this.wallet, this.client, this.uri, this.netMagic);
-            this.syncWalletHndl.SetPublicKey(this.pubKey);
-            this.syncWalletHndl.SetAlias("NoAlias");
-            this.syncWalletHndl.SetAutoCreate("0");
-            this.syncWalletHndl.SetNetAddress("localhost:20556");
-            this.syncWalletHndl.SetMaxChannel(10);
-            this.syncWalletHndl.SetChannelInfo();
+            this.syncWalletHndl = new TestSyncWalletHandler(this.wallet, this.client, 
+                string.Format("{0}@{1}:{2}", TestConfiguration.pubKey, TestConfiguration.localIp, TestConfiguration.LocalPort), this.netMagic);
+            this.syncWalletHndl.MakeupSyncWalletData();
+            //this.syncWalletHndl.SetPublicKey(this.pubKey);
+            //this.syncWalletHndl.SetAlias("NoAlias");
+            //this.syncWalletHndl.SetAutoCreate("0");
+            //this.syncWalletHndl.SetNetAddress("localhost:20556");
+            //this.syncWalletHndl.SetMaxChannel(10);
+            //this.syncWalletHndl.SetChannelInfo();
 
             // Start to send RegisterKeepAlive to gateway
             Console.WriteLine("Send SyncWalletData: {0}", this.syncWalletHndl.ToJson());
