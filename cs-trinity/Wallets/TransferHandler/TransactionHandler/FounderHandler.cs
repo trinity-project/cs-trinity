@@ -67,7 +67,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         
 
         public FounderHandler(string sender, string receiver, string channel, string asset, 
-            string magic, UInt64 nonce, double deposit, int role=0) : base()
+            string magic, UInt64 nonce, double deposit, int role) : base()
         {
             this.RoleMax = 1;
 
@@ -148,32 +148,29 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.SHandler.MakeupFundingTx(this.Request.MessageBody.Founder);
             this.SHandler.MakeupCommitmentTx(this.Request.MessageBody.Commitment);
             this.SHandler.MakeupRevocableDeliveryTx(this.Request.MessageBody.RevocableDelivery);
+            // send FounderSign to peer
+            this.SHandler.MakeTransaction(this.GetClient());
             #endregion
 
             #region New_FounderHandler
-            FounderHandler founderHandler = null;
             if (this.IsRole0(this.Request.MessageBody.RoleIndex))
             {
                 // record the peer data to the database
                 this.AddTransaction(true);
 
                 // Sender Founder with Role equals to 1
-                founderHandler = new FounderHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
+                FounderHandler founderHandler = new FounderHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                         this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Deposit,
-                        1);
+                        0);
+                founderHandler.MakeTransaction(this.GetClient());
             }
             #endregion
-
-            // send FounderSign to peer
-            this.SHandler.MakeTransaction(this.GetClient());
-            founderHandler.MakeTransaction(this.GetClient());
 
             return true;
         }
 
         public override void MakeTransaction(TrinityTcpClient client)
         {
-            this.MakeupMessage();
             base.MakeTransaction(client);
         }
 
@@ -194,6 +191,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 TransactionTabelContent transactionContent = this.GetChannelInterface().GetTransaction(this.Request.TxNonce);
                 if (null != transactionContent)
                 {
+                    this.fundingTx = new JObject();
                     this.fundingTx["txData"] = transactionContent.founder.originalData.txData;
                     this.fundingTx["txId"] = transactionContent.founder.originalData.txId;
                     this.fundingTx["witness"] = transactionContent.founder.originalData.witness;
@@ -276,6 +274,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             if (IsRole0(this.Request.MessageBody.RoleIndex))
             {
                 this.AddTransaction();
+                this.Request.MessageBody.RoleIndex = 1;
             }
             else if (IsRole1(this.Request.MessageBody.RoleIndex))
             {

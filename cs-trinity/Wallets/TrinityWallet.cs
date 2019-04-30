@@ -169,11 +169,12 @@ namespace Trinity
 
         public virtual void ProcessMessage(string message)
         {
-            if (null == message)
+            ParsedHeader header = message.Deserialize<ParsedHeader>();
+
+            if (null == header)
             {
                 return;
             }
-            ParsedHeader header = message.Deserialize<ParsedHeader>();
 
             Log.Debug("Received {0}, {1}", header.MessageType, message);
             // To handle the message

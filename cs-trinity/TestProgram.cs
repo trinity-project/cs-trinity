@@ -123,7 +123,7 @@ namespace Trinity
             //    }
 
             // Message : Founder
-            FounderHandler FounderMsgHndl = new FounderHandler("1", "2", "3", "4", "5", 6, 7);
+            //FounderHandler FounderMsgHndl = new FounderHandler("1", "2", "3", "4", "5", 6, 7);
             //FounderMsgHndl.SetCommitment();
             Console.WriteLine(FounderMsgHndl.ToJson());
         }

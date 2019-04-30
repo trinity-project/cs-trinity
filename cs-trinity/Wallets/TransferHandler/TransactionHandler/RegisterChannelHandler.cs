@@ -129,7 +129,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.SHandler = new FounderHandler(
                 this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                this.Request.MessageBody.AssetType, this.Request.NetMagic, 0, this.Request.MessageBody.Deposit);
+                this.Request.MessageBody.AssetType, this.Request.NetMagic, 0, this.Request.MessageBody.Deposit, 0);
             this.SHandler.MakeTransaction(this.GetClient());
 
             // Add channel to database

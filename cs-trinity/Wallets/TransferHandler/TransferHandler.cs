@@ -127,7 +127,7 @@ namespace Trinity.Wallets.TransferHandler
 
             if (null != this.Request)
             {
-                this.wallet.GetClient()?.SendData(this.Request.Serialize());
+                this.wallet?.GetClient()?.SendData(this.Request.Serialize());
             }
             else
             {
@@ -142,6 +142,11 @@ namespace Trinity.Wallets.TransferHandler
         public string ToJson()
         {
             return this.Request.Serialize();
+        }
+
+        public TMessage GetTMessage()
+        {
+            return this.Request;
         }
 
         //public virtual bool Handle(string msg)
@@ -188,18 +193,18 @@ namespace Trinity.Wallets.TransferHandler
 
         public TrinityTcpClient GetClient()
         {
-            return this.wallet.GetClient();
+            return this.wallet?.GetClient();
         }
 
         public string GetNetMagic()
         {
-            return this.wallet.GetNetMagic();
+            return this.wallet?.GetNetMagic();
         }
 
         public void ParsePubkeyPair(string uri, string peerUri)
         {
-            this.pubKey = uri.Split('@').First();
-            this.peerPubKey = peerUri.Split('@').First();
+            this.pubKey = uri?.Split('@').First();
+            this.peerPubKey = peerUri?.Split('@').First();
         }
 
         public string GetPubKey()
@@ -261,12 +266,12 @@ namespace Trinity.Wallets.TransferHandler
 
         public string Sign(string content)
         {
-            return this.wallet.Sign(content);
+            return this.wallet?.Sign(content);
         }
 
         public bool VerifySignarture(string content, string contentSign)
         {
-            return this.wallet.VerifySignarture(content, contentSign);
+            return (null == this.wallet) ? false : this.wallet.VerifySignarture(content, contentSign);
         }
     }
 }
