@@ -62,25 +62,29 @@ namespace Trinity.Wallets.Tests
 
         public string pubKey;
 
-        public TestTrinityWallet(NeoSystem system, Wallet wallet, string pubKey, string prikey, string ip = null, string port = null)
-            : base(system, wallet, pubKey, ip, port)
+        public TestTrinityWallet(NeoSystem system, Wallet wallet, string pubKey, string prikey,
+            string magic, string ip = null, string port = null)
+            : base(system, wallet, pubKey, magic, ip, port)
         {
             this.neoSystem = system;
             this.neoWallet = wallet;
             this.pubKey = pubKey;
             this.walletKey = new MockKeyPair(prikey, pubKey);
 
-            if (null != ip && null != port)
-            {
-                this.client = new TrinityTcpClient(ip, port);
-                this.client.CreateConnetion();
-            }
+            this.client = this.GetClient();
+
+            //if (null != ip && null != port)
+            //{
+            //    this.client = new TrinityTcpClient(ip, port);
+            //    this.client.CreateConnetion();
+            //}
         }
 
-        private void ProcessMessage(string message)
+        public override void ProcessMessage(string message)
         {
-            TransactionHeader header = message.Deserialize<TransactionHeader>();
+            ParsedHeader header = message.Deserialize<ParsedHeader>();
 
+            Log.Info("Receive {0}: {1}", header.MessageType, message);
             // To handle the message
             switch (header.MessageType)
             {

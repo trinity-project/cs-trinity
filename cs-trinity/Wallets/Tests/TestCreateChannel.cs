@@ -260,7 +260,7 @@ namespace Trinity.Wallets.Tests
             }
             this.client = new TrinityTcpClient(this.ip, this.port);
             this.client.CreateConnetion();
-            this.wallet = new TestTrinityWallet(null, null, this.pubKey, this.priKey, this.ip, this.port);
+            this.wallet = new TestTrinityWallet(null, null, this.pubKey, this.priKey, "19990331", this.ip, this.port);
         }
 
         public void WCCTestRegisterKeepAlive()
@@ -291,7 +291,7 @@ namespace Trinity.Wallets.Tests
             this.syncWalletHndl.SendMessage();
 
             // received the expected messages
-            this.client.ReceiveMessage("AckSyncWallet");
+            //this.client.ReceiveMessage("AckSyncWallet");
         }
 
         public void WCCTestTriggerCreateChannel()
@@ -306,22 +306,22 @@ namespace Trinity.Wallets.Tests
                 Console.WriteLine("Send RegisterChannel: {0}", this.registerChannelHndl.ToJson());
                 this.registerChannelHndl.SendMessage();
 
-                // expected the Founder message
-                this.client.ReceiveMessage("Founder");
+                //// expected the Founder message
+                //this.client.ReceiveMessage("Founder");
 
-                // second message is FounderSign
-                this.client.ReceiveMessage("FounderSign");
+                //// second message is FounderSign
+                //this.client.ReceiveMessage("FounderSign");
             }
             else
             {
-                // expected the Founder message
-                this.client.ReceiveMessage("RegisterChannel");
+                //// expected the Founder message
+                //this.client.ReceiveMessage("RegisterChannel");
                 
-                // expected the Founder message
-                this.client.ReceiveMessage("FounderSign");
+                //// expected the Founder message
+                //this.client.ReceiveMessage("FounderSign");
 
-                // second message is FounderSign
-                this.client.ReceiveMessage("Founder");
+                //// second message is FounderSign
+                //this.client.ReceiveMessage("Founder");
             }
             
         }

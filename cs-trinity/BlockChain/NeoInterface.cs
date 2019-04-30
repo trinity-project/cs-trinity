@@ -264,7 +264,7 @@ namespace Trinity.BlockChain
         ///</returns>
         public static UInt160 ToScriptHash1(string address)
         {
-            byte[] data = address.Base58CheckDecode();
+            byte[] data = address.Replace("\"", "").Base58CheckDecode();
             if (data.Length != 21)
                 throw new FormatException();
             return new UInt160(data.Skip(1).ToArray());

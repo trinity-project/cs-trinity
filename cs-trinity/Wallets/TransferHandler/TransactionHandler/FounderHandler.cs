@@ -25,6 +25,7 @@ SOFTWARE.
 */
 using System;
 
+using Neo;
 using Neo.IO.Json;
 using Neo.Wallets;
 
@@ -250,7 +251,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 deposit, this.GetPubKey(), this.GetPeerPubKey(),
                 this.fundingTx["scriptFunding"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
 
-            string address = this.GetPubKey().ConvertToScriptHash().ToAddress();
+            UInt160 address160 = this.GetPubKey().ConvertToScriptHash();
+            string address = address160.ToAddress();
             this.rdTx = Funding.createRDTX(this.commTx["addressRSMC"].ToString(), address,
                 this.Request.MessageBody.Deposit.ToString(), this.commTx["txId"].ToString(),
                 this.commTx["scriptRSMC"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());

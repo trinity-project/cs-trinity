@@ -283,7 +283,7 @@ namespace Trinity.Network.TCP
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    //Console.WriteLine(ex.ToString());
                 }
 
                 Thread.Sleep(1000);

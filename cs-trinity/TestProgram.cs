@@ -34,6 +34,8 @@ using Trinity.Wallets.Templates.Definitions;
 using Trinity.Wallets.TransferHandler.TransactionHandler;
 using Trinity.Network.TCP;
 using Trinity.Wallets.Tests;
+using Trinity.BlockChain;
+using Trinity.Wallets;
 
 using Neo.IO.Data.LevelDB;
 using Trinity.ChannelSet;
@@ -85,12 +87,13 @@ namespace Trinity
 
             ChannelTableContent channelItem = channel.TryGetChannel(channelName);
 
-            Console.ReadKey();
+            //string address = NeoInterface.ToAddress1("030b97a25f520b417e436d91cd849877ff1c02fff60d7a39a578a60f51fc6eccd8".ConvertToScriptHash());
+            
         }
 
         public static void TestMain()
         {
-            TempTest();
+            //TempTest();
             // Output the message body to verify it's correct ??
             // TestVerifyMessageBody();
 
@@ -103,7 +106,7 @@ namespace Trinity
             //MFTestRegisterKeepAlive(client); // RegisterKeepAlive
             //MFTestSyncWalletData(client); // SyncWalletData
 
-            //MFTestCreateChannel();
+            MFTestCreateChannel();
 
             Console.ReadKey();
         }
@@ -153,7 +156,7 @@ namespace Trinity
 
             TCCHHandler.WCCTestSyncWallet();
 
-            TCCHHandler.WCCTestTriggerCreateChannel();
+            //TCCHHandler.WCCTestTriggerCreateChannel();
         }
     }
 }

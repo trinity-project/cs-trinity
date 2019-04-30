@@ -37,6 +37,7 @@ using Neo.Wallets;
 using Neo.Cryptography.ECC;
 using Neo.SmartContract;
 
+using Trinity.BlockChain;
 using Trinity.Wallets.Templates.Definitions;
 
 namespace Trinity.Wallets
@@ -89,9 +90,19 @@ namespace Trinity.Wallets
         ///
         public static UInt160 ConvertToScriptHash(this string pubKey)
         {
-            ECPoint ECPointPublicKey = ECPoint.DecodePoint(pubKey.Replace("0x", "").HexToBytes(), ECCurve.Secp256r1);
+            ECPoint ECPointPublicKey = ECPoint.DecodePoint(pubKey.RemovePrefix().HexToBytes(), ECCurve.Secp256r1);
             UInt160 ScriptHash = Contract.CreateSignatureRedeemScript(ECPointPublicKey).ToScriptHash();
             return ScriptHash;
+        }
+
+        public static string PublicKeyToAddress(this string pubKey)
+        {
+            return NeoInterface.ToAddress1(pubKey.RemovePrefix().ConvertToScriptHash());
+        }
+
+        public static string RemovePrefix(this string content)
+        {
+            return content.Replace("0x", "").Replace("0X", "");
         }
 
         /////////////////////////////////////////////////////////////////////////////

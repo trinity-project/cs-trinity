@@ -81,7 +81,7 @@ namespace Trinity
 
             // start the Thread
             this.StartThread();
-            
+
         }
 
         public void StartThread()
@@ -167,7 +167,7 @@ namespace Trinity
             }
         }
 
-        private void ProcessMessage(string message)
+        public virtual void ProcessMessage(string message)
         {
             ParsedHeader header = message.Deserialize<ParsedHeader>();
 

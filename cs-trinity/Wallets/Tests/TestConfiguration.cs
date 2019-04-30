@@ -50,8 +50,10 @@ namespace Trinity.Wallets.Tests
         public const string pubKey = "02614f837dd7025ce133312b11e70c0fac76db48bfa255eada5e0b89d0bbdc33d8";
 
         // other side wallet
-        public const string peerPriKey = "2b70128c49b8164921947ed7e9e1a5234d265880d381b7e72d595e952984fd20";
-        public const string peerPubKey = "03f082d73e5c1ed87c5d2b84ae726185ffc01b76490c1012f015b77162f5883333";
+        public const string peerPriKey = "6e6061004a2622684e92d595be9d4afc258d49a638d09832340bd35ae0c818e5";
+        public const string peerPubKey = "030b97a25f520b417e436d91cd849877ff1c02fff60d7a39a578a60f51fc6eccd8";
+        //public const string peerPriKey = "2b70128c49b8164921947ed7e9e1a5234d265880d381b7e72d595e952984fd20";
+        //public const string peerPubKey = "03f082d73e5c1ed87c5d2b84ae726185ffc01b76490c1012f015b77162f5883333";
 
         // sender, receiver
         public static string uri = string.Format("{0}@{1}:{2}", pubKey, ip, port);
