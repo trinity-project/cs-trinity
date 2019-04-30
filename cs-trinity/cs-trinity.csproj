@@ -34,7 +34,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\cs-trinity-built\bin\Debug\</OutputPath>
+    <OutputPath>..\..\cs-trinity-built\Trinity\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -44,7 +44,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\cs-trinity-built\bin\Release\</OutputPath>
+    <OutputPath>..\..\cs-trinity-built\Trinity\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -290,16 +290,10 @@
     <Compile Include="ChannelSet\Definitions\EnumTransactionState.cs" />
     <Compile Include="Network\RPC\TrinityRpcServer.cs" />
     <Compile Include="Network\Utils.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="startTrinity.cs" />
     <Compile Include="Trinity.cs" />
     <Compile Include="Wallets\Log.cs" />
-    <Compile Include="Wallets\Tests\TestCloseChannel.cs" />
-    <Compile Include="Wallets\Tests\TestConfiguration.cs" />
-    <Compile Include="Wallets\Tests\TestCreateChannel.cs" />
-    <Compile Include="Wallets\Tests\TestTrintyWallet.cs" />
     <Compile Include="Wallets\TrinityWallet.cs" />
-    <Compile Include="TestProgram.cs" />
     <Compile Include="Properties\Settings1.cs" />
     <Compile Include="Properties\Settings1.Designer.cs" />
     <Compile Include="TrinityDB\BaseModel.cs" />
@@ -340,8 +334,6 @@
     <Compile Include="Wallets\Templates\Messages\Settle.cs" />
     <Compile Include="Wallets\Templates\Messages\SyncWalletData.cs" />
     <Compile Include="Wallets\Templates\Messages\VoidBody.cs" />
-    <Compile Include="Wallets\Tests\TestRegisterKeepAlive.cs" />
-    <Compile Include="Wallets\Tests\TestSyncWalletData.cs" />
     <Compile Include="Wallets\TransferHandler\ControlHandler\SyncWalletHandler.cs" />
     <Compile Include="Wallets\TransferHandler\VoidHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

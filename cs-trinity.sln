@@ -5,6 +5,11 @@ VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cs-trinity", "cs-trinity\cs-trinity.csproj", "{4FBC62ED-FE13-4FE5-B1B1-1048AB4978DF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cs-trinity-test", "cs-trinity-test\cs-trinity-test.csproj", "{D3F17290-6310-4D27-B48B-7E6346CB98DE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4FBC62ED-FE13-4FE5-B1B1-1048AB4978DF} = {4FBC62ED-FE13-4FE5-B1B1-1048AB4978DF}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +20,10 @@ Global
 		{4FBC62ED-FE13-4FE5-B1B1-1048AB4978DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FBC62ED-FE13-4FE5-B1B1-1048AB4978DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FBC62ED-FE13-4FE5-B1B1-1048AB4978DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3F17290-6310-4D27-B48B-7E6346CB98DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3F17290-6310-4D27-B48B-7E6346CB98DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3F17290-6310-4D27-B48B-7E6346CB98DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3F17290-6310-4D27-B48B-7E6346CB98DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
