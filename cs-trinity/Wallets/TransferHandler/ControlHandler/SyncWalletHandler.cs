@@ -49,7 +49,7 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
             this.Request = new SyncWalletData
             {
                 Sender = sender,
-                NetMagic = magic,
+                NetMagic = magic ?? this.GetNetMagic(),
 
                 MessageBody = new SyncWalletBody
                 {

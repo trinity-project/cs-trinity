@@ -49,9 +49,10 @@ namespace Trinity.Wallets.Tests
 
         public void SyncWalletData()
         {
-            SyncWalletHandler msgHandler = new SyncWalletHandler("NoUser@ip:port", "123456");
+            SyncWalletHandler msgHandler = new SyncWalletHandler(
+                string.Format("{0}@{1}:{2}", TestConfiguration.pubKey, TestConfiguration.ip, TestConfiguration.port), null);
             
-            msgHandler.SetPublicKey("0257f6e8e5ee6a4a5413045c693b4a17c0191f1250e4ff078787c44993a1ddca81");
+            msgHandler.SetPublicKey(TestConfiguration.pubKey);
             msgHandler.SetAlias("NoAlias");
             msgHandler.SetAutoCreate("0");
             msgHandler.SetNetAddress("localhost:20556");
