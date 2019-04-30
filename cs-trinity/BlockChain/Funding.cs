@@ -42,6 +42,8 @@ using Neo.Network.P2P.Payloads;
 using System.IO;
 using Trinity.BlockChain;
 
+using Trinity.Wallets;
+
 namespace Trinity.BlockChain
 {
     class Funding
@@ -214,7 +216,7 @@ namespace Trinity.BlockChain
             #if DEBUG
                 t = testTime;
             #endif
-            string pre_txid = CTxId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();                    //pre_txid
+            string pre_txid = CTxId.RemovePrefix().HexToBytes().Reverse().ToArray().ToHexString();                    //pre_txid
             UInt160 ScriptHashSelf = NeoInterface.ToScriptHash1(AddressSelf);                                                    //outputTo
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
@@ -263,7 +265,7 @@ namespace Trinity.BlockChain
             #if DEBUG
                 t = testTime;
             #endif
-            string pre_txid = CTxId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();            //pre_txid
+            string pre_txid = CTxId.RemovePrefix().HexToBytes().Reverse().ToArray().ToHexString();            //pre_txid
             UInt160 ScriptHashSelf = NeoInterface.ToScriptHash1(AddressOther);                              //outputTo
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
