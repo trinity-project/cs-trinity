@@ -40,8 +40,7 @@ using Neo.IO.Json;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using System.IO;
-
-using Trinity.Wallets;
+using Trinity.BlockChain;
 
 namespace Trinity.BlockChain
 {
@@ -52,11 +51,11 @@ namespace Trinity.BlockChain
         ///<summary>
         ///构造Funding交易
         ///</summary>
-        ///<paramname="<PublicKeySelf>"><发起方公钥></param>
-        ///<paramname="<DepositSelf>"><发起方押金></param>
-        ///<paramname="<PublicKeyOther>"><对端公钥></param>
-        ///<paramname="<DepositOther>"><对端押金></param>
-        ///<paramname="<AssetId>"><资产ID></param>
+        ///<param name="PublicKeySelf">发起方公钥</param>
+        ///<param name="DepositSelf">发起方押金</param>
+        ///<param name="PublicKeyOther">对端公钥</param>
+        ///<param name="DepositOther">对端押金</param>
+        ///<param name="AssetId">资产ID</param>
         ///<returns>
         ///Funding交易数据
         ///</returns>
@@ -120,13 +119,13 @@ namespace Trinity.BlockChain
         ///<summary>
         ///构造CTX
         ///</summary>
-        ///<paramname="<AddressFunding>"><Funding产生的多签合约地址></param>
-        ///<paramname="<BalanceSelf>"><发起方余额></param>
-        ///<paramname="<BalanceOther>"><对端余额></param>
-        ///<paramname="<PublicKeySelf>"><发起方公钥></param>
-        ///<paramname="<PublicKeyOther>"><对端公钥></param>
-        ///<paramname="<FundingScript>"><Funding产生的多签合约脚本></param>
-        ///<paramname="<AssetId>"><资产ID></param>
+        ///<param name="AddressFunding">Funding产生的多签合约地址</param>
+        ///<param name="BalanceSelf">发起方余额</param>
+        ///<param name="BalanceOther">对端余额</param>
+        ///<param name="PublicKeySelf">发起方公钥</param>
+        ///<param name="PublicKeyOther">对端公钥</param>
+        ///<param name="FundingScript">Funding产生的多签合约脚本</param>
+        ///<param name="AssetId">资产ID</param>
         ///<returns>
         ///C交易数据
         ///</returns>
@@ -194,13 +193,13 @@ namespace Trinity.BlockChain
         ///<summary>
         ///构造RDTX
         ///</summary>
-        ///<paramname="<AddressRSMC>"><CTX产生的RSMC合约地址></param>
-        ///<paramname="<AddressSelf>"><发起方地址></param>
-        ///<paramname="<BalanceSelf>"><发起方余额></param>
-        ///<paramname="<CTxId>"><C交易的TXId></param>
-        ///<paramname="<AssetId>"><资产ID></param>
+        ///<param name="AddressRSMC">CTX产生的RSMC合约地址</param>
+        ///<param name="AddressSelf">发起方地址</param>
+        ///<param name="BalanceSelf">发起方余额</param>
+        ///<param name="CTxId">C交易的TXId</param>
+        ///<param name="AssetId">资产ID</param>
         ///<returns>
-        ///C交易数据
+        ///RD交易数据
         ///</returns>
         public static JObject createRDTX(string AddressRSMC, string AddressSelf, string BalanceSelf, string CTxId, string RSMCScript, string AssetId)
         {
@@ -215,8 +214,57 @@ namespace Trinity.BlockChain
             #if DEBUG
                 t = testTime;
             #endif
-            string pre_txid = CTxId.RemovePrefix().HexToBytes().Reverse().ToArray().ToHexString();                    //pre_txid
+            string pre_txid = CTxId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();                    //pre_txid
             UInt160 ScriptHashSelf = NeoInterface.ToScriptHash1(AddressSelf);                                                    //outputTo
+
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, pre_txid, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, ScriptHashSelf, attributes).MakeAttribute(out attributes);
+
+            Transaction tx = new InvocationTransaction
+            {
+                Version = 1,
+                Script = (op_data_to_self).HexToBytes(),
+            };
+            tx.Attributes = attributes.ToArray();
+            tx.Inputs = new CoinReference[0];
+            tx.Outputs = new TransactionOutput[0];
+
+            JObject result = new JObject();
+            result["txData"] = tx.GetHashData().ToHexString();
+            result["txId"] = tx.Hash.ToString();
+            result["witness"] = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.createVerifyScript(RSMCScript);
+
+            return result;
+        }
+
+        ///<summary>
+        ///构造BRTX
+        ///</summary>
+        ///<param name="AddressRSMC">CTX产生的RSMC合约地址</param>
+        ///<param name="AddressOther">发起方地址</param>
+        ///<param name="BalanceSelf">发起方余额</param>
+        ///<param name="CTxId">C交易的TXId</param>
+        ///<param name="AssetId">资产ID</param>
+        ///<returns>
+        ///BR交易数据
+        ///</returns>
+        public static JObject createBRTX(string AddressRSMC, string AddressOther, string BalanceSelf, string CTxId, string RSMCScript, string AssetId)
+        {
+            string op_data_to_self = NeoInterface.createOpdata(AddressRSMC, AddressOther, BalanceSelf, AssetId);
+            Console.WriteLine("op_data_to_self:");
+            Console.WriteLine(op_data_to_self);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(AddressRSMC);
+            TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+            long t = (long)cha.TotalSeconds;                                    //时间戳
+            #if DEBUG
+                t = testTime;
+            #endif
+            string pre_txid = CTxId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString();            //pre_txid
+            UInt160 ScriptHashSelf = NeoInterface.ToScriptHash1(AddressOther);                              //outputTo
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
@@ -243,13 +291,13 @@ namespace Trinity.BlockChain
         ///<summary>
         ///构造Settle
         ///</summary>
-        ///<paramname="<AddressFunding>"><Funding产生的多签合约地址></param>
-        ///<paramname="<BalanceSelf>"><发起方余额></param>
-        ///<paramname="<BalanceOther>"><对端余额></param>
-        ///<paramname="<PublicKeySelf>"><发起方公钥></param>
-        ///<paramname="<PublicKeyOther>"><对端公钥></param>
-        ///<paramname="<FundingScript>"><Funding产生的多签合约脚本></param>
-        ///<paramname="<AssetId>"><资产ID></param>
+        ///<param name="AddressFunding">Funding产生的多签合约地址</param>
+        ///<param name="BalanceSelf">发起方余额</param>
+        ///<param name="BalanceOther">对端余额</param>
+        ///<param name="PublicKeySelf">发起方公钥</param>
+        ///<param name="PublicKeyOther">对端公钥</param>
+        ///<param name="FundingScript">Funding产生的多签合约脚本</param>
+        ///<param name="AssetId">资产ID</param>
         ///<returns>
         ///Settle数据
         ///</returns>
