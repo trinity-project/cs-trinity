@@ -102,7 +102,7 @@ namespace Trinity.Wallets
 
         public static string RemovePrefix(this string content)
         {
-            return content.Replace("0x", "").Replace("0X", "");
+            return content.Replace("\"", "").Replace("0x", "").Replace("0X", "");
         }
 
         /////////////////////////////////////////////////////////////////////////////

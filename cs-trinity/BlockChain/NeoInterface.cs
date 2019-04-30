@@ -43,6 +43,7 @@ using VMArray = Neo.VM.Types.Array;
 using Neo.VM;
 using Neo.Cryptography.ECC;
 
+using Trinity.Wallets;
 
 namespace Trinity.BlockChain
 {
@@ -164,7 +165,7 @@ namespace Trinity.BlockChain
 
         public static JObject sendRawTransaction(string trans)
         {
-            Transaction tx = Transaction.DeserializeFrom(trans.Replace("0x", "").HexToBytes());
+            Transaction tx = Transaction.DeserializeFrom(trans.RemovePrefix().HexToBytes());
             RelayResultReason reason = startTrinity.NeoSystem.Blockchain.Ask<RelayResultReason>(tx).Result;
             return GetRelayResult(reason);
         }
@@ -264,7 +265,7 @@ namespace Trinity.BlockChain
         ///</returns>
         public static UInt160 ToScriptHash1(string address)
         {
-            byte[] data = address.Replace("\"", "").Base58CheckDecode();
+            byte[] data = address.RemovePrefix().Base58CheckDecode();
             if (data.Length != 21)
                 throw new FormatException();
             return new UInt160(data.Skip(1).ToArray());
@@ -292,7 +293,7 @@ namespace Trinity.BlockChain
         public static string ScriptToAddress(string Script)
         {
             //UInt160 ScriptHash = Script.ConvertToScriptHash();
-            UInt160 ScriptHash = ScriptToScriptHash(Script.Replace("0x", "").HexToBytes());
+            UInt160 ScriptHash = ScriptToScriptHash(Script.RemovePrefix().HexToBytes());
             string Address = ToAddress1(ScriptHash);
             //string AddressOther = ToAddress1(ScriptHashOther);
             //string address = script_hash.ToAddress();       //无法获取gui的参数，暂不使用             
@@ -412,13 +413,13 @@ namespace Trinity.BlockChain
             string pubkey_small;
             if (publicKey1.CompareTo(publicKey2) > 0)
             {
-                pubkey_large = publicKey1.Replace("0x", "");
-                pubkey_small = publicKey2.Replace("0x", "");
+                pubkey_large = publicKey1.RemovePrefix();
+                pubkey_small = publicKey2.RemovePrefix();
             }
             else
             {
-                pubkey_large = publicKey2.Replace("0x", "");
-                pubkey_small = publicKey1.Replace("0x", "");
+                pubkey_large = publicKey2.RemovePrefix();
+                pubkey_small = publicKey1.RemovePrefix();
             }
 
             string contractTemplate = "53c56b6c766b00527ac46c766b51527ac4616c766b00c36121{0}ac642f006c766b51c361" +
@@ -438,7 +439,7 @@ namespace Trinity.BlockChain
         ///</returns>
         public static UInt160 PublicKeyToScriptHash(string PublicKey)
         {
-            Neo.Cryptography.ECC.ECPoint ECPointPublicKey = Neo.Cryptography.ECC.ECPoint.DecodePoint(PublicKey.Replace("0x", "").HexToBytes(), Neo.Cryptography.ECC.ECCurve.Secp256r1);
+            Neo.Cryptography.ECC.ECPoint ECPointPublicKey = Neo.Cryptography.ECC.ECPoint.DecodePoint(PublicKey.RemovePrefix().HexToBytes(), Neo.Cryptography.ECC.ECCurve.Secp256r1);
             UInt160 ScriptHash = Contract.CreateSignatureRedeemScript(ECPointPublicKey).ToScriptHash();
             return ScriptHash;
         }
@@ -471,7 +472,7 @@ namespace Trinity.BlockChain
             OpCode += intToHex(method.Length / 2);
             OpCode += method;
             OpCode += "67";  // APPCALL
-            OpCode += AssetID.Replace("0x", "").HexToBytes().Reverse().ToArray().ToHexString();
+            OpCode += AssetID.RemovePrefix().HexToBytes().Reverse().ToArray().ToHexString();
             OpCode += "f1";  // THROWIFNOT
 
             return OpCode;
@@ -584,7 +585,7 @@ namespace Trinity.BlockChain
 
             public override byte[] ConvertToArray(string attr)
             {
-                return attr.Replace("0x", "").HexToBytes();
+                return attr.RemovePrefix().HexToBytes();
             }
         }
         public class TransactionAttributeLong : TransactionAttribute<long>

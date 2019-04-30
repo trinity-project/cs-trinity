@@ -251,8 +251,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 deposit, this.GetPubKey(), this.GetPeerPubKey(),
                 this.fundingTx["scriptFunding"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
 
-            UInt160 address160 = this.GetPubKey().ConvertToScriptHash();
-            string address = address160.ToAddress();
+            string address = this.GetPubKey().PublicKeyToAddress();
             this.rdTx = Funding.createRDTX(this.commTx["addressRSMC"].ToString(), address,
                 this.Request.MessageBody.Deposit.ToString(), this.commTx["txId"].ToString(),
                 this.commTx["scriptRSMC"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
