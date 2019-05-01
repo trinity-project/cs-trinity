@@ -75,13 +75,13 @@ namespace Trinity.BlockChain
 
                 try
                 {
-                    blockChainHeight = NeoInterface.getBlockHeight();
+                    blockChainHeight = NeoInterface.GetBlockHeight();
                 }
                 catch (Exception ex)
                 {
                     throw ex;
                 }
-                walletBlockHeitht = NeoInterface.getWalletBlockHeight();
+                walletBlockHeitht = NeoInterface.GetWalletBlockHeight();
                 deltaBlockHeitht = blockChainHeight - walletBlockHeitht;
                 try
                 {
@@ -128,7 +128,7 @@ namespace Trinity.BlockChain
 
         public void MonitorTxId(uint block)
         {
-            List<string> txidList = NeoInterface.getBlockTxId(block);
+            List<string> txidList = NeoInterface.GetBlockTxId(block);
             foreach (string id in txidList)
             {
                 string id1 = NeoInterface.FormatJObject(id).Substring(2);

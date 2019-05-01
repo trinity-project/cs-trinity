@@ -47,12 +47,12 @@ using Trinity.Wallets;
 
 namespace Trinity.BlockChain
 {
-    public sealed class NeoInterface
+    public class NeoInterface
     {
         
         static System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create();
 
-        private static BigDecimal GetNep5Balance(UInt160 asset_id, UInt160 scriptHash)
+        private static BigDecimal getNep5Balance(UInt160 asset_id, UInt160 scriptHash)
         {
             if (asset_id is UInt160 asset_id_160)
             {
@@ -77,7 +77,7 @@ namespace Trinity.BlockChain
             }
         }
 
-        public static JObject GetBalance(string assetId, string publicKey)
+        public static JObject getBalance(string assetId, string publicKey)
         {
             if (startTrinity.currentWallet == null)
             {
@@ -92,7 +92,7 @@ namespace Trinity.BlockChain
                 switch (UIntBase.Parse(assetId))
                 {
                     case UInt160 asset_id_160: //NEP-5 balance
-                        json["balance"] = GetNep5Balance(asset_id_160, scriptHash).ToString();
+                        json["balance"] = getNep5Balance(asset_id_160, scriptHash).ToString();
                         break;
                     case UInt256 asset_id_256: //Global Assets balance
                         IEnumerable<Coin> coins = startTrinity.currentWallet.GetCoins(accounts).Where(p => !p.State.HasFlag(CoinState.Spent) && p.Output.AssetId.Equals(asset_id_256));
@@ -104,7 +104,7 @@ namespace Trinity.BlockChain
             }
         }
 
-        public static List<string> GetBlockTxId(uint blockHeigh)
+        public static List<string> getBlockTxId(uint blockHeigh)
         {
             JObject blockInfo = new JObject();
             JArray tx;
@@ -125,12 +125,12 @@ namespace Trinity.BlockChain
             return txidList;
         }
 
-        public static uint GetBlockHeight()
+        public static uint getBlockHeight()
         {
             return Blockchain.Singleton.HeaderHeight;
         }
 
-        public static uint GetWalletBlockHeight()
+        public static uint getWalletBlockHeight()
         {
             if (startTrinity.currentWallet == null)
             {
@@ -163,7 +163,7 @@ namespace Trinity.BlockChain
             }
         }
 
-        public static JObject SendRawTransaction(string trans)
+        public static JObject sendRawTransaction(string trans)
         {
             Transaction tx = Transaction.DeserializeFrom(trans.RemovePrefix().HexToBytes());
             RelayResultReason reason = startTrinity.NeoSystem.Blockchain.Ask<RelayResultReason>(tx).Result;
@@ -321,15 +321,15 @@ namespace Trinity.BlockChain
         ///<returns>
         ///转换后的Bytes数组
         ///</returns>
-        //public static byte[] LongToBytes(long n)
-        //{
-        //    byte[] b = new byte[4];
-        //    for (int i = 0; i < 4; i++)
-        //    {
-        //        b[i] = (byte)(n >> (24 - i * 8));
-        //    }
-        //    return b;
-        //}
+        public static byte[] longToBytes(long n)
+        {
+            byte[] b = new byte[4];
+            for (int i = 0; i < 4; i++)
+            {
+                b[i] = (byte)(n >> (24 - i * 8));
+            }
+            return b;
+        }
 
         ///<summary>
         ///string转HexString
@@ -356,7 +356,7 @@ namespace Trinity.BlockChain
         ///<returns>
         ///转换后的HexString
         ///</returns>
-        public static string IntToHex(int i)
+        public static string intToHex(int i)
         {
             return BigInteger.Parse(i.ToString()).ToByteArray().ToHexString();
         }
@@ -414,13 +414,13 @@ namespace Trinity.BlockChain
             string pubkey_small;
             if (publicKey1.CompareTo(publicKey2) > 0)
             {
-                pubkey_large = publicKey1.NeoStrip();
-                pubkey_small = publicKey2.NeoStrip();
+                pubkey_large = publicKey1.RemovePrefix();
+                pubkey_small = publicKey2.RemovePrefix();
             }
             else
             {
-                pubkey_large = publicKey2.NeoStrip();
-                pubkey_small = publicKey1.NeoStrip();
+                pubkey_large = publicKey2.RemovePrefix();
+                pubkey_small = publicKey1.RemovePrefix();
             }
 
             string contractTemplate = "53c56b6c766b00527ac46c766b51527ac4616c766b00c36121{0}ac642f006c766b51c361" +
@@ -455,7 +455,7 @@ namespace Trinity.BlockChain
         ///<returns>
         ///OpCode
         ///</returns>
-        public static string CreateOpdata(string AddressFrom, string AddressTo, string Value, string AssetID)
+        public static string createOpdata(string AddressFrom, string AddressTo, string Value, string AssetID)
         {
             string OpCode = "";
             string Value1 = BigInteger.Parse(Value).ToByteArray().ToHexString();
@@ -465,12 +465,12 @@ namespace Trinity.BlockChain
             string[] invoke_args = { Value1, ScriptHashTo, ScriptHashFrom };
             foreach (var item in invoke_args)
             {
-                string[] args = { IntToHex(item.Length / 2), item };
+                string[] args = { intToHex(item.Length / 2), item };
                 OpCode += string.Join("", args);
             }
             OpCode += "53";  // PUSH3
             OpCode += "c1";  // PACK
-            OpCode += IntToHex(method.Length / 2);
+            OpCode += intToHex(method.Length / 2);
             OpCode += method;
             OpCode += "67";  // APPCALL
             OpCode += AssetID.RemovePrefix().HexToBytes().Reverse().ToArray().ToHexString();
@@ -490,11 +490,11 @@ namespace Trinity.BlockChain
         ///<returns>
         ///RSMCContract RSMC合约数据
         ///</returns>
-        public static JObject CreateRSMCContract(UInt160 HashSelf, string PubkeySelf, UInt160 HashOther, string PubkeyOther, string Timestamp)
+        public static JObject createRSMCContract(UInt160 HashSelf, string PubkeySelf, UInt160 HashOther, string PubkeyOther, string Timestamp)
         {
             Timestamp = NeoInterface.StringToHexString(Timestamp);
             byte[] TimestampByte = Encoding.UTF8.GetBytes(Timestamp);
-            string length = NeoInterface.IntToHex(TimestampByte.Length / 2).PadLeft(2, '0');
+            string length = NeoInterface.intToHex(TimestampByte.Length / 2).PadLeft(2, '0');
             string magicTimestamp = length + Timestamp;
 
             string contractTemplate = "5dc56b6c766b00527ac46c766b51527ac46c766b52527ac461{0}6c766b53527ac4616829537" +
@@ -589,15 +589,15 @@ namespace Trinity.BlockChain
                 return attr.RemovePrefix().HexToBytes();
             }
         }
-        public class TransactionAttributeDouble : TransactionAttribute<double>
+        public class TransactionAttributeLong : TransactionAttribute<long>
         {
-            public TransactionAttributeDouble(TransactionAttributeUsage Usage, double Data, List<TransactionAttribute> attributes) : base(Usage, Data, attributes)
+            public TransactionAttributeLong(TransactionAttributeUsage Usage, long Data, List<TransactionAttribute> attributes) : base(Usage, Data, attributes)
             {
             }
 
-            public override byte[] ConvertToArray(double attr)
+            public override byte[] ConvertToArray(long attr)
             {
-                return BitConverter.GetBytes(attr);
+                return longToBytes(attr);
             }
         }
 
@@ -623,9 +623,9 @@ namespace Trinity.BlockChain
         ///<paramname="<Script>"><脚本></param>
         ///<returns>
         ///验证脚本
-        public static string CreateVerifyScript(string Script)
+        public static string createVerifyScript(string Script)
         {
-            string tmp = IntToHex(Script.Length / 2);
+            string tmp = intToHex(Script.Length / 2);
             if (tmp.Length % 2 == 1)
             {
                 tmp = "0" + tmp;

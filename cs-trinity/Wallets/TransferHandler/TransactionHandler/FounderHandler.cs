@@ -181,7 +181,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 string deposit = this.Request.MessageBody.Deposit.ToString();
                 // Because this is triggered by the RegisterChannel, the founder of this channel is value of Receiver;
-                this.fundingTx = Funding.createFundingTx(this.GetPubKey(), deposit,
+                this.fundingTx = FundingOrigin.createFundingTx(this.GetPubKey(), deposit,
                     this.GetPeerPubKey(), deposit, this.Request.MessageBody.AssetType.ToAssetId());
                 return true;
             }
@@ -245,12 +245,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 return;
             }
             
-            this.commTx = Funding.createCTX(this.fundingTx["addressFunding"].ToString(), deposit,
+            this.commTx = FundingOrigin.createCTX(this.fundingTx["addressFunding"].ToString(), deposit,
                 deposit, this.GetPubKey(), this.GetPeerPubKey(),
                 this.fundingTx["scriptFunding"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
 
             string address = this.GetPubKey().PublicKeyToAddress();
-            this.rdTx = Funding.createRDTX(this.commTx["addressRSMC"].ToString(), address,
+            this.rdTx = FundingOrigin.createRDTX(this.commTx["addressRSMC"].ToString(), address,
                 this.Request.MessageBody.Deposit.ToString(), this.commTx["txId"].ToString(),
                 this.commTx["scriptRSMC"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
 
@@ -472,7 +472,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 .Replace("{signOther}", peerFundSign)
                 .Replace("{signSelf}", peerFundSign);
 
-            NeoInterface.sendRawTransaction(this.Request.MessageBody.Founder.originalData.txData + witness);
+            NeoInterface.SendRawTransaction(this.Request.MessageBody.Founder.originalData.txData + witness);
         }
 
         private void UpdateTransaction()

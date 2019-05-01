@@ -136,7 +136,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // Start to create refund trade
             this.channelContent.balance.TryGetValue(this.Request.Sender, out double balance);
             this.channelContent.balance.TryGetValue(this.Request.Sender, out double peerBalance);
-            JObject refundTx = Funding.createSettle(
+            JObject refundTx = FundingOrigin.createSettle(
                 this.fundingTrade.founder.originalData.addressFunding,
                 balance.ToString(), peerBalance.ToString(),
                 this.GetPubKey(), this.GetPeerPubKey(),

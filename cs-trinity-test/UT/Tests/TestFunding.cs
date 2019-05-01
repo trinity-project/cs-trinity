@@ -42,53 +42,52 @@ using Neo.Network.P2P.Payloads;
 using System.IO;
 using Trinity.BlockChain;
 
-using Trinity.Wallets.Templates.Definitions;
+using Trinity.Wallets;
 
-namespace Trinity.BlockChain
+namespace TestTrinity.UT.Tests
 {
-    public sealed class FundingOrigin
+    internal class FundingVerification
     {
         static long testTime = 1554866712;
 
         ///<summary>
-        /// Constructor the body of funding trade
+        ///构造Funding交易
         ///</summary>
-        ///<param name="PublicKeySelf">Founder's public key</param>
-        ///<param name="DepositSelf">Founder's deposit</param>
-        ///<param name="PublicKeyOther">Partner's public key</param>
-        ///<param name="DepositOther">Partner's deposit</param>
-        ///<param name="AssetId">Uniform Asset ID</param>
+        ///<param name="PublicKeySelf">发起方公钥</param>
+        ///<param name="DepositSelf">发起方押金</param>
+        ///<param name="PublicKeyOther">对端公钥</param>
+        ///<param name="DepositOther">对端押金</param>
+        ///<param name="AssetId">资产ID</param>
         ///<returns>
-        /// Funding Trade Body
+        ///Funding交易数据
         ///</returns>
-        
         public static JObject createFundingTx(string PublicKeySelf, string DepositSelf, string PublicKeyOther, string DepositOther, string AssetId)
         {
             Contract contract = NeoInterface.CreateMultiSigContract(PublicKeySelf, PublicKeyOther);
-            string contractAddress = contract.Address;
-            UInt160 ScriptHashSelf = PublicKeySelf.ToHash160();
+            string contractAddress = NeoInterface.ToAddress1(contract.ScriptHash);
+            UInt160 ScriptHashSelf = NeoInterface.PublicKeyToScriptHash(PublicKeySelf);
             UInt160 ScriptHashOther = NeoInterface.PublicKeyToScriptHash(PublicKeyOther);
             string AddressSelf = NeoInterface.ToAddress1(ScriptHashSelf);
             string AddressOther = NeoInterface.ToAddress1(ScriptHashOther);
             //string address = script_hash.ToAddress();       //无法获取gui的参数，暂不使用             
 
-            string op_dataSelf = NeoInterface.CreateOpdata(AddressSelf, contractAddress, DepositSelf, AssetId);
+            string op_dataSelf = NeoInterface.createOpdata(AddressSelf, contractAddress, DepositSelf, AssetId);
             Console.WriteLine("op_dataSelf:");
             Console.WriteLine(op_dataSelf);
-            string op_dataOther = NeoInterface.CreateOpdata(AddressOther, contractAddress, DepositOther, AssetId);
+            string op_dataOther = NeoInterface.createOpdata(AddressOther, contractAddress, DepositOther, AssetId);
             Console.WriteLine("op_dataOther:");
             Console.WriteLine(op_dataOther);
-
+ 
             TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));                         //时间戳
             long t = (long)cha.TotalSeconds;
-#if DEBUG
-            t = testTime;
-#endif
+            #if DEBUG
+                t = testTime;
+            #endif
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, ScriptHashSelf, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, ScriptHashOther, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
 
             Transaction tx = new InvocationTransaction
             {
@@ -148,30 +147,30 @@ namespace Trinity.BlockChain
             string Decimal = t1.Substring(index + 1, 6);                    //截取6位小数，RSMC合约精度需要
             t1 = t.ToString() + '.' + Decimal;
 
-#if DEBUG
-            t = testTime;
-            t1 = t.ToString() + ".265512";
-#endif
+            #if DEBUG
+                t = testTime;
+                t1 = t.ToString() + ".265512";
+            #endif
             Console.WriteLine(t);
             Console.WriteLine(t1);
-            JObject RSMCContract = NeoInterface.CreateRSMCContract(ScriptHashSelf, PublicKeySelf, ScriptHashOther, PublicKeyOther, t1);
+            JObject RSMCContract = NeoInterface.createRSMCContract(ScriptHashSelf, PublicKeySelf, ScriptHashOther, PublicKeyOther, t1);
             Console.WriteLine(RSMCContract);
             string RSMCContractAddress = RSMCContract["address"].ToString();
             RSMCContractAddress = NeoInterface.FormatJObject(RSMCContractAddress);                                                   //暂用
 
-            string op_data_to_RSMC = NeoInterface.CreateOpdata(AddressFunding, RSMCContractAddress, BalanceSelf, AssetId);
+            string op_data_to_RSMC = NeoInterface.createOpdata(AddressFunding, RSMCContractAddress, BalanceSelf, AssetId);
             //string AddressSelf = ToAddress1(ScriptHashSelf);
             //string op_data_to_RSMC = CreateOpdata(addressFunding, AddressSelf, balanceSelf, AssetId);
             Console.WriteLine("op_data_to_RSMC:");
             Console.WriteLine(op_data_to_RSMC);
-            string op_data_to_other = NeoInterface.CreateOpdata(AddressFunding, AddressOther, BalanceOther, AssetId);
+            string op_data_to_other = NeoInterface.createOpdata(AddressFunding, AddressOther, BalanceOther, AssetId);
             Console.WriteLine("op_data_to_other:");
             Console.WriteLine(op_data_to_other);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_funding = NeoInterface.ToScriptHash1(AddressFunding);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_funding, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
 
             Transaction tx = new InvocationTransaction
             {
@@ -206,7 +205,7 @@ namespace Trinity.BlockChain
         ///</returns>
         public static JObject createRDTX(string AddressRSMC, string AddressSelf, string BalanceSelf, string CTxId, string RSMCScript, string AssetId)
         {
-            string op_data_to_self = NeoInterface.CreateOpdata(AddressRSMC, AddressSelf, BalanceSelf, AssetId);
+            string op_data_to_self = NeoInterface.createOpdata(AddressRSMC, AddressSelf, BalanceSelf, AssetId);
             Console.WriteLine("op_data_to_self:");
             Console.WriteLine(op_data_to_self);
 
@@ -214,14 +213,14 @@ namespace Trinity.BlockChain
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(AddressRSMC);
             TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
             long t = (long)cha.TotalSeconds;                                    //时间戳
-#if DEBUG
-            t = testTime;
-#endif
-            string pre_txid = CTxId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString();                    //pre_txid
+            #if DEBUG
+                t = testTime;
+            #endif
+            string pre_txid = CTxId.RemovePrefix().HexToBytes().Reverse().ToArray().ToHexString();                    //pre_txid
             UInt160 ScriptHashSelf = NeoInterface.ToScriptHash1(AddressSelf);                                                    //outputTo
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, pre_txid, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, ScriptHashSelf, attributes).MakeAttribute(out attributes);
 
@@ -237,7 +236,7 @@ namespace Trinity.BlockChain
             JObject result = new JObject();
             result["txData"] = tx.GetHashData().ToHexString();
             result["txId"] = tx.Hash.ToString();
-            result["witness"] = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(RSMCScript);
+            result["witness"] = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.createVerifyScript(RSMCScript);
 
             return result;
         }
@@ -255,7 +254,7 @@ namespace Trinity.BlockChain
         ///</returns>
         public static JObject createBRTX(string AddressRSMC, string AddressOther, string BalanceSelf, string CTxId, string RSMCScript, string AssetId)
         {
-            string op_data_to_self = NeoInterface.CreateOpdata(AddressRSMC, AddressOther, BalanceSelf, AssetId);
+            string op_data_to_self = NeoInterface.createOpdata(AddressRSMC, AddressOther, BalanceSelf, AssetId);
             Console.WriteLine("op_data_to_self:");
             Console.WriteLine(op_data_to_self);
 
@@ -263,14 +262,14 @@ namespace Trinity.BlockChain
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(AddressRSMC);
             TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
             long t = (long)cha.TotalSeconds;                                    //时间戳
-#if DEBUG
-            t = testTime;
-#endif
-            string pre_txid = CTxId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString();            //pre_txid
+            #if DEBUG
+                t = testTime;
+            #endif
+            string pre_txid = CTxId.RemovePrefix().HexToBytes().Reverse().ToArray().ToHexString();            //pre_txid
             UInt160 ScriptHashSelf = NeoInterface.ToScriptHash1(AddressOther);                              //outputTo
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, pre_txid, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, ScriptHashSelf, attributes).MakeAttribute(out attributes);
 
@@ -286,7 +285,7 @@ namespace Trinity.BlockChain
             JObject result = new JObject();
             result["txData"] = tx.GetHashData().ToHexString();
             result["txId"] = tx.Hash.ToString();
-            result["witness"] = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(RSMCScript);
+            result["witness"] = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.createVerifyScript(RSMCScript);
 
             return result;
         }
@@ -313,22 +312,22 @@ namespace Trinity.BlockChain
 
             TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));                       //时间戳
             long t = (long)cha.TotalSeconds;
-#if DEBUG
-            t = testTime;
-#endif
+            #if DEBUG
+                t = testTime;
+            #endif
 
             string AddressSelf = NeoInterface.ToAddress1(ScriptHashSelf);
-            string op_data_to_self = NeoInterface.CreateOpdata(AddressFunding, AddressSelf, BalanceSelf, AssetId);
+            string op_data_to_self = NeoInterface.createOpdata(AddressFunding, AddressSelf, BalanceSelf, AssetId);
             Console.WriteLine("op_data_to_self:");
             Console.WriteLine(op_data_to_self);
-            string op_data_to_other = NeoInterface.CreateOpdata(AddressFunding, AddressOther, BalanceOther, AssetId);
+            string op_data_to_other = NeoInterface.createOpdata(AddressFunding, AddressOther, BalanceOther, AssetId);
             Console.WriteLine("op_data_to_other:");
             Console.WriteLine(op_data_to_other);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_funding = NeoInterface.ToScriptHash1(AddressFunding);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_funding, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, t, attributes).MakeAttribute(out attributes);
             Transaction tx = new InvocationTransaction
             {
                 Version = 1,
@@ -431,5 +430,7 @@ namespace Trinity.BlockChain
 
         //    Console.ReadLine();
         //}
+
+    
     }
 }
