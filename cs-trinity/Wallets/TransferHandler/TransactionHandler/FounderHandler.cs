@@ -46,10 +46,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         //private readonly double Deposit;
         //private readonly UInt64 Nonce;
 
-        public int RoleIndex;
-        public JObject fundingTx;
-        public JObject commTx;
-        public JObject rdTx;
+        private int RoleIndex;
+        private FundingTx fundingTx;
+        private CommitmentTx commTx;
+        private RevocableDeliveryTx rdTx;
+
+        private readonly NeoTransaction neoTransaction;
 
         public FounderHandler() : base()
         {
@@ -67,7 +69,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         
 
         public FounderHandler(string sender, string receiver, string channel, string asset, 
-            string magic, UInt64 nonce, double deposit, int role) : base()
+            string magic, UInt64 nonce, double deposit, int role=0) : base()
         {
             this.RoleMax = 1;
 
@@ -85,14 +87,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     AssetType = asset,
                     Deposit = deposit,
                     RoleIndex = role,
-                    Founder = new FundingTx(),
-                    Commitment = new CommitmentTx(),
-                    RevocableDelivery = new RevocableDeliveryTx()
+                    //Founder = new FundingTx(),
+                    //Commitment = new CommitmentTx(),
+                    //RevocableDelivery = new RevocableDeliveryTx()
                 }
             };
 
             this.ParsePubkeyPair(sender, receiver);
             this.SetChannelInterface(sender, receiver, channel, asset);
+
+            this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), deposit.ToString(),
+                this.GetPeerPubKey(), deposit.ToString());
         }
 
         public FounderHandler(string message) : base(message)
@@ -161,7 +166,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 // Sender Founder with Role equals to 1
                 FounderHandler founderHandler = new FounderHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                         this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Deposit,
-                        0);
+                        1);
                 founderHandler.MakeTransaction(this.GetClient());
             }
             #endregion
@@ -181,8 +186,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 string deposit = this.Request.MessageBody.Deposit.ToString();
                 // Because this is triggered by the RegisterChannel, the founder of this channel is value of Receiver;
-                this.fundingTx = FundingOrigin.createFundingTx(this.GetPubKey(), deposit,
-                    this.GetPeerPubKey(), deposit, this.Request.MessageBody.AssetType.ToAssetId());
+                this.neoTransaction.CreateFundingTx(out this.fundingTx);
                 return true;
             }
             else if (this.IsRole1(this.Request.MessageBody.RoleIndex))
@@ -191,12 +195,18 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 TransactionTabelContent transactionContent = this.GetChannelInterface().GetTransaction(this.Request.TxNonce);
                 if (null != transactionContent)
                 {
-                    this.fundingTx = new JObject();
-                    this.fundingTx["txData"] = transactionContent.founder.originalData.txData;
-                    this.fundingTx["txId"] = transactionContent.founder.originalData.txId;
-                    this.fundingTx["witness"] = transactionContent.founder.originalData.witness;
-                    this.fundingTx["addressFunding"] = transactionContent.founder.originalData.addressFunding;
-                    this.fundingTx["scriptFunding"] = transactionContent.founder.originalData.scriptFunding;
+                    this.fundingTx = new FundingTx
+                    {
+                        txData = transactionContent.founder.originalData.txData,
+                        txId = transactionContent.founder.originalData.txId,
+                        addressFunding = transactionContent.founder.originalData.addressFunding,
+                        scriptFunding = transactionContent.founder.originalData.scriptFunding,
+                        witness = transactionContent.founder.originalData.witness
+                    };
+
+                    // set the neo transaction handler attribute
+                    this.neoTransaction.SetAddressFunding(transactionContent.founder.originalData.addressFunding);
+                    this.neoTransaction.SetScripFunding(transactionContent.founder.originalData.scriptFunding);
                     return true;
                 }
                 else
@@ -244,37 +254,21 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 return;
             }
-            
-            this.commTx = FundingOrigin.createCTX(this.fundingTx["addressFunding"].ToString(), deposit,
-                deposit, this.GetPubKey(), this.GetPeerPubKey(),
-                this.fundingTx["scriptFunding"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
 
-            string address = this.GetPubKey().PublicKeyToAddress();
-            this.rdTx = FundingOrigin.createRDTX(this.commTx["addressRSMC"].ToString(), address,
-                this.Request.MessageBody.Deposit.ToString(), this.commTx["txId"].ToString(),
-                this.commTx["scriptRSMC"].ToString(), this.Request.MessageBody.AssetType.ToAssetId());
+            // Create Commitment transaction
+            this.neoTransaction.CreateCTX(out this.commTx);
 
-            this.Request.MessageBody.Founder.SetAttribute("txId", this.fundingTx["txId"].ToString());
-            this.Request.MessageBody.Founder.SetAttribute("txData", this.fundingTx["txData"].ToString());
-            this.Request.MessageBody.Founder.SetAttribute("addressRSMC", this.fundingTx["addressFunding"].ToString());
-            this.Request.MessageBody.Founder.SetAttribute("scriptRSMC", this.fundingTx["scriptFunding"].ToString());
-            this.Request.MessageBody.Founder.SetAttribute("witness", this.fundingTx["witness"].ToString());
+            // create Revocable commitment transaction
+            this.neoTransaction.createRDTX(out this.rdTx, this.commTx.txId);
 
-            this.Request.MessageBody.Commitment.SetAttribute("txId", this.commTx["txId"].ToString());
-            this.Request.MessageBody.Commitment.SetAttribute("txData", this.commTx["txData"].ToString());
-            this.Request.MessageBody.Commitment.SetAttribute("addressRSMC", this.commTx["addressRSMC"].ToString());
-            this.Request.MessageBody.Commitment.SetAttribute("scriptRSMC", this.commTx["scriptRSMC"].ToString());
-            this.Request.MessageBody.Commitment.SetAttribute("witness", this.commTx["witness"].ToString());
-            
-            this.Request.MessageBody.RevocableDelivery.SetAttribute("txId", this.rdTx["txId"].ToString());
-            this.Request.MessageBody.RevocableDelivery.SetAttribute("txData", this.rdTx["txData"].ToString());
-            this.Request.MessageBody.RevocableDelivery.SetAttribute("witness", this.rdTx["witness"].ToString());
+            this.Request.MessageBody.Founder = this.fundingTx;
+            this.Request.MessageBody.Commitment = this.commTx;
+            this.Request.MessageBody.RevocableDelivery = this.rdTx;
 
             // record the item to database
             if (IsRole0(this.Request.MessageBody.RoleIndex))
             {
                 this.AddTransaction();
-                this.Request.MessageBody.RoleIndex = 1;
             }
             else if (IsRole1(this.Request.MessageBody.RoleIndex))
             {

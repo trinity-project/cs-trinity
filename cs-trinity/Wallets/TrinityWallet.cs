@@ -74,7 +74,7 @@ namespace Trinity
             this.gatewayPort = port ?? TrinityWalletConfig.port;
 
             // get the wallet pair key by neo wallet instance
-            this.walletKey = this.neoWallet?.GetAccount(pubKey.ConvertToScriptHash()).GetKey();
+            this.walletKey = this.neoWallet?.GetAccount(pubKey?.ToHash160()).GetKey();
 
             // create the Trinity Tcp client connection
             this.CreateConnection();
@@ -181,8 +181,7 @@ namespace Trinity
             switch (header.MessageType)
             {
                 case "RegisterChannel":
-                    RegisterChannelHandler registerChannelHndl = new RegisterChannelHandler(message);
-                    registerChannelHndl.Handle();
+                    new RegisterChannelHandler(message).Handle();
                     break;
                 case "RegisterChannelFail":
                     new RegisterChannelFailHandler(message).Handle();

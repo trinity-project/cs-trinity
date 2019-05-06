@@ -44,6 +44,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     {
         private readonly TransactionTabelContent fundingTrade;
         private readonly ChannelTableContent channelContent;
+        private readonly NeoTransaction neoTransaction;
 
         /// <summary>
         /// Constructors
@@ -82,6 +83,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.SetChannelInterface(sender, receiver, channel, asset);
             this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
             this.channelContent = this.GetChannelInterface().TryGetChannel(channel);
+
+            this.channelContent.balance.TryGetValue(this.Request.Sender, out double balance);
+            this.channelContent.balance.TryGetValue(this.Request.Sender, out double peerBalance);
+
+            this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balance.ToString(),
+                this.GetPeerPubKey(), peerBalance.ToString(), this.fundingTrade.founder.originalData.addressFunding,
+                this.fundingTrade.founder.originalData.scriptFunding);
         }
 
         public override bool Handle()
@@ -134,24 +142,14 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // Start to create refund trade
-            this.channelContent.balance.TryGetValue(this.Request.Sender, out double balance);
-            this.channelContent.balance.TryGetValue(this.Request.Sender, out double peerBalance);
-            JObject refundTx = FundingOrigin.createSettle(
-                this.fundingTrade.founder.originalData.addressFunding,
-                balance.ToString(), peerBalance.ToString(),
-                this.GetPubKey(), this.GetPeerPubKey(),
-                this.fundingTrade.founder.originalData.scriptFunding,
-                this.channelContent.asset.ToAssetId()
-                );
-
-            if (null == refundTx)
+            if (!this.neoTransaction.CreateSettle(out TxContents refundTx))
             {
                 Console.WriteLine("Failed to create refunding trade for channel: {}", this.Request.ChannelName);
                 return false;
             }
 
             // set the message body
-            this.Request.MessageBody.Settlement = refundTx.ToString().Deserialize<TxContents>();
+            this.Request.MessageBody.Settlement = refundTx;
             this.Request.MessageBody.Balance = this.channelContent.balance;
             this.Request.MessageBody.AssetType = this.channelContent.asset;
 

@@ -34,14 +34,14 @@ namespace TestTrinity.FT.Tests
         public const double deposit = 10;
 
         // TrinityTcpClient definitions
-        //public const string ip = "10.0.0.5";
-        public const string ip = "10.149.23.108";
+        public const string ip = "10.0.0.5";
+        //public const string ip = "10.149.23.108";
         public const string localIp = "localhost";
         public const string port = "8089";
         public const string LocalPort = "20666";
 
-        public const string peerIp = "10.149.23.108";
-        //public const string peerIp = "10.0.0.5";
+        //public const string peerIp = "10.149.23.108";
+        public const string peerIp = "10.0.0.5";
         public const string peerLocalIp = "localhost";
         public const string peerPort = "8089";
         public const string peerLocalPort = "20777";

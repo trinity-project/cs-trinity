@@ -72,14 +72,36 @@ namespace Trinity.BlockChain
         // self wallet trade information of the channel
         private readonly string balance;
         private readonly string pubKey;
-        private UInt160 scriptHash => this.scriptHash ?? this.pubKey.ToHash160();
-        private string address => this.address ?? this.pubKey.ToAddress();
+        private UInt160 scriptHash => (null != this.pubKey) ? this.pubKey.ToHash160() : null;
+        private string address => (null != this.pubKey) ? this.pubKey.ToAddress() : null;
+        //private string address
+        //{
+        //    get
+        //    {
+        //        if (null != this.pubKey)
+        //        {
+        //            return this.pubKey.ToAddress();
+        //        }
+        //        return null;
+        //    }
+        //}
 
         // peer wallet trade information of the channel
         private readonly string peerBalance;
         private readonly string peerPubkey;
-        private UInt160 peerScriptHash => this.peerScriptHash ?? this.peerPubkey.ToHash160();
-        private string peerAddress => this.peerAddress ?? this.peerPubkey.ToAddress();
+        private UInt160 peerScriptHash => (null != this.peerPubkey) ? this.peerPubkey.ToHash160() : null;
+        private string peerAddress => (null != this.peerPubkey) ? this.peerPubkey.ToAddress() : null;
+        //private string peerAddress
+        //{
+        //    get
+        //    {
+        //        if (null != this.peerPubkey)
+        //        {
+        //            return this.peerPubkey.ToAddress();
+        //        }
+        //        return null;
+        //    }
+        //}
 
         /// <summary>
         /// Constructor for this class
@@ -95,6 +117,7 @@ namespace Trinity.BlockChain
             string addressFunding=null, string scriptFunding=null)
         {
             this.assetId = assetId;
+            
 
             this.pubKey = pubKey.NeoStrip();
             this.balance = balance.NeoStrip();
@@ -167,7 +190,7 @@ namespace Trinity.BlockChain
 
             this.SetAddressRSMC(RSMCContract["address"].ToString());
             this.SetScripRSMC(RSMCContract["script"].ToString());
-            string RSMCContractAddress = NeoInterface.FormatJObject(this.addressRsmc);                                                   //‘›”√
+            string RSMCContractAddress =this.addressRsmc;                                                   //‘›”√
 
             string opdataRsmc = NeoInterface.CreateOpdata(this.addressFunding, RSMCContractAddress, this.balance, this.assetId);
             Log.Debug("opdataRsmc: {0}", opdataRsmc);
@@ -288,6 +311,26 @@ namespace Trinity.BlockChain
             return true;
         }
 
+        public void SetAddressFunding(string addressFunding)
+        {
+            this.addressFunding = addressFunding.NeoStrip();
+        }
+
+        public void SetScripFunding(string scriptFunding)
+        {
+            this.scriptFunding = scriptFunding.NeoStrip();
+        }
+
+        public void SetAddressRSMC(string addressRsmc)
+        {
+            this.addressRsmc = addressRsmc.NeoStrip();
+        }
+
+        public void SetScripRSMC(string scriptRsmc)
+        {
+            this.scriptRsmc = scriptRsmc.NeoStrip();
+        }
+
         ///////////////////////////////////////////////////////////////////////////////////////////
         /// Private Method Sets                                                                 ///
         /////////////////////////////////////////////////////////////////////////////////////////// 
@@ -316,26 +359,6 @@ namespace Trinity.BlockChain
             transaction.Outputs = new TransactionOutput[0];
 
             return;
-        }
-
-        private void SetAddressFunding(string addressFunding)
-        {
-            this.addressFunding = addressFunding.NeoStrip();
-        }
-
-        private void SetScripFunding(string scriptFunding)
-        {
-            this.scriptFunding = scriptFunding.NeoStrip();
-        }
-
-        private void SetAddressRSMC(string addressRsmc)
-        {
-            this.addressRsmc = addressRsmc.NeoStrip();
-        }
-
-        private void SetScripRSMC(string scriptRsmc)
-        {
-            this.scriptRsmc = scriptRsmc.NeoStrip();
         }
     }
 }
