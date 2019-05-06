@@ -42,6 +42,7 @@ using System.Numerics;
 using VMArray = Neo.VM.Types.Array;
 using Neo.VM;
 using Neo.Cryptography.ECC;
+using MessagePack;
 
 using Trinity.Wallets;
 
@@ -634,6 +635,66 @@ namespace Trinity.BlockChain
             string verify_script = string.Join("", array);
 
             return verify_script;
+        }
+
+        //获取账户下的符合要求的input信息
+        private static Coin[] GetUnspentCoins(UInt160[] from, UInt256 asset_id, Fixed8 amount)
+        {
+            IEnumerable<UInt160> accounts = from.Length > 0 ? from : startTrinity.currentWallet.GetAccounts().Where(p => !p.Lock && !p.WatchOnly).Select(p => p.ScriptHash);
+            IEnumerable<Coin> unspents = startTrinity.currentWallet.GetCoins(accounts).Where(p => p.State.HasFlag(CoinState.Confirmed) && !p.State.HasFlag(CoinState.Spent) && !p.State.HasFlag(CoinState.Frozen));
+
+            Coin[] unspents_asset = unspents.Where(p => p.Output.AssetId == asset_id).ToArray();
+            Fixed8 sum = unspents_asset.Sum(p => p.Output.Value);
+            if (sum < amount) return null;
+            if (sum == amount) return unspents_asset;
+            Coin[] unspents_ordered = unspents_asset.OrderByDescending(p => p.Output.Value).ToArray();
+            int i = 0;
+            while (unspents_ordered[i].Output.Value <= amount)
+                amount -= unspents_ordered[i++].Output.Value;
+            if (amount == Fixed8.Zero)
+                return unspents_ordered.Take(i).ToArray();
+            else
+                return unspents_ordered.Take(i).Concat(new[] { unspents_ordered.Last(p => p.Output.Value >= amount) }).ToArray();
+        }
+
+        // 构造NEO/GAS founding交易需要的信息字段
+        [MessagePackObject(keyAsPropertyName: true)]
+        public class Vin
+        {
+            public ushort n;
+            public string txid;
+            public long value;
+        }
+
+        private const long D = 100_000_000;
+
+        //查找未花费的资产交易信息
+        public List<string> getGloablAssetVout(string publicKey, uint _amount, string _assetId)
+        {
+            UInt256 assetId = UInt256.Parse(_assetId);
+            Fixed8 amount = Fixed8.FromDecimal(_amount);
+            UInt160 account = NeoInterface.PublicKeyToScriptHash(publicKey);
+            UInt160[] accounts = { account };
+            Coin[] coinList = GetUnspentCoins(accounts, assetId, amount);
+            List<string> listData = new List<string>();
+            if (coinList == null)
+            {
+                return null;
+            }
+
+            foreach (Coin coin in coinList)
+            {
+                Vin vin = new Vin
+                {
+                    n = coin.Reference.PrevIndex,
+                    txid = coin.Reference.PrevHash.ToString(),
+                    value = coin.Output.Value.GetData() / D
+                };
+
+                string vinData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vin));
+                listData.Add(vinData);
+            }
+            return listData;
         }
     }
 }
