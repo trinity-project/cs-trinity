@@ -211,7 +211,7 @@ namespace Trinity.BlockChain
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 addressRSMC = this.addressRsmc,
                 scriptRSMC = this.scriptRsmc,
-                txId = tx.Hash.ToString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
                 witness = "018240{signSelf}40{signOther}da" + this.scriptFunding
             };
 

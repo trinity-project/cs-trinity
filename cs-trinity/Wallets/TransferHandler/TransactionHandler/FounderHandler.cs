@@ -464,7 +464,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             string fundSign = this.Sign(this.Request.MessageBody.Founder.originalData.txData);
             string witness = this.Request.MessageBody.Founder.originalData.witness
                 .Replace("{signOther}", peerFundSign)
-                .Replace("{signSelf}", peerFundSign);
+                .Replace("{signSelf}", fundSign);
 
             NeoInterface.SendRawTransaction(this.Request.MessageBody.Founder.originalData.txData + witness);
         }
