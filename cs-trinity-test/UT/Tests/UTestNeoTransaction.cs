@@ -1,4 +1,4 @@
-﻿/*
+/*
 Author: Trinity Core Team
 
 MIT License
@@ -28,27 +28,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Akka.Actor;
-using Neo;
-using Neo.Cryptography;
-using Neo.IO.Json;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC;
-using Neo.Persistence;
-using Neo.SmartContract;
-using Neo.Wallets;
-using System.Numerics;
-using VMArray = Neo.VM.Types.Array;
-using Neo.VM;
-using Neo.Cryptography.ECC;
+using System.Threading.Tasks;
 
-using Trinity.Wallets;
+using NUnit.Framework;
 
-namespace Trinity.BlockChain
+namespace TestTrinity.UT.Tests
 {
-    public class TestNeoInterface
+    [TestFixture]
+    public class UTestNeoTransaction
     {
+        //[SetUpFixture]
         
     }
 }

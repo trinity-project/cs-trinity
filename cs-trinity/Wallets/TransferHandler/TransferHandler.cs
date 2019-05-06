@@ -109,9 +109,7 @@ namespace Trinity.Wallets.TransferHandler
 
         public virtual void MakeTransaction(TrinityTcpClient client)
         {
-            this.MakeupMessage();
-
-            if (null != this.Request)
+            if (this.MakeupMessage())
             {
                 client?.SendData(this.Request.Serialize());
             }
@@ -123,9 +121,8 @@ namespace Trinity.Wallets.TransferHandler
 
         public virtual void MakeTransaction()
         {
-            this.MakeupMessage();
-
-            if (null != this.Request)
+            
+            if (this.MakeupMessage())
             {
                 this.wallet?.GetClient()?.SendData(this.Request.Serialize());
             }
@@ -135,8 +132,9 @@ namespace Trinity.Wallets.TransferHandler
             }
         }
 
-        public virtual void MakeupMessage()
+        public virtual bool MakeupMessage()
         {
+            return false;
         }
 
         public string ToJson()

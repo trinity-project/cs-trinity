@@ -241,18 +241,18 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return this.VerifyRoleIndex();
         }
 
-        public override void MakeupMessage()
+        public override bool MakeupMessage()
         {
-            this.MakeupTransactionBody();
+            return this.MakeupTransactionBody();
         }
 
-        public void MakeupTransactionBody()
+        public bool MakeupTransactionBody()
         {
             string deposit = this.Request.MessageBody.Deposit.ToString();
 
             if (!this.SignFundingTx())
             {
-                return;
+                return false;
             }
 
             // Create Commitment transaction
@@ -283,7 +283,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 }
             }
 
-            return;
+            return true;
         }
 
         private void AddTransaction(bool isPeer = false)
@@ -453,7 +453,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // broadcast this transaction
             if (IsRole1(this.Request.MessageBody.RoleIndex))
             {
-                //this.BroadcastTransaction();
+                this.BroadcastTransaction();
             }
             return true;
         }

@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
+#define DEBUG
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,7 +50,7 @@ namespace Trinity.BlockChain
     {
         // Timestamp attribute for contract
 #if DEBUG
-        private readonly double timestamp = 1554866712.123456; // for test use;
+        private readonly double timestamp = 1554866712; // for test use;
         private readonly string timestampString = "1554866712.123456";
 #else
         private double timestamp => (DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1))).TotalSeconds;
@@ -231,7 +231,7 @@ namespace Trinity.BlockChain
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
-            string preTxId = txId.HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId
+            string preTxId = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
@@ -263,7 +263,7 @@ namespace Trinity.BlockChain
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
 
-            string preTxID = txId.HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");            //preTxId
+            string preTxID = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");            //preTxId
             UInt160 ScriptHashSelf = NeoInterface.ToScriptHash1(this.peerAddress);                              //outputTo
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);

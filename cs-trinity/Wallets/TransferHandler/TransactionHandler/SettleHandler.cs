@@ -132,6 +132,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
         }
 
+        public override void MakeupMessage()
+        {
+            this.MakeupRefundTx();
+        }
+
         private bool MakeupRefundTx()
         {
             // makeup refund trade
