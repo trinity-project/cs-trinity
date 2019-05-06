@@ -134,7 +134,7 @@ namespace Trinity.Wallets.TransferHandler
 
         public virtual bool MakeupMessage()
         {
-            return false;
+            return true;
         }
 
         public string ToJson()

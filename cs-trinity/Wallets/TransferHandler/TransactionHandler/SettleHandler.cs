@@ -118,7 +118,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.SHandler.MakeupRefundTxSign(this.Request.MessageBody.Settlement);
 
             // send SettleSign to peer
-            this.SHandler.MakeTransaction(this.GetClient());
+            this.SHandler.MakeTransaction();
 
             return true;
         }
@@ -132,9 +132,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
         }
 
-        public override void MakeupMessage()
+        public override bool MakeupMessage()
         {
-            this.MakeupRefundTx();
+            return this.MakeupRefundTx();
         }
 
         private bool MakeupRefundTx()
@@ -230,11 +230,31 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public override bool SucceedStep()
         {
             // Broadcast this transaction
-            throw new NotImplementedException();
+            this.BroadcastTransaction();
+            return true;
         }
 
-        public bool MakeupRefundTxSign(TxContents settlement)
+        private void BroadcastTransaction()
         {
+            string peerSettleSignarture = this.Request.MessageBody.Settlement.txDataSign;
+            string settleSignarture = this.Sign(this.Request.MessageBody.Settlement.originalData.txData);
+            string witness = this.Request.MessageBody.Settlement.originalData.witness
+                .Replace("{signOther}", peerSettleSignarture)
+                .Replace("{signSelf}", settleSignarture);
+
+            NeoInterface.SendRawTransaction(this.Request.MessageBody.Settlement.originalData.txData + witness);
+        }
+
+        public bool MakeupRefundTxSign(TxContents contents)
+        {
+            string txDataSign = this.Sign(contents.txData);
+
+            this.Request.MessageBody.Settlement = new TxContentsSign
+            {
+                txDataSign = txDataSign,
+                originalData = contents
+            };
+
             return true;
         }
 
