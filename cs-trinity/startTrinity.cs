@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Neo;
 using Neo.Wallets;
+using Trinity.BlockChain;
 
 namespace Trinity
 {
@@ -23,6 +25,10 @@ namespace Trinity
             currentAccountPublicKey = publicKey;
 
             trinityWallet = new TrinityWallet(neoSystem, wallet, publicKey, magic, ip, port);
+
+            MonitorTransction monitorTransction = new MonitorTransction(publicKey, ip, port, magic);
+            Thread thread = new Thread(monitorTransction.monitorBlock);
+            thread.Start();
         }
 
         /*

@@ -53,6 +53,13 @@ namespace Trinity.BlockChain
             channel = new Channel(null, null, uri);
         }
 
+        public MonitorTransction(string publicKey, string ip, string port, string magic)
+        {
+            this.netMagic = magic;
+            this.uri = String.Format("{0}@{1}:{2}", publicKey, ip, port);
+            channel = new Channel(null, null, uri);
+        }
+
         public bool SetWalletUri(string uri)
         {
             bool ret = this.uri.Equals(uri);
@@ -63,6 +70,14 @@ namespace Trinity.BlockChain
             }
 
             return !ret;
+        }
+
+        public void StartMonitor(string publicKey, string magic, string ip, string port)
+        {
+            string uri = String.Format("{0}@{1}:{2}", publicKey, ip, port);
+            MonitorTransction monitorTransction = new MonitorTransction(uri, magic);
+            Thread thread = new Thread(monitorTransction.monitorBlock);
+            thread.Start();
         }
 
         public void monitorBlock()
