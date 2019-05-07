@@ -49,7 +49,7 @@ namespace Trinity.BlockChain
     public sealed class NeoTransaction
     {
         // Timestamp attribute for contract
-#if DEBUG
+#if DEBUG_SIGNARTURE
         private readonly double timestamp = 1554866712; // for test use;
         private readonly string timestampString = "1554866712.123456";
 #else
