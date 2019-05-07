@@ -159,7 +159,9 @@ namespace Trinity.Network.TCP
                 {
                     int msgLength = buffer.Skip(4).Take(4).ToArray().ToInt32();
                     splitLength = msgLength + 12;
+
                     msg = Encoding.UTF8.GetString(buffer.Skip(12).Take(msgLength).ToArray(), 0, msgLength);
+                    msg = msg.Substring(0, msg.LastIndexOf("}")+1);
                 }
 
                 msgList.Add(msg);

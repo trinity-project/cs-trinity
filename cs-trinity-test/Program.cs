@@ -38,6 +38,8 @@ namespace TestTrinity
         public static void Main()
         {
             UnitTest.TestMain();
+
+            Console.ReadKey();
         }
     }
 }
