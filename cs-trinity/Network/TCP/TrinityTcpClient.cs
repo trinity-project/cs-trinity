@@ -136,7 +136,7 @@ namespace Trinity.Network.TCP
         private void UnWrapMessageToAdaptGateway(byte[] buffer, int recvLength, ref List<string> msgList)
         {
             //msgList = default(List<string>);
-            
+
             try
             {
                 if (null == buffer || 0 >= recvLength)
@@ -161,10 +161,13 @@ namespace Trinity.Network.TCP
                     splitLength = msgLength + 12;
 
                     msg = Encoding.UTF8.GetString(buffer.Skip(12).Take(msgLength).ToArray(), 0, msgLength);
-                    msg = msg.Substring(0, msg.LastIndexOf("}")+1);
+                    msg = msg.Substring(0, msg.LastIndexOf("}") + 1);
                 }
 
-                msgList.Add(msg);
+                if (msg.Contains("{"))
+                { 
+                    msgList.Add(msg);
+                }
 
                 int newMsgLength = recvLength - splitLength;
                 this.UnWrapMessageToAdaptGateway(
