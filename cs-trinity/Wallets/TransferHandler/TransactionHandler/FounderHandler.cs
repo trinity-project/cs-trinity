@@ -69,7 +69,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         
 
         public FounderHandler(string sender, string receiver, string channel, string asset, 
-            string magic, UInt64 nonce, double deposit, int role=0) : base()
+            string magic, UInt64 nonce, long deposit, int role=0) : base()
         {
             this.RoleMax = 1;
 
@@ -96,8 +96,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.ParsePubkeyPair(sender, receiver);
             this.SetChannelInterface(sender, receiver, channel, asset);
 
-            this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), deposit.ToString(),
-                this.GetPeerPubKey(), deposit.ToString());
+            this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPeerPubKey(), deposit.ToString(),
+                this.GetPubKey(), deposit.ToString());
         }
 
         public FounderHandler(string message) : base(message)
@@ -405,7 +405,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="deposit"></param>
         /// <param name="role"></param>
         public FounderSignHandler(string sender, string receiver, string channel, string asset,
-            string magic, UInt64 nonce, double deposit, int role = 0)
+            string magic, UInt64 nonce, long deposit, int role = 0)
         {
             this.Request = new FounderSign
             {
@@ -548,7 +548,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     public class FounderFailHandler : TransferHandler<FounderFail, VoidHandler, VoidHandler>
     {
         public FounderFailHandler(string sender, string receiver, string channel, string asset,
-            string magic, UInt64 nonce, double deposit, int role = 0)
+            string magic, UInt64 nonce, long deposit, int role = 0)
         {
             this.Request = this.Request = new FounderFail
             {

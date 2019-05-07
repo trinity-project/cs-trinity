@@ -46,8 +46,8 @@ namespace Trinity.TrinityDB.Definitions
         public string role;
         public string state;
         public UInt64 alive;
-        public Dictionary<string, double> deposit;
-        public Dictionary<string, double> balance;
+        public Dictionary<string, long> deposit;
+        public Dictionary<string, long> balance;
     }
 
     [MessagePackObject(keyAsPropertyName: true)]

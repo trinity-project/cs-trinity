@@ -36,7 +36,7 @@ namespace Trinity.Wallets.Templates.Messages
     public class FounderBody
     {
         public string AssetType { get; set; }
-        public double Deposit { get; set; }
+        public long Deposit { get; set; }
         public FundingTx Founder { get; set; }
         public CommitmentTx Commitment { get; set; }
         public RevocableDeliveryTx RevocableDelivery { get; set; }

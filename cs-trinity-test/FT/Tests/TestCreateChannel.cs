@@ -90,7 +90,7 @@ namespace TestTrinity.FT.Tests
         }
 
         public TestRegisterChannelHandler(TrinityWallet wallet, TrinityTcpClient client, 
-            string sender, string receiver, string channel, string asset, string magic,double deposit) 
+            string sender, string receiver, string channel, string asset, string magic,long deposit) 
             : base(sender, receiver, channel, asset, magic, deposit)
         {
             this.SetClient(client);
@@ -148,7 +148,7 @@ namespace TestTrinity.FT.Tests
 
         public TestFounderHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string sender, string receiver, string channel, string asset,
-            string magic, UInt64 nonce, double deposit, int role = 0) : base()
+            string magic, UInt64 nonce, long deposit, int role = 0) : base()
         {
             this.SetClient(client);
             this.SetWallet(wallet);
@@ -171,7 +171,7 @@ namespace TestTrinity.FT.Tests
     {
         public TestFounderSignHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string sender, string receiver, string channel, string asset,
-            string magic, UInt64 nonce, double deposit, int role = 0) 
+            string magic, UInt64 nonce, long deposit, int role = 0) 
             : base(sender, receiver, channel, asset, magic, nonce, deposit, role)
         {
             this.SetClient(client);
@@ -195,7 +195,7 @@ namespace TestTrinity.FT.Tests
     {
         public TestFounderFailHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string sender, string receiver, string channel, string asset,
-            string magic, UInt64 nonce, double deposit, int role = 0) 
+            string magic, UInt64 nonce, long deposit, int role = 0) 
             : base(sender, receiver, channel, asset, magic, nonce, deposit, role)
         {
             this.SetClient(client);
@@ -230,7 +230,7 @@ namespace TestTrinity.FT.Tests
         private readonly string peerUri;
         private readonly string netMagic;
         private readonly string assetType;
-        private readonly double deposit;
+        private readonly long deposit;
 
         private TestRegisterWallet registerWalletHndl;
         private TestSyncWalletHandler syncWalletHndl;

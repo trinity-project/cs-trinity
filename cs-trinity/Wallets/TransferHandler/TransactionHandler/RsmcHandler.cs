@@ -29,10 +29,10 @@ using Trinity.Wallets.Templates.Messages;
 
 namespace Trinity.Wallets.TransferHandler.TransactionHandler
 {
-    ///// <summary>
-    ///// Class Handler for handling Rsmc Message
-    ///// </summary>
-    //public class RsmcHandler : TrinityTransaction<Rsmc, RsmcSignHandler, RsmcFailHandler>
+    /// <summary>
+    /// Class Handler for handling Rsmc Message
+    /// </summary>
+    //public class RsmcHandler : TransferHandler<Rsmc, RsmcSignHandler, RsmcFailHandler>
     //{
     //    public RsmcHandler(string msg) : base(msg)
     //    {
@@ -68,7 +68,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     ///// <summary>
     ///// Class Handler for handling RsmcSign Message
     ///// </summary>
-    //public class RsmcSignHandler : TrinityTransaction<RsmcSign, RsmcHandler, RsmcFailHandler>
+    //public class RsmcSignHandler : TransferHandler<RsmcSign, RsmcHandler, RsmcFailHandler>
     //{
     //    public RsmcSignHandler(string msg) : base(msg)
     //    {
@@ -91,10 +91,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     //    }
     //}
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    ///// RsmcFailHandler start
+    /////////////////////////////////////////////////////////////////////////////////////////////////
     ///// <summary>
     ///// Class Handler for handling RsmcFail Message
     ///// </summary>
-    //public class RsmcFailHandler : TrinityTransaction<RsmcFail, VoidHandler, VoidHandler>
+    //public class RsmcFailHandler : TransferHandler<RsmcFail, VoidHandler, VoidHandler>
     //{
     //    public RsmcFailHandler(string msg) : base(msg)
     //    {

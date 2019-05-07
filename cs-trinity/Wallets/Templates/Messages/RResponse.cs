@@ -37,7 +37,7 @@ namespace Trinity.Wallets.Templates.Messages
         public string HR { get; set; }
         public string R { get; set; }
         public string AssetType { get; set; }
-        public double Count { get; set; }
+        public long Count { get; set; }
         public string Comments { get; set; }
     }
 

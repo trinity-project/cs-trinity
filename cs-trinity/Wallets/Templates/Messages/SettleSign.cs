@@ -39,7 +39,7 @@ namespace Trinity.Wallets.Templates.Messages
     public class SettleSignBody
     {
         public TxContentsSign Settlement { get; set; }
-        public Dictionary<string, double> Balance { get; set; }
+        public Dictionary<string, long> Balance { get; set; }
         public string AssetType { get; set; }
     }
 

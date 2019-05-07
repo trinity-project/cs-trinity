@@ -42,7 +42,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// </summary>
     public class RegisterChannelHandler : TransferHandler<RegisterChannel, FounderHandler, RegisterChannelFailHandler>
     {
-        private readonly double Deposit;
+        private readonly long Deposit;
         private readonly string NetMagic;
 
         // Default Constructor
@@ -61,7 +61,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="nonce"></param>
         /// <param name="deposit"></param>
         public RegisterChannelHandler(string sender, string receiver, string channel, string asset, string magic, 
-            double deposit) : base()
+            long deposit) : base()
         {
             this.Deposit = deposit;
             this.NetMagic = magic ?? this.GetNetMagic();
@@ -156,11 +156,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 role = role.ToString(),
                 state = EnumChannelState.INIT.ToString(),
                 alive = 0,
-                deposit = new Dictionary<string, double> {
+                deposit = new Dictionary<string, long> {
                     { uri, this.Request.MessageBody.Deposit},
                     { peerUri, this.Request.MessageBody.Deposit},
                 },
-                balance = new Dictionary<string, double> {
+                balance = new Dictionary<string, long> {
                     { uri, this.Request.MessageBody.Deposit},
                     { peerUri, this.Request.MessageBody.Deposit},
                 }

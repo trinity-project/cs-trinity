@@ -71,7 +71,7 @@ namespace TestTrinity
                 channel = channelName,
                 asset = "TNC"
             };
-            channelContent.balance = new Dictionary<string, double>();
+            channelContent.balance = new Dictionary<string, long>();
             channelContent.balance.Add("founder", 100);
             channelContent.balance.Add("partner", 100);
             channel.AddChannel(channelName, channelContent);

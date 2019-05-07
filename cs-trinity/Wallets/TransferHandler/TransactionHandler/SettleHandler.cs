@@ -84,8 +84,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
             this.channelContent = this.GetChannelInterface().TryGetChannel(channel);
 
-            this.channelContent.balance.TryGetValue(this.Request.Sender, out double balance);
-            this.channelContent.balance.TryGetValue(this.Request.Sender, out double peerBalance);
+            this.channelContent.balance.TryGetValue(this.Request.Sender, out long balance);
+            this.channelContent.balance.TryGetValue(this.Request.Sender, out long peerBalance);
 
             this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balance.ToString(),
                 this.GetPeerPubKey(), peerBalance.ToString(), this.fundingTrade.founder.originalData.addressFunding,

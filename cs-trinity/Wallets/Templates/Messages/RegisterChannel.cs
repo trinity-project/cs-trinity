@@ -35,7 +35,7 @@ namespace Trinity.Wallets.Templates.Messages
     public class RegisterChannelBody
     {
         public string AssetType { get; set; }
-        public double Deposit { get; set; }
+        public long Deposit { get; set; }
         public string Comments { get; set; }
     }
 

@@ -31,7 +31,7 @@ namespace TestTrinity.FT.Tests
         // 
         public const string magic = "195378745719990331";
         public const string AssetType = "TNC";
-        public const double deposit = 10;
+        public const long deposit = 10;
 
         // TrinityTcpClient definitions
         public const string ip = "10.0.0.5";
