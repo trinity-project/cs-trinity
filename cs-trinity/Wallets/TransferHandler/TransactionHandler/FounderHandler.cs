@@ -24,6 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 using System;
+using System.Collections.Generic;
 
 using Neo;
 using Neo.IO.Json;
@@ -168,8 +169,19 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                         this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Deposit,
                         1);
                 founderHandler.MakeTransaction(this.GetClient());
+
+                // Add channel to database
+                this.AddChannel(this.Request.Receiver, this.Request.Sender);
             }
             #endregion
+            else if (IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                // Update the channel to opening state
+                this.UpdateChannelState(this.Request.Receiver, this.Request.Sender, EnumChannelState.OPENING);
+            }
+            else {
+                Log.Error("Unkown Role index: {0}", this.Request.MessageBody.RoleIndex);
+            }
 
             return true;
         }
@@ -317,58 +329,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.GetChannelInterface().AddTransaction(this.Request.TxNonce, txContent);
         }
 
-        //public void AddTransaction(bool isPeer=false)
-        //{
-        //    TransactionTabelContent transactionContent;
-        //    // add peer information from the message
-        //    if (isPeer)
-        //    {
-        //        transactionContent = new TransactionTabelContent();
-        //        transactionContent.nonce = this.Request.TxNonce;
-        //    }
-        //    else
-        //    {
-        //        transactionContent = new TransactionTabelContent
-        //        {
-        //            nonce = this.Request.TxNonce,
-        //            monitorTxId = this.commTx["txId"].ToString(),
-        //            founder = new FundingSignTx
-        //            {
-        //                originalData = new FundingTx
-        //                {
-        //                    txData = this.fundingTx["txData"].ToString(),
-        //                    txId = this.fundingTx["txId"].ToString(),
-        //                    witness = this.fundingTx["witness"].ToString(),
-        //                    addressFunding = this.fundingTx["addressFunding"].ToString(),
-        //                    scriptFunding = this.fundingTx["scriptFunding"].ToString()
-        //                },
-        //            },
-        //            commitment = new CommitmentSignTx
-        //            {
-        //                originalData = new CommitmentTx
-        //                {
-        //                    txData = this.commTx["txData"].ToString(),
-        //                    txId = this.commTx["txId"].ToString(),
-        //                    witness = this.commTx["witness"].ToString(),
-        //                    addressRSMC = this.commTx["addressRSMC"].ToString(),
-        //                    scriptRSMC = this.commTx["scriptRSMC"].ToString(),
-        //                },
-        //            },
-        //            revocableDelivery = new RevocableDeliverySignTx
-        //            {
-        //                originalData = new RevocableDeliveryTx
-        //                {
-        //                    txData = this.rdTx["txData"].ToString(),
-        //                    txId = this.rdTx["txId"].ToString(),
-        //                    witness = this.rdTx["witness"].ToString(),
-        //                }
-        //            }
-        //        };
-        //    }
-
-        //    this.GetChannelInterface().AddTransaction(this.Request.TxNonce, transactionContent);
-        //}
-
         private void AddTransactionSummary(UInt64 nonce, string txId, string channel, EnumTxType type)
         {
             TransactionTabelSummary txContent = new TransactionTabelSummary
@@ -379,6 +339,44 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             };
 
             this.GetChannelInterface().AddTransaction(txId, txContent);
+        }
+
+        public void AddChannel(string uri, string peerUri)
+        {
+            ChannelTableContent content = new ChannelTableContent
+            {
+                channel = this.Request.ChannelName,
+                asset = this.Request.MessageBody.AssetType,
+                uri = uri,
+                peer = peerUri,
+                magic = this.Request.NetMagic,
+                role = EnumRole.PARTNER.ToString(),
+                state = EnumChannelState.INIT.ToString(),
+                alive = 0,
+                deposit = new Dictionary<string, long> {
+                    { uri, this.Request.MessageBody.Deposit},
+                    { peerUri, this.Request.MessageBody.Deposit},
+                },
+                balance = new Dictionary<string, long> {
+                    { uri, this.Request.MessageBody.Deposit},
+                    { peerUri, this.Request.MessageBody.Deposit},
+                }
+            };
+            this.GetChannelInterface().AddChannel(this.Request.ChannelName, content);
+        }
+
+        public void UpdateChannelState(string uri, string peerUri, EnumChannelState state)
+        {
+            ChannelTableContent channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
+            if (null == channelContent)
+            {
+                Log.Fatal("Could not find channel -- {0} in Database.", this.Request.ChannelName);
+                return;
+            }
+
+            // Update the channel state
+            channelContent.state = state.ToString();
+            this.GetChannelInterface().AddChannel(this.Request.ChannelName, channelContent);
         }
     }
 
@@ -454,6 +452,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             if (IsRole1(this.Request.MessageBody.RoleIndex))
             {
                 this.BroadcastTransaction();
+
+                // Update the channel to opening state
+                this.UpdateChannelState(this.Request.Receiver, this.Request.Sender, EnumChannelState.OPENING);
             }
             return true;
         }
@@ -485,7 +486,21 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.GetChannelInterface().UpdateTransaction(this.Request.TxNonce, content);
         }
-        
+
+        public void UpdateChannelState(string uri, string peerUri, EnumChannelState state)
+        {
+            ChannelTableContent channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
+            if (null == channelContent)
+            {
+                Log.Fatal("Could not find channel -- {0} in Database.", this.Request.ChannelName);
+                return;
+            }
+
+            // Update the channel state
+            channelContent.state = state.ToString();
+            this.GetChannelInterface().AddChannel(this.Request.ChannelName, channelContent);
+        }
+
         public void MakeupFundingTx(FundingTx txContent)
         {
             string txDataSign = this.Sign(txContent.txData);

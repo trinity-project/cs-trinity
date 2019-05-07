@@ -144,7 +144,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             base.MakeTransaction();
         }
 
-        public void AddChannel(string uri, string peerUri, EnumRole role = EnumRole.PARTNER)
+        public void AddChannel(string uri, string peerUri)
         {
             ChannelTableContent content = new ChannelTableContent
             {
@@ -153,7 +153,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 uri = uri,
                 peer = peerUri,
                 magic = this.Request.NetMagic,
-                role = role.ToString(),
+                role = EnumRole.FOUNDER.ToString(),
                 state = EnumChannelState.INIT.ToString(),
                 alive = 0,
                 deposit = new Dictionary<string, long> {
