@@ -640,21 +640,28 @@ namespace Trinity.BlockChain
         //获取账户下的符合要求的input信息
         private static Coin[] GetUnspentCoins(UInt160[] from, UInt256 asset_id, Fixed8 amount)
         {
-            IEnumerable<UInt160> accounts = from.Length > 0 ? from : startTrinity.currentWallet.GetAccounts().Where(p => !p.Lock && !p.WatchOnly).Select(p => p.ScriptHash);
-            IEnumerable<Coin> unspents = startTrinity.currentWallet.GetCoins(accounts).Where(p => p.State.HasFlag(CoinState.Confirmed) && !p.State.HasFlag(CoinState.Spent) && !p.State.HasFlag(CoinState.Frozen));
+            try
+            {
+                IEnumerable<UInt160> accounts = from.Length > 0 ? from : startTrinity.currentWallet.GetAccounts().Where(p => !p.Lock && !p.WatchOnly).Select(p => p.ScriptHash);
+                IEnumerable<Coin> unspents = startTrinity.currentWallet.GetCoins(accounts).Where(p => p.State.HasFlag(CoinState.Confirmed) && !p.State.HasFlag(CoinState.Spent) && !p.State.HasFlag(CoinState.Frozen));
 
-            Coin[] unspents_asset = unspents.Where(p => p.Output.AssetId == asset_id).ToArray();
-            Fixed8 sum = unspents_asset.Sum(p => p.Output.Value);
-            if (sum < amount) return null;
-            if (sum == amount) return unspents_asset;
-            Coin[] unspents_ordered = unspents_asset.OrderByDescending(p => p.Output.Value).ToArray();
-            int i = 0;
-            while (unspents_ordered[i].Output.Value <= amount)
-                amount -= unspents_ordered[i++].Output.Value;
-            if (amount == Fixed8.Zero)
-                return unspents_ordered.Take(i).ToArray();
-            else
-                return unspents_ordered.Take(i).Concat(new[] { unspents_ordered.Last(p => p.Output.Value >= amount) }).ToArray();
+                Coin[] unspents_asset = unspents.Where(p => p.Output.AssetId == asset_id).ToArray();
+                Fixed8 sum = unspents_asset.Sum(p => p.Output.Value);
+                if (sum < amount) return null;
+                if (sum == amount) return unspents_asset;
+                Coin[] unspents_ordered = unspents_asset.OrderByDescending(p => p.Output.Value).ToArray();
+                int i = 0;
+                while (unspents_ordered[i].Output.Value <= amount)
+                    amount -= unspents_ordered[i++].Output.Value;
+                if (amount == Fixed8.Zero)
+                    return unspents_ordered.Take(i).ToArray();
+                else
+                    return unspents_ordered.Take(i).Concat(new[] { unspents_ordered.Last(p => p.Output.Value >= amount) }).ToArray();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         // 构造NEO/GAS founding交易需要的信息字段
@@ -669,7 +676,7 @@ namespace Trinity.BlockChain
         private const long D = 100_000_000;
 
         //查找未花费的资产交易信息
-        public List<string> getGloablAssetVout(string publicKey, uint _amount, string _assetId)
+        public static List<string> getGloablAssetVout(string publicKey, string _assetId, uint _amount)
         {
             UInt256 assetId = UInt256.Parse(_assetId);
             Fixed8 amount = Fixed8.FromDecimal(_amount);
