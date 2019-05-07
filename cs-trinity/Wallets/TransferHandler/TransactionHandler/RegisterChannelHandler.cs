@@ -133,7 +133,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.SHandler.MakeTransaction(this.GetClient());
 
             // Add channel to database
-            this.AddChannel(this.Request.Receiver, this.Request.Sender, EnumRole.PARTNER);
+            this.AddChannel(this.Request.Receiver, this.Request.Sender);
 
             return true;
         }
