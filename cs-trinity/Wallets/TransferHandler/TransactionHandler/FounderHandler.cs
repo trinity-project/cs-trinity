@@ -169,9 +169,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                         this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Deposit,
                         1);
                 founderHandler.MakeTransaction(this.GetClient());
-
-                // Add channel to database
-                this.AddChannel(this.Request.Receiver, this.Request.Sender);
             }
             #endregion
             else if (IsRole1(this.Request.MessageBody.RoleIndex))
@@ -339,30 +336,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             };
 
             this.GetChannelInterface().AddTransaction(txId, txContent);
-        }
-
-        public void AddChannel(string uri, string peerUri)
-        {
-            ChannelTableContent content = new ChannelTableContent
-            {
-                channel = this.Request.ChannelName,
-                asset = this.Request.MessageBody.AssetType,
-                uri = uri,
-                peer = peerUri,
-                magic = this.Request.NetMagic,
-                role = EnumRole.PARTNER.ToString(),
-                state = EnumChannelState.INIT.ToString(),
-                alive = 0,
-                deposit = new Dictionary<string, long> {
-                    { uri, this.Request.MessageBody.Deposit},
-                    { peerUri, this.Request.MessageBody.Deposit},
-                },
-                balance = new Dictionary<string, long> {
-                    { uri, this.Request.MessageBody.Deposit},
-                    { peerUri, this.Request.MessageBody.Deposit},
-                }
-            };
-            this.GetChannelInterface().AddChannel(this.Request.ChannelName, content);
         }
 
         public void UpdateChannelState(string uri, string peerUri, EnumChannelState state)

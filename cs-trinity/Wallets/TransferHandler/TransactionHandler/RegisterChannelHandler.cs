@@ -87,6 +87,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.ParsePubkeyPair(sender, receiver);
             this.SetChannelInterface(sender, receiver, channel, asset);
+
+            // Add channel to database
+            this.AddChannel(this.Request.Sender, this.Request.Receiver);
         }
 
         public RegisterChannelHandler(string message) : base(message)
@@ -133,18 +136,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.SHandler.MakeTransaction(this.GetClient());
 
             // Add channel to database
-            this.AddChannel(this.Request.Receiver, this.Request.Sender);
+            this.AddChannel(this.Request.Receiver, this.Request.Sender, EnumRole.PARTNER);
 
             return true;
         }
 
         public override void MakeTransaction()
         {
-            this.AddChannel(this.Request.Sender, this.Request.Receiver);
             base.MakeTransaction();
         }
 
-        public void AddChannel(string uri, string peerUri)
+        public void AddChannel(string uri, string peerUri, EnumRole role= EnumRole.FOUNDER)
         {
             ChannelTableContent content = new ChannelTableContent
             {
@@ -153,7 +155,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 uri = uri,
                 peer = peerUri,
                 magic = this.Request.NetMagic,
-                role = EnumRole.FOUNDER.ToString(),
+                role = role.ToString(),
                 state = EnumChannelState.INIT.ToString(),
                 alive = 0,
                 deposit = new Dictionary<string, long> {
