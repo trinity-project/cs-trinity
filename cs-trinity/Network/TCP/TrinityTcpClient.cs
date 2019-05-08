@@ -168,7 +168,11 @@ namespace Trinity.Network.TCP
                     msg = msg.Substring(0, msg.LastIndexOf("}") + 1);
                 }
 
-                msgList.Add(msg);
+                if (msg.StartsWith("{"))
+                {
+                    Log.Debug("Push message to queue. Message {0}", msg);
+                    msgList.Add(msg);
+                }
 
                 int newMsgLength = recvLength - splitLength;
                 this.UnWrapMessageToAdaptGateway(
