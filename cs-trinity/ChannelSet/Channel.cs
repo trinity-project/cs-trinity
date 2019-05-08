@@ -168,7 +168,7 @@ namespace Trinity.ChannelSet
         {
             try
             {
-                Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString());
+                Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString());
                 return txContent.ToString().Deserialize<TransactionTabelContent>();
             }
             catch (Exception ExpInfo)
@@ -192,7 +192,7 @@ namespace Trinity.ChannelSet
 
         public TransactionTabelContent TryGetTransaction(UInt64 nonce)
         {
-            if (this.TableTransaction.Db.TryGet(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()),
+            if (this.TableTransaction.Db.TryGet(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()),
                 nonce.ToString(), out Slice txContent))
             {
                 return txContent.ToString().Deserialize<TransactionTabelContent>();
@@ -219,7 +219,7 @@ namespace Trinity.ChannelSet
 
         public void AddTransaction(UInt64 nonce, TransactionTabelContent value)
         {
-            this.TableTransaction.Db.Add(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString(), value);
+            this.TableTransaction.Db.Add(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString(), value);
         }
 
         public void AddTransaction(string txid, TransactionTabelSummary value)
@@ -229,12 +229,12 @@ namespace Trinity.ChannelSet
 
         public void UpdateTransaction(UInt64 nonce, TransactionTabelContent value)
         {
-            this.TableTransaction.Db.Update(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString(), value);
+            this.TableTransaction.Db.Update(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString(), value);
         }
 
         public void DeleteTransaction(UInt64 nonce)
         {
-            this.TableTransaction.Db.Delete(this.TableTransaction.record.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString());
+            this.TableTransaction.Db.Delete(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString());
         }
 
         public void DeleteTransaction(string txid)
