@@ -49,8 +49,15 @@ namespace Trinity.TrinityDB
         /// <param name="path"></param>
         public TransactionModel(string path, string channel) : base(path)
         {
-            byte[] group = channel.ToHashBytes();
-            this.record = SliceBuilder.Begin(ModelPrefix.MPTransaction).Add(group);
+            if (null != channel)
+            {
+                byte[] group = channel.ToHashBytes();
+                this.record = SliceBuilder.Begin(ModelPrefix.MPTransaction).Add(group);
+            }
+            else
+            {
+                this.record = SliceBuilder.Begin(ModelPrefix.MPTransaction);
+            }
         }
         
     }
