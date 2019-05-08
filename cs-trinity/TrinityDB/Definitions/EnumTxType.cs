@@ -36,6 +36,7 @@ namespace Trinity.TrinityDB.Definitions
     {
         FUNDING = 0,
         COMMITMENT = 0x1,
-        REVOCABLE = 0x2
+        REVOCABLE = 0x2,
+        SETTLE=0xFF
     }
 }

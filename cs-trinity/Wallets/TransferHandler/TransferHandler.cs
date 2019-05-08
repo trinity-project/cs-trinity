@@ -229,8 +229,50 @@ namespace Trinity.Wallets.TransferHandler
 
             // Update the channel state
             channelContent.state = state.ToString();
-            this.channelDbInterface.UpdateChannel(channelName, channelContent);
+            this.channelDbInterface?.UpdateChannel(channelName, channelContent);
         }
+
+        public void AddTransactionSummary(UInt64 nonce, string txId, string channel, EnumTxType type)
+        {
+            TransactionTabelSummary txContent = new TransactionTabelSummary
+            {
+                nonce = nonce,
+                channel = channel,
+                txType = type.ToString()
+            };
+
+            this.channelDbInterface?.AddTransaction(txId, txContent);
+        }
+
+        public bool CurrentNonce(string channel, out UInt64 nonce)
+        {
+            nonce = 0;
+
+            ChannelSummaryContents content = this.channelDbInterface?.TryGetChannelSummary(channel);
+
+            if (null == content)
+            {
+                Log.Error("Not found summary information for channel: {0}", channel);
+                return false;
+            }
+
+            nonce = content.nonce;
+            return true;
+        }
+
+        public bool NextNonce(string channel, out UInt64 nonce)
+        {
+            nonce = 0;
+
+            if (this.CurrentNonce(channel, out UInt64 currentNonce))
+            {
+                nonce = currentNonce + 1;
+                return true;
+            }
+
+            return false;
+        }
+        
 
         /// <summary>
         /// Trinity Transaction Role define here.

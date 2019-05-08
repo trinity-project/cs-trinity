@@ -73,6 +73,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="magic"></param>
         public SettleHandler(string sender, string receiver, string channel, string asset, string magic) : base()
         {
+            
             this.Request = new Settle
             {
                 Sender = sender,
@@ -83,6 +84,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 MessageBody = new SettleBody(),
             };
 
+            if (this.NextNonce(channel, out UInt64 nonce))
+            {
+                this.Request.TxNonce = nonce;
+            }
+
             this.ParsePubkeyPair(sender, receiver);
             this.SetChannelInterface(sender, receiver, channel, asset);
             this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
@@ -91,6 +97,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.channelContent.balance.TryGetValue(this.Request.Sender, out long balance);
             this.channelContent.balance.TryGetValue(this.Request.Sender, out long peerBalance);
 
+            
+
             this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balance.ToString(),
                 this.GetPeerPubKey(), peerBalance.ToString(), this.fundingTrade.founder.originalData.addressFunding,
                 this.fundingTrade.founder.originalData.scriptFunding);
@@ -98,13 +106,21 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // Whatever happens, we set the channel settling when call this class
             this.UpdateChannelState(this.Request.Receiver, this.Request.Sender,
                 this.Request.ChannelName, EnumChannelState.SETTLING);
+
         }
 
         public override bool Handle()
         {
             Log.Debug("Handle Settle Message. Channel name: {0}, Balance {1}",
                 this.Request.ChannelName, this.Request.MessageBody.Balance);
-            base.Handle();
+            if (!base.Handle())
+            {
+                return false;
+            }
+
+            // Add txid for monitor
+            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Settlement.txId,
+                this.Request.ChannelName, EnumTxType.SETTLE);
 
             return true;
         }
@@ -172,6 +188,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.Request.MessageBody.Settlement = refundTx;
             this.Request.MessageBody.Balance = this.channelContent.balance;
             this.Request.MessageBody.AssetType = this.channelContent.asset;
+
+            // Add txid for monitor
+            this.AddTransactionSummary(this.Request.TxNonce, refundTx.txId,
+                this.Request.ChannelName, EnumTxType.SETTLE);
 
             return true;
         }

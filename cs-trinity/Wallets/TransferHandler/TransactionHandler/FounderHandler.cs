@@ -339,18 +339,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.GetChannelInterface().AddTransaction(this.Request.TxNonce, txContent);
         }
-
-        private void AddTransactionSummary(UInt64 nonce, string txId, string channel, EnumTxType type)
-        {
-            TransactionTabelSummary txContent = new TransactionTabelSummary
-            {
-                nonce = nonce,
-                channel = channel,
-                txType = type.ToString()
-            };
-
-            this.GetChannelInterface().AddTransaction(txId, txContent);
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

@@ -138,6 +138,16 @@ namespace Trinity.ChannelSet
             return null;
         }
 
+        public ChannelSummaryContents TryGetChannelSummary(string channel)
+        {
+            if (this.TableChannel.Db.TryGet(this.TableChannel.summary.Add(channel.ToBytesUtf8()), channel, out Slice summary))
+            {
+                return summary.ToString().Deserialize<ChannelSummaryContents>();
+            }
+
+            return null;
+        }
+
         public void AddChannelSummary(string channel, ChannelSummaryContents value)
         {
             this.TableChannel.Db.Add(this.TableChannel.summary.Add(channel.ToBytesUtf8()), channel, value);

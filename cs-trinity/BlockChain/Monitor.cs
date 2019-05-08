@@ -161,6 +161,7 @@ namespace Trinity.BlockChain
         {
             switch (Summary.txType.ToLower())
             {
+                
                 case "funding":
                     ChannelTableContent ChannelData = channel.TryGetChannel(Summary.channel);
                     ChannelData.state = EnumChannelState.OPENED.ToString();
