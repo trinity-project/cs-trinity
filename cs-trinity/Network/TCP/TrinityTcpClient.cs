@@ -161,13 +161,14 @@ namespace Trinity.Network.TCP
                     splitLength = msgLength + 12;
 
                     msg = Encoding.UTF8.GetString(buffer.Skip(12).Take(msgLength).ToArray(), 0, msgLength);
+                }
+
+                if (!msg.EndsWith("}"))
+                {
                     msg = msg.Substring(0, msg.LastIndexOf("}") + 1);
                 }
 
-                if (msg.Contains("{"))
-                { 
-                    msgList.Add(msg);
-                }
+                msgList.Add(msg);
 
                 int newMsgLength = recvLength - splitLength;
                 this.UnWrapMessageToAdaptGateway(
@@ -200,56 +201,8 @@ namespace Trinity.Network.TCP
             {
                 try
                 {
-                    /*
-                    if (client == null)
-                    {
-                        continue;
-                    }
-                    NetworkStream clientStream = client.GetStream();
-                    byte[] buffer = new byte[bufferSize];
-                    MemoryStream reponseMessage = new MemoryStream();
-                    int readBytes = 1;
-                    while (readBytes > 0)
-                    {
-                        readBytes = clientStream.Read(buffer, 0, bufferSize);
-                        reponseMessage.Write(buffer, 0, readBytes);
-                    }
-                    //clientStream.Close();
-
-                    byte[] message = reponseMessage.GetBuffer();
-                    string str = Encoding.UTF8.GetString(message);
-                    Form_main.showInformation((str.Length).ToString());
-                    if (str.Length > 0)
-                    {
-                        //messageQueue.Enqueue(str);
-                    }
-                    */
-                    //Console.WriteLine("recieved message");
-                    //byte[] buffer = new byte[bufferSize];
+                    // set buffer zero
                     buffer.Initialize();
-                    //string str = null;
-                    //实际接收到的有效字节数
-                    //int len = 0;
-                    /*
-                    try
-                    { 
-
-                        do
-                        {
-                            len = client.Receive(buffer);
-                            if (Encoding.UTF8.GetString(buffer, 0, len).Equals("eof"))
-                            {
-                                break;
-                            }
-                            Console.WriteLine("read {0} data", len.ToString());
-                            str += Encoding.UTF8.GetString(buffer, 0, len);
-                            //Console.WriteLine("read {0} data", len.ToString());
-                        } while (len > 0);//while(client.Poll(500, SelectMode.SelectRead) && client.Available > 0 && client.Connected);      
-                    }
-                    catch (Exception e)
-                    {
-                        //Console.WriteLine("read exception");
-                    }*/
 
                     int len = clientSocket.Receive(buffer);
                     if (0 >= len)

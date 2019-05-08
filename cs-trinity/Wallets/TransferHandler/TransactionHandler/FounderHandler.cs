@@ -432,7 +432,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public override bool MakeTransaction()
         {
             bool ret = base.MakeTransaction();
-
+            Log.Debug("{0} to send {1}. Channel name {2}, Asset Type: {3}, Deposit: {4}.",
+                ret ? "Succeed" : "Fail",
+                this.Request.MessageType,
+                this.Request.ChannelName,
+                this.Request.MessageBody.AssetType,
+                this.Request.MessageBody.Deposit);
 
             return ret;
         }
