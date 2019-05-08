@@ -54,7 +54,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
             this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
-                this.Request.ChannelName, null);
+                this.Request.ChannelName, this.Request.MessageBody.AssetType);
             this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
             this.channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
         }
@@ -94,6 +94,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Handle()
         {
+            Log.Debug("Handle Settle Message. Channel name: {0}, Balance {1}",
+                this.Request.ChannelName, this.Request.MessageBody.Balance);
             base.Handle();
 
             return true;
@@ -185,7 +187,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
             this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
-                this.Request.ChannelName, null);
+                this.Request.ChannelName, this.Request.MessageBody.AssetType);
             this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
             this.channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
         }
@@ -221,7 +223,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Handle()
         {
-            return false;
+            Log.Debug("Handle SettleSign Message. Channel name: {0}.", this.Request.ChannelName);
+            return base.Handle();
         }
 
         public override bool FailStep()
@@ -245,7 +248,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 .Replace("{signOther}", peerSettleSignarture)
                 .Replace("{signSelf}", settleSignarture);
 
-            NeoInterface.SendRawTransaction(this.Request.MessageBody.Settlement.originalData.txData + witness);
+            JObject ret = NeoInterface.SendRawTransaction(this.Request.MessageBody.Settlement.originalData.txData + witness);
+            Log.Debug("Broadcast Settle transaction result is {0}. txId: {1}", ret, this.Request.MessageBody.Settlement.originalData.txId);
         }
 
         public bool MakeupRefundTxSign(TxContents contents)

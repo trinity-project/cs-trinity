@@ -477,7 +477,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 .Replace("{signSelf}", fundSign);
 
             JObject ret = NeoInterface.SendRawTransaction(this.Request.MessageBody.Founder.originalData.txData + witness);
-            Log.Debug("Broadcast Founder transaction result is {0}", ret);
+            Log.Debug("Broadcast Founder transaction result is {0}. txId: {1}", ret, this.Request.MessageBody.Founder.originalData.txId);
         }
 
         private void UpdateTransaction()
