@@ -40,10 +40,8 @@ namespace Trinity.TrinityDB
     /// </summary>
     public class TransactionModel : BaseModel
     {
-        private readonly byte[] group;
-
-        public SliceBuilder record => SliceBuilder.Begin(ModelPrefix.MPTransaction).Add(this.group);
-        public SliceBuilder txid => SliceBuilder.Begin(ModelPrefix.MPTransactionTxId);//.Add(this.group);
+        public SliceBuilder record;
+        public SliceBuilder txid => SliceBuilder.Begin(ModelPrefix.MPTransactionTxId);
 
         /// <summary>
         /// Default Constructor
@@ -51,10 +49,8 @@ namespace Trinity.TrinityDB
         /// <param name="path"></param>
         public TransactionModel(string path, string channel) : base(path)
         {
-            if (null != channel)
-            {
-                this.group = channel.ToHashBytes();
-            }
+            byte[] group = channel.ToHashBytes();
+            this.record = SliceBuilder.Begin(ModelPrefix.MPTransaction).Add(group);
         }
         
     }

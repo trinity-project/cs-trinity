@@ -42,10 +42,10 @@ namespace Trinity.TrinityDB
     public class ChannelModel : BaseModel
     {
         private readonly byte[] group;
-        private readonly byte[] peerGroup;
+        //private readonly byte[] peerGroup;
 
-        public SliceBuilder keyword => SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
-        public SliceBuilder bothKeyword => SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
+        public readonly SliceBuilder keyword;
+        public readonly SliceBuilder bothKeyword;
         public SliceBuilder summary => SliceBuilder.Begin(ModelPrefix.MPSummary);
 
         /// <summary>
@@ -56,11 +56,13 @@ namespace Trinity.TrinityDB
         public ChannelModel(string path, string uri, string peerUri=null) : base(path)
         {
             this.group = uri.ToHashBytes();
+            this.keyword = SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
+            this.bothKeyword = SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
 
-            if (null != peerUri)
-            {
-                this.peerGroup = uri.ToHashBytes();
-            }
+            //if (null != peerUri)
+            //{
+            //    this.peerGroup = uri.ToHashBytes();
+            //}
         }
     }
 }
