@@ -42,6 +42,7 @@ namespace Trinity.TrinityDB
     {
         private readonly byte[] group;
 
+        public SliceBuilder txid => SliceBuilder.Begin(ModelPrefix.MPTransactionTxId);
         public SliceBuilder record
         {
             get
@@ -53,8 +54,8 @@ namespace Trinity.TrinityDB
 
                 return null;
             }
-        };
-        public SliceBuilder txid => SliceBuilder.Begin(ModelPrefix.MPTransactionTxId);//.Add(this.group);
+        }
+        
 
         /// <summary>
         /// Default Constructor
