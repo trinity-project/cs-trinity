@@ -59,7 +59,7 @@ namespace TestTrinity.FT.Tests
 
             // Start to send RegisterKeepAlive to gateway
             Console.WriteLine("Send SyncWalletData: {0}", msgHandler.ToJson());
-            msgHandler.MakeTransaction(this.Client);
+            msgHandler.MakeTransaction();
 
             // received the expected messages
             this.Client.ReceiveMessage("AckSyncWallet");

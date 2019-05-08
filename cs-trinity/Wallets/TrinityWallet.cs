@@ -176,7 +176,6 @@ namespace Trinity
                 return;
             }
 
-            Log.Debug("Received {0}, {1}", header.MessageType, message);
             // To handle the message
             switch (header.MessageType)
             {

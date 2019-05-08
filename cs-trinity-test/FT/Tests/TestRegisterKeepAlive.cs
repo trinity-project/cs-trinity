@@ -49,7 +49,7 @@ namespace TestTrinity.FT.Tests
 
             // Start to send RegisterKeepAlive to gateway
             Console.WriteLine("Send RegisterKeepAlive: {0}", msgHandler.ToJson());
-            msgHandler.MakeTransaction(this.Client);
+            msgHandler.MakeTransaction();
         }
     }
 }

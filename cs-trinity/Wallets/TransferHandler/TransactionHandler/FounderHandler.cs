@@ -110,6 +110,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Handle()
         {
+            Log.Debug("Handle Message {0}. Channel name {1}, Asset Type: {2}, Deposit: {3}.",
+                this.Request.MessageType,
+                this.Request.ChannelName,
+                this.Request.MessageBody.AssetType,
+                this.Request.MessageBody.Deposit);
+
             if (!base.Handle())
             {
                 return false;
@@ -132,7 +138,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.FHandler = new FounderFailHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                     this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Deposit);
-            this.FHandler.MakeTransaction(this.GetClient());
+            this.FHandler.MakeTransaction();
 
             return true;
         }
@@ -155,7 +161,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.SHandler.MakeupCommitmentTx(this.Request.MessageBody.Commitment);
             this.SHandler.MakeupRevocableDeliveryTx(this.Request.MessageBody.RevocableDelivery);
             // send FounderSign to peer
-            this.SHandler.MakeTransaction(this.GetClient());
+            this.SHandler.MakeTransaction();
             #endregion
 
             #region New_FounderHandler
@@ -168,7 +174,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 FounderHandler founderHandler = new FounderHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                         this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Deposit,
                         1);
-                founderHandler.MakeTransaction(this.GetClient());
+                founderHandler.MakeTransaction();
             }
             #endregion
             else if (IsRole1(this.Request.MessageBody.RoleIndex))
@@ -183,9 +189,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
-        public override void MakeTransaction(TrinityTcpClient client)
+        public override bool MakeTransaction()
         {
-            base.MakeTransaction(client);
+            bool ret = base.MakeTransaction();
+            Log.Debug("{0} to send {1}. Channel name {2}, Asset Type: {3}, Deposit: {4}.", 
+                ret?"Succeed" : "Fail",
+                this.Request.MessageType,
+                this.Request.ChannelName,
+                this.Request.MessageBody.AssetType,
+                this.Request.MessageBody.Deposit);
+            return ret;
         }
 
         private bool SignFundingTx()
@@ -406,16 +419,34 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.Request.ChannelName, this.Request.MessageBody.AssetType);
         }
 
+        public override bool Handle()
+        {
+            Log.Debug("Handle Message {0}. Channel name {1}, Asset Type: {2}, Deposit: {3}.",
+                this.Request.MessageType,
+                this.Request.ChannelName,
+                this.Request.MessageBody.AssetType,
+                this.Request.MessageBody.Deposit);
+            return base.Handle();
+        }
+
+        public override bool MakeTransaction()
+        {
+            bool ret = base.MakeTransaction();
+
+
+            return ret;
+        }
+
         public override bool FailStep()
         {
             this.FHandler = new FounderFailHandler(this.Request.Receiver, this.Request.Sender, 
                 this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.NetMagic, 
                 this.Request.TxNonce, this.Request.MessageBody.Deposit, this.Request.MessageBody.RoleIndex);
-            this.FHandler.MakeTransaction(this.GetClient());
+            this.FHandler.MakeTransaction();
 
             return true;
         }
-
+        
         public override bool SucceedStep()
         {
             // update the transaction history
@@ -440,7 +471,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 .Replace("{signOther}", peerFundSign)
                 .Replace("{signSelf}", fundSign);
 
-            NeoInterface.SendRawTransaction(this.Request.MessageBody.Founder.originalData.txData + witness);
+            JObject ret = NeoInterface.SendRawTransaction(this.Request.MessageBody.Founder.originalData.txData + witness);
+            Log.Debug("Broadcast Founder transaction result is {0}", ret);
         }
 
         private void UpdateTransaction()
@@ -571,9 +603,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Handle()
         {
-            Console.WriteLine("Failed to reate channel {0}", this.Request.ChannelName);
-            base.Handle();
-            return false;
+            Log.Debug("Handle Message {0}. Failed to create channel {1}.",
+                this.Request.MessageType,
+                this.Request.ChannelName);
+
+            return base.Handle();
         }
 
         public override bool FailStep()

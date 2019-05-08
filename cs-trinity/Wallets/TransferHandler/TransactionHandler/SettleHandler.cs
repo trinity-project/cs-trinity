@@ -104,7 +104,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.FHandler = new SettleSignHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                     this.Request.MessageBody.AssetType, this.Request.NetMagic);
 
-            this.FHandler.MakeTransaction(this.GetClient());
+            this.FHandler.MakeTransaction();
 
             return true;
         }
@@ -123,13 +123,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
-        public override void MakeTransaction(TrinityTcpClient client)
+        public override bool MakeTransaction()
         {
             // makeup the message
             if (this.MakeupRefundTx())
             {
-                base.MakeTransaction(client);
+                bool ret = base.MakeTransaction();
+                return ret;
             }
+
+            return false;
         }
 
         public override bool MakeupMessage()

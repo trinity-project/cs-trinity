@@ -107,29 +107,18 @@ namespace Trinity.Wallets.TransferHandler
         public virtual void SetBodyAttribute<TValue>(string name, TValue value) {}
         public virtual void GetBodyAttribute<TContext>(string name) { }
 
-        public virtual void MakeTransaction(TrinityTcpClient client)
+        public virtual bool MakeTransaction()
         {
-            if (this.MakeupMessage())
-            {
-                client?.SendData(this.Request.Serialize());
-            }
-            else
-            {
-                Console.WriteLine("Void Message is found");
-            }
-        }
-
-        public virtual void MakeTransaction()
-        {
-            
             if (this.MakeupMessage())
             {
                 this.wallet?.GetClient()?.SendData(this.Request.Serialize());
+                return true;
             }
             else
             {
                 Console.WriteLine("Void Message is found");
             }
+            return false;
         }
 
         public virtual bool MakeupMessage()

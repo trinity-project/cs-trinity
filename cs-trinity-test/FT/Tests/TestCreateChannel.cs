@@ -106,7 +106,7 @@ namespace TestTrinity.FT.Tests
 
         public void SendMessage()
         {
-            this.MakeTransaction(this.GetClient());
+            this.MakeTransaction();
         }
     }
 
@@ -134,7 +134,7 @@ namespace TestTrinity.FT.Tests
 
         public void SendMessage()
         {
-            this.MakeTransaction(this.GetClient());
+            this.MakeTransaction();
         }
     }
 
@@ -163,7 +163,7 @@ namespace TestTrinity.FT.Tests
 
         public void SendMessage()
         {
-            this.MakeTransaction(this.GetClient());
+            this.MakeTransaction();
         }
     }
 
@@ -187,7 +187,7 @@ namespace TestTrinity.FT.Tests
 
         public void SendMessage()
         {
-            this.MakeTransaction(this.GetClient());
+            this.MakeTransaction();
         }
     }
 
@@ -211,7 +211,7 @@ namespace TestTrinity.FT.Tests
 
         public void SendMessage()
         {
-            this.MakeTransaction(this.GetClient());
+            this.MakeTransaction();
         }
     }
 

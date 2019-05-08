@@ -105,6 +105,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <returns></returns>
         public override bool Handle()
         {
+            Log.Debug("Handle Message {0}. Asset Type: {1}, Deposit: {2}.",
+                this.Request.MessageType,
+                this.Request.MessageBody.AssetType,
+                this.Request.MessageBody.Deposit);
             return base.Handle();
         }
 
@@ -113,7 +117,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.FHandler = new RegisterChannelFailHandler(
                 this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                 this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.MessageBody);
-            this.FHandler.MakeTransaction(this.GetClient());
+            this.FHandler.MakeTransaction();
 
             ChannelTableContent content = new ChannelTableContent
             {
@@ -133,7 +137,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.SHandler = new FounderHandler(
                 this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                 this.Request.MessageBody.AssetType, this.Request.NetMagic, 0, this.Request.MessageBody.Deposit, 0);
-            this.SHandler.MakeTransaction(this.GetClient());
+            this.SHandler.MakeTransaction();
 
             // Add channel to database
             this.AddChannel(this.Request.Receiver, this.Request.Sender, EnumRole.PARTNER);
@@ -141,9 +145,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
-        public override void MakeTransaction()
+        public override bool MakeTransaction()
         {
-            base.MakeTransaction();
+            bool ret = base.MakeTransaction();
+
+            Log.Debug("{0} to send Message {1}. Asset Type: {2}, Deposit: {3}.",
+                ret?"Succeed":"Fail",
+                this.Request.MessageType,
+                this.Request.MessageBody.AssetType,
+                this.Request.MessageBody.Deposit);
+            return ret;
         }
 
         public void AddChannel(string uri, string peerUri, EnumRole role= EnumRole.FOUNDER)
