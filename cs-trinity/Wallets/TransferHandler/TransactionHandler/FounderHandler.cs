@@ -180,7 +180,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             else if (IsRole1(this.Request.MessageBody.RoleIndex))
             {
                 // Update the channel to opening state
-                this.UpdateChannelState(this.Request.Receiver, this.Request.Sender, EnumChannelState.OPENING);
+                this.UpdateChannelState(this.Request.Receiver, this.Request.Sender, 
+                    this.Request.ChannelName, EnumChannelState.OPENING);
             }
             else {
                 Log.Error("Unkown Role index: {0}", this.Request.MessageBody.RoleIndex);
@@ -350,20 +351,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.GetChannelInterface().AddTransaction(txId, txContent);
         }
-
-        public void UpdateChannelState(string uri, string peerUri, EnumChannelState state)
-        {
-            ChannelTableContent channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
-            if (null == channelContent)
-            {
-                Log.Fatal("Could not find channel -- {0} in Database.", this.Request.ChannelName);
-                return;
-            }
-
-            // Update the channel state
-            channelContent.state = state.ToString();
-            this.GetChannelInterface().AddChannel(this.Request.ChannelName, channelContent);
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -463,7 +450,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.BroadcastTransaction();
 
                 // Update the channel to opening state
-                this.UpdateChannelState(this.Request.Receiver, this.Request.Sender, EnumChannelState.OPENING);
+                this.UpdateChannelState(this.Request.Receiver, this.Request.Sender,
+                    this.Request.ChannelName, EnumChannelState.OPENING);
             }
             return true;
         }
@@ -495,20 +483,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             content.revocableDelivery.txDataSign = this.Request.MessageBody.RevocableDelivery.txDataSign;
 
             this.GetChannelInterface().UpdateTransaction(this.Request.TxNonce, content);
-        }
-
-        public void UpdateChannelState(string uri, string peerUri, EnumChannelState state)
-        {
-            ChannelTableContent channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
-            if (null == channelContent)
-            {
-                Log.Fatal("Could not find channel -- {0} in Database.", this.Request.ChannelName);
-                return;
-            }
-
-            // Update the channel state
-            channelContent.state = state.ToString();
-            this.GetChannelInterface().AddChannel(this.Request.ChannelName, channelContent);
         }
 
         public void MakeupFundingTx(FundingTx txContent)

@@ -36,11 +36,24 @@ using Neo.IO.Json;
 using Trinity.BlockChain;
 using Trinity.Wallets.Templates.Definitions;
 
+using TestTrinity.UT.Tests;
+
 namespace TestTrinity
 {
     public sealed class UnitTest
     {
         public static void TestMain()
+        {
+            new UTestChannel();
+            //TempTest();
+        }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////
+        /// Temperory Test
+        /////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////
+        private static void TempTest()
         {
             //交易数据，模拟
             string PrikeySelf = "d3e366d637fcb62807d7dc4b196f45c84f7768434593957a744b5adcad1cdffd";               //ASkZe5DCXsSFARJnwEB3DGxkfTK17LteRa
@@ -127,9 +140,6 @@ namespace TestTrinity
             string signOther3 = NeoInterface.Sign(txData3, prikeyByteOther);
             Console.WriteLine(signSelf3);
             Console.WriteLine(signOther3);
-
-            Console.ReadLine();
         }
-
     }
 }

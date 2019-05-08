@@ -33,6 +33,7 @@ using System.Threading.Tasks;
 using Trinity.Network.TCP;
 using Trinity.Wallets.Templates.Messages;
 using Trinity.ChannelSet;
+using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
 
 namespace Trinity.Wallets.TransferHandler
@@ -215,6 +216,20 @@ namespace Trinity.Wallets.TransferHandler
         public Channel GetChannelInterface()
         {
             return this.channelDbInterface;
+        }
+
+        public virtual void UpdateChannelState(string uri, string peerUri, string channelName, EnumChannelState state)
+        {
+            ChannelTableContent channelContent = this.GetChannelInterface().TryGetChannel(channelName);
+            if (null == channelContent)
+            {
+                Log.Fatal("Could not find channel -- {0} in Database.", channelName);
+                return;
+            }
+
+            // Update the channel state
+            channelContent.state = state.ToString();
+            this.channelDbInterface.UpdateChannel(channelName, channelContent);
         }
 
         /// <summary>

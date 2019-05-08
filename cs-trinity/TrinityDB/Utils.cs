@@ -120,7 +120,7 @@ namespace Trinity.TrinityDB
             if (TryGet(db, slice, item, out Slice itemvalue))
             {
                 // TODO: add logs here
-                Console.WriteLine("Items {0} already exists in database:", item);
+                Log.Fatal("Items {0} already exists in database:", item);
                 return;
             }
 

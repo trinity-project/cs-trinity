@@ -159,17 +159,17 @@ namespace Trinity.BlockChain
 
         public void ConductEvent(TransactionTabelSummary Summary)
         {
-            switch (Summary.txType)
+            switch (Summary.txType.ToLower())
             {
                 case "funding":
                     ChannelTableContent ChannelData = channel.TryGetChannel(Summary.channel);
                     ChannelData.state = EnumChannelState.OPENED.ToString();
                     channel.UpdateChannel(Summary.channel, ChannelData);
-                    Console.WriteLine("执行funding操作结束");
+                    Log.Debug("Change {0} to OPENED state.", Summary.channel);
                     break;
                 case "settle":
                     channel.DeleteChannel(Summary.channel);
-                    Console.WriteLine("执行settle操作结束");
+                    Log.Debug("Change {0} to SETTLED state.", Summary.channel);
                     break;
             }
         }

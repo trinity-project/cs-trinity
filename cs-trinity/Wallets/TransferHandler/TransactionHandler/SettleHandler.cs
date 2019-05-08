@@ -57,6 +57,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.Request.ChannelName, this.Request.MessageBody.AssetType);
             this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
             this.channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
+
+            // Whatever happens, we set the channel settling when call this class
+            this.UpdateChannelState(this.Request.Receiver, this.Request.Sender,
+                this.Request.ChannelName, EnumChannelState.SETTLING);
         }
 
         /// <summary>
@@ -90,6 +94,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balance.ToString(),
                 this.GetPeerPubKey(), peerBalance.ToString(), this.fundingTrade.founder.originalData.addressFunding,
                 this.fundingTrade.founder.originalData.scriptFunding);
+
+            // Whatever happens, we set the channel settling when call this class
+            this.UpdateChannelState(this.Request.Receiver, this.Request.Sender,
+                this.Request.ChannelName, EnumChannelState.SETTLING);
         }
 
         public override bool Handle()
@@ -131,6 +139,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             if (this.MakeupRefundTx())
             {
                 bool ret = base.MakeTransaction();
+                
+                Log.Debug("{0} to send Settle Message.", ret?"Succeed":"Fail");
                 return ret;
             }
 
