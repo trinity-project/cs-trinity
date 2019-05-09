@@ -82,11 +82,14 @@ namespace Trinity.BlockChain
 
         public void monitorBlock()
         {
+            uint lastMonitoredBlockHeight = 0;
+
             while (true)
             {
                 uint blockChainHeight = 0;
                 uint walletBlockHeitht = 0;
                 uint deltaBlockHeitht = 0;
+                
 
                 try
                 {
@@ -100,13 +103,17 @@ namespace Trinity.BlockChain
                 deltaBlockHeitht = blockChainHeight - walletBlockHeitht;
                 try
                 {
-                    if (deltaBlockHeitht > 0 && deltaBlockHeitht < 2000)
+                    if (deltaBlockHeitht >= 0 && deltaBlockHeitht < 2000)
                     {
                         //TODO jugement whether there is matched txId, then trigger function to handle it.
                         //TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
                         //string t = cha.ToString();
                         //Console.WriteLine("①本地块高:" + walletBlockHeitht + " 链上:" + blockChainHeight + " 当前时间:" + t);
-                        MonitorTxId(walletBlockHeitht);
+                        if (lastMonitoredBlockHeight != walletBlockHeitht)
+                        {
+                            MonitorTxId(walletBlockHeitht);
+                            lastMonitoredBlockHeight = walletBlockHeitht;
+                        }                       
                     }
                     /*
                     else if (deltaBlockHeitht >= 2000)
