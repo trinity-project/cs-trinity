@@ -100,19 +100,21 @@ namespace Trinity.BlockChain
                 deltaBlockHeitht = blockChainHeight - walletBlockHeitht;
                 try
                 {
-                    if (deltaBlockHeitht >= 0 && deltaBlockHeitht < 2000)
+                    if (deltaBlockHeitht > 0 && deltaBlockHeitht < 2000)
                     {
                         //TODO jugement whether there is matched txId, then trigger function to handle it.
                         //TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
                         //string t = cha.ToString();
                         //Console.WriteLine("①本地块高:" + walletBlockHeitht + " 链上:" + blockChainHeight + " 当前时间:" + t);
-                        MonitorTxId(deltaBlockHeitht);
+                        MonitorTxId(walletBlockHeitht);
                     }
+                    /*
                     else if (deltaBlockHeitht >= 2000)
                     {
                         //TODO if there is matched txId, Then punishment would be meaningless.
                         MonitorTxId(walletBlockHeitht - 2000);
                     }
+                    */
                 }
                 catch (Exception ex)
                 {
@@ -146,8 +148,7 @@ namespace Trinity.BlockChain
             List<string> txidList = NeoInterface.GetBlockTxId(block);
             foreach (string id in txidList)
             {
-                string id1 = NeoInterface.FormatJObject(id).Substring(2);
-                List<ChannelTableContent> channelList = channel.GetChannelListOfThisWallet();
+                string id1 = NeoInterface.FormatJObject(id);
                 TransactionTabelSummary Summary = channel.TryGetTransaction(id1);
                 if (Summary != null)
                 {
@@ -159,17 +160,19 @@ namespace Trinity.BlockChain
 
         public void ConductEvent(TransactionTabelSummary Summary)
         {
+            ChannelTableContent ChannelData;
             switch (Summary.txType.ToLower())
-            {
-                
+            {               
                 case "funding":
-                    ChannelTableContent ChannelData = channel.TryGetChannel(Summary.channel);
+                    ChannelData = channel.TryGetChannel(Summary.channel);
                     ChannelData.state = EnumChannelState.OPENED.ToString();
                     channel.UpdateChannel(Summary.channel, ChannelData);
                     Log.Debug("Change {0} to OPENED state.", Summary.channel);
                     break;
                 case "settle":
-                    channel.DeleteChannel(Summary.channel);
+                    ChannelData = channel.TryGetChannel(Summary.channel);
+                    ChannelData.state = EnumChannelState.SETTLED.ToString();
+                    channel.UpdateChannel(Summary.channel, ChannelData);
                     Log.Debug("Change {0} to SETTLED state.", Summary.channel);
                     break;
             }
