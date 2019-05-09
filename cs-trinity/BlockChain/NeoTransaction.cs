@@ -49,9 +49,10 @@ namespace Trinity.BlockChain
     public sealed class NeoTransaction
     {
         // Timestamp attribute for contract
-#if DEBUG_SIGNARTURE
-        private readonly double timestamp = 1554866712; // for test use;
+#if DEBUG
+        private readonly double timestamp = 1554866712.123456; // for test use;
         private readonly string timestampString = "1554866712.123456";
+        private readonly long timestampLong = 1554866712;
 #else
         private double timestamp => (DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1))).TotalSeconds;
         private string timestampString => this.timestamp.ToString("F6");  // 6-precision, but the last number is aways 0(caused by C#)
@@ -67,6 +68,10 @@ namespace Trinity.BlockChain
         // Commitment trade information
         private string addressRsmc;
         private string scriptRsmc;
+
+        // HTLC trade information
+        private string addressHtlc;
+        private string scriptHtlc;
 
         // Peers of the trade
         // self wallet trade information of the channel
@@ -311,6 +316,374 @@ namespace Trinity.BlockChain
             return true;
         }
 
+        /// <summary>
+        /// It helps Trinity to create Sender HC transaction for adapting the Neo contract.
+        /// </summary>
+        /// <param name="HCTX"> output the HCTX body </param>
+        /// <returns></returns>
+        public bool CreateSenderHCTX(out HCTX HCTX, string HtlcValue, string balance, string peerBalance, string HashR)
+        {
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.scriptHash, this.pubKey, this.peerScriptHash, this.peerPubkey, this.timestampString);
+            Log.Debug("timestamp: {0}", this.timestampString);
+            Log.Debug("RSMCContract: {0}", RSMCContract);
+            JObject HTLCContract = NeoInterface.CreateHTLCContract((this.timestampLong + 600).ToString(), this.pubKey, this.peerPubkey, HashR);
+            Log.Debug("HTLCContract: {0}", HTLCContract);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_funding = NeoInterface.ToScriptHash1(this.addressFunding);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_funding, attributes).MakeAttribute(out attributes);
+            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+            this.SetAddressHTLC(HTLCContract["address"].ToString());
+            this.SetScripHTLC(HTLCContract["script"].ToString());
+
+            string opdataToHTLC = NeoInterface.CreateOpdata(this.addressFunding, this.addressHtlc, HtlcValue, this.assetId);
+            Log.Debug("opdataToHTLC: {0}", opdataToHTLC);
+            string opdataToRsmc = NeoInterface.CreateOpdata(this.addressFunding, this.addressRsmc, balance, this.assetId);
+            Log.Debug("opdataToRsmc: {0}", opdataToRsmc);
+            string OpdataToPeer = NeoInterface.CreateOpdata(this.addressFunding, this.peerAddress, peerBalance, this.assetId);
+            Log.Debug("OpdataToPeer: {0}", OpdataToPeer);
+
+            this.GetInvocationTransaction(out Transaction tx, opdataToRsmc + OpdataToPeer + opdataToHTLC, attributes);
+
+            HCTX = new HCTX
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                addressRSMC = this.addressRsmc,
+                addressHTLC = this.addressHtlc,
+                scriptRSMC = this.scriptRsmc,
+                scriptHTLC = this.scriptHtlc,
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "018240{signSelf}40{signOther}da" + this.scriptFunding
+            };
+
+            return true;
+        }
+
+        /// <summary>
+        /// It helps Trinity to create Sender RD transaction for adapting the Neo contract.
+        /// </summary>
+        /// <param name="RDTX"> output the RDTX body </param>
+        /// <returns></returns>
+        public bool CreateSenderRDTX(out RevocableDeliveryTx revocableDeliveryTx, string balance, string txId)
+        {
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId  ???
+
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
+            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.address, balance, this.assetId);
+            Log.Debug("createRDTX opdata: {0}", opdata);
+
+            this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
+
+            revocableDeliveryTx = new RevocableDeliveryTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
+
+            return true;
+        }
+
+        /// <summary>
+        /// It helps Trinity to create Sender HED transaction for adapting the Neo contract.
+        /// </summary>
+        /// <param name="HEDTX"> output the HEDTX body </param>
+        /// <returns></returns>
+        public bool CreateHEDTX(out HEDTX HEDTX, string HtlcValue)
+        {
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
+            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+
+            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.peerAddress, HtlcValue, this.assetId);
+            Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
+
+            this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
+
+            HEDTX = new HEDTX
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc)
+            };
+
+            return true;
+        }
+
+        /// <summary>
+        /// It helps Trinity to create Sender HT transaction for adapting the Neo contract.
+        /// </summary>
+        /// <param name="HTTX"> output the HTTX body </param>
+        /// <returns></returns>
+        public bool CreateHTTX(out HTTX HTTX, string HtlcValue)
+        {
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.scriptHash, this.pubKey, this.peerScriptHash, this.peerPubkey, this.timestampString);
+            Log.Debug("RSMCContract: {0}", RSMCContract);
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
+            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+
+            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.addressRsmc, HtlcValue, this.assetId);
+            Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
+
+            this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
+
+            HTTX = new HTTX
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                addressRSMC = this.addressRsmc,
+                scriptRSMC = this.scriptRsmc,
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc)
+            };
+
+            return true;
+        }
+
+        /// <summary>
+        /// It helps Trinity to create Sender HT transaction for adapting the Neo contract.
+        /// </summary>
+        /// <param name="HTRDTX"> output the HTTX body </param>
+        /// <returns></returns>
+        public bool CreateHTRDTX(out RevocableDeliveryTx revocableDeliveryTx, string txId, string HtlcValue)
+        {
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId ???
+
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
+            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.address, HtlcValue, this.assetId);
+            Log.Debug("CreateHTRDTX opdata: {0}", opdata);
+
+            this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
+
+            revocableDeliveryTx = new RevocableDeliveryTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
+
+            return true;
+        }
+
+        /// <summary>
+        /// It helps Trinity to create Sender HC transaction for adapting the Neo contract.
+        /// </summary>
+        /// <param name="HCTX"> output the HCTX body </param>
+        /// <returns></returns>
+        public bool CreateReceiverHCTX(out HCTX HCTX, string HtlcValue, string balance, string peerBalance, string HashR)
+        {
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
+            Log.Debug("timestamp: {0}", this.timestampString);
+            Log.Debug("RSMCContract: {0}", RSMCContract);
+            JObject HTLCContract = NeoInterface.CreateHTLCContract((this.timestampLong + 600).ToString(), this.peerPubkey, this.pubKey, HashR);
+            Log.Debug("HTLCContract: {0}", HTLCContract);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_funding = NeoInterface.ToScriptHash1(this.addressFunding);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_funding, attributes).MakeAttribute(out attributes);
+            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+            this.SetAddressHTLC(HTLCContract["address"].ToString());
+            this.SetScripHTLC(HTLCContract["script"].ToString());
+
+            string opdataToHTLC = NeoInterface.CreateOpdata(this.addressFunding, this.addressHtlc, HtlcValue, this.assetId);
+            Log.Debug("opdataToHTLC: {0}", opdataToHTLC);
+            string opdataToRsmc = NeoInterface.CreateOpdata(this.addressFunding, this.addressRsmc, peerBalance, this.assetId);
+            Log.Debug("opdataToRsmc: {0}", opdataToRsmc);
+            string OpdataToSender = NeoInterface.CreateOpdata(this.addressFunding, this.address, balance, this.assetId);
+            Log.Debug("OpdataToSender: {0}", OpdataToSender);
+
+            this.GetInvocationTransaction(out Transaction tx, opdataToRsmc + OpdataToSender + opdataToHTLC, attributes);
+
+            HCTX = new HCTX
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                addressRSMC = this.addressRsmc,
+                addressHTLC = this.addressHtlc,
+                scriptRSMC = this.scriptRsmc,
+                scriptHTLC = this.scriptHtlc,
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "018240{signSelf}40{signOther}da" + this.scriptFunding
+            };
+
+            return true;
+        }
+
+        /// <summary>
+        /// It helps Trinity to create Sender RD transaction for adapting the Neo contract.
+        /// </summary>
+        /// <param name="RDTX"> output the RDTX body </param>
+        /// <returns></returns>
+        public bool CreateReceiverRDTX(out RevocableDeliveryTx revocableDeliveryTx, string balance, string txId)
+        {
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId  ???
+
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
+            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.peerScriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.peerAddress, balance, this.assetId);
+            Log.Debug("createRDTX opdata: {0}", opdata);
+
+            this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
+
+            revocableDeliveryTx = new RevocableDeliveryTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
+
+            return true;
+        }
+
+        //createHTDTX(addressHTLC, pubkeySender, HTLCValue, HTLCScript, asset_id)
+        /// <summary>
+        /// It helps Trinity to create Sender HTD transaction for adapting the Neo contract.
+        /// </summary>
+        /// <param name="HTDTX"> output the HTDTX body </param>
+        /// <returns></returns>
+        public bool CreateHTDTX(out HTDTX HTDTX, string HtlcValue)
+        {
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
+            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+
+            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.peerAddress, HtlcValue, this.assetId);
+            Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
+
+            this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
+
+            HTDTX = new HTDTX
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc)
+            };
+
+            return true;
+        }
+
+        /// <summary>
+        /// It helps Trinity to create Sender HT transaction for adapting the Neo contract.
+        /// </summary>
+        /// <param name="HETX"> output the HTTX body </param>
+        /// <returns></returns>
+        public bool CreateHETX(out HETX HETX, string HtlcValue)
+        {
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
+            Log.Debug("RSMCContract: {0}", RSMCContract);
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
+            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+
+            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.addressRsmc, HtlcValue, this.assetId);
+            Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
+
+            this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
+
+            HETX = new HETX
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                addressRSMC = this.addressRsmc,
+                scriptRSMC = this.scriptRsmc,
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc)
+            };
+
+            return true;
+        }
+
+        /// <summary>
+        /// It helps Trinity to create Sender HT transaction for adapting the Neo contract.
+        /// </summary>
+        /// <param name="HERDTX"> output the HTTX body </param>
+        /// <returns></returns>
+        public bool CreateHERDTX(out RevocableDeliveryTx revocableDeliveryTx, string txId, string HtlcValue)
+        {
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId ???
+
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
+            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.address, HtlcValue, this.assetId);
+            Log.Debug("CreateHTRDTX opdata: {0}", opdata);
+
+            this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
+
+            revocableDeliveryTx = new RevocableDeliveryTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
+
+            return true;
+        }
+
+        /// <summary>
+        /// It helps Trinity to create random for adapting the Neo contract.
+        /// </summary>
+        /// <param name="Length"> output the length of R </param>
+        /// <returns></returns>
+        public string CreateR(int Length)
+        {
+            char[] constant ={
+                '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'
+            };
+            System.Text.StringBuilder newRandom = new System.Text.StringBuilder(16);
+            Random rd = new Random();
+            for (int i = 0; i < Length; i++)
+            {
+                newRandom.Append(constant[rd.Next(16)]);
+            }
+            return newRandom.ToString();
+        }
+
         public void SetAddressFunding(string addressFunding)
         {
             this.addressFunding = addressFunding.NeoStrip();
@@ -326,9 +699,19 @@ namespace Trinity.BlockChain
             this.addressRsmc = addressRsmc.NeoStrip();
         }
 
+        public void SetAddressHTLC(string addressHtlc)
+        {
+            this.addressHtlc = addressHtlc.NeoStrip();
+        }
+
         public void SetScripRSMC(string scriptRsmc)
         {
             this.scriptRsmc = scriptRsmc.NeoStrip();
+        }
+
+        public void SetScripHTLC(string scriptHtlc)
+        {
+            this.scriptHtlc = scriptHtlc.NeoStrip();
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -340,7 +723,7 @@ namespace Trinity.BlockChain
         /// <param name="opdata"> Assembly Data of Transaction </param>
         /// <param name="version"> Version of InvocationTransaction </param>
         /// <param name="transaction"> </param>
-        private void GetInvocationTransaction(out Transaction transaction, string opdata, List<TransactionAttribute> attributes, byte version=1)
+        private void GetInvocationTransaction(out Transaction transaction, string opdata, List<TransactionAttribute> attributes, byte version = 1)
         {
             // return null if no assembly data is input
             if (null == opdata)

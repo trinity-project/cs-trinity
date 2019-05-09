@@ -322,15 +322,15 @@ namespace Trinity.BlockChain
         ///<returns>
         ///转换后的Bytes数组
         ///</returns>
-        //public static byte[] LongToBytes(long n)
-        //{
-        //    byte[] b = new byte[4];
-        //    for (int i = 0; i < 4; i++)
-        //    {
-        //        b[i] = (byte)(n >> (24 - i * 8));
-        //    }
-        //    return b;
-        //}
+        public static byte[] LongToBytes(long n)
+        {
+            byte[] b = new byte[4];
+            for (int i = 0; i < 4; i++)
+            {
+                b[i] = (byte)(n >> (24 - i * 8));
+            }
+            return b;
+        }
 
         ///<summary>
         ///string转HexString
@@ -533,6 +533,33 @@ namespace Trinity.BlockChain
             return result;
         }
 
+        public static JObject CreateHTLCContract(string futureTimestamp, string PubkeySelf, string PubkeyOther, string HashR)
+        {
+            long time = long.Parse(futureTimestamp);
+            futureTimestamp = LongToBytes(time).Reverse().ToHexString();
+            Console.WriteLine("------------------futureTimestamp------------------");
+            Console.WriteLine(futureTimestamp);
+            //Timestamp = NeoInterface.StringToHexString(Timestamp);
+            //byte[] TimestampByte = Encoding.UTF8.GetBytes(Timestamp);
+            //string length = NeoInterface.IntToHex(TimestampByte.Length / 2).PadLeft(2, '0');
+            //string magicTimestamp = length + Timestamp;
+
+            string contractTemplate = 
+                     "58c56b6c766b00527ac46c766b51527ac46c766b52527ac4616c766b52c3a76c766b53527ac46168184e656f2e4" +
+                     "26c6f636b636861696e2e4765744865696768746168184e656f2e426c6f636b636861696e2e4765744865616465" +
+                     "726c766b54527ac46c766b00c36121{0}ac642f006c766b51c36121{1}ac635f006c766b00c3612" +
+                     "1{2}ac642f006c766b51c36121{3}ac62040000620400516c766b55527ac46c766b54c36168174e" +
+                     "656f2e4865616465722e47657454696d657374616d7004{4}9f6c766b56527ac46c766b56c364" +
+                     "3600616c766b55c36422006c766b53c36114{5}9c620400006c766b57527ac46212006c766b55c36c766b57" +
+                     "527ac46203006c766b57c3616c7566";
+            string HTLCContract = String.Format(contractTemplate, PubkeySelf, PubkeyOther, PubkeyOther, PubkeySelf, futureTimestamp, HashR);
+
+            JObject result = new JObject();
+            result["script"] = HTLCContract;
+            result["address"] = ScriptToAddress(HTLCContract);
+            return result;
+        }
+
         ///<summary>
         ///TransactionAttribute交易属性类
         ///</summary>
@@ -588,6 +615,17 @@ namespace Trinity.BlockChain
             public override byte[] ConvertToArray(string attr)
             {
                 return attr.RemovePrefix().HexToBytes();
+            }
+        }
+        public class TransactionAttributeLong : TransactionAttribute<long>
+        {
+            public TransactionAttributeLong(TransactionAttributeUsage Usage, long Data, List<TransactionAttribute> attributes) : base(Usage, Data, attributes)
+            {
+            }
+
+            public override byte[] ConvertToArray(long attr)
+            {
+                return LongToBytes(attr);
             }
         }
         public class TransactionAttributeDouble : TransactionAttribute<double>
