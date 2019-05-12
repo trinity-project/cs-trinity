@@ -65,7 +65,7 @@ namespace Trinity.TrinityDB
             return Encoding.UTF8.GetBytes(origin);
         }
 
-        public static string ToBytesUtf8(this byte[] origin)
+        public static string ToStringUtf8(this byte[] origin)
         {
             return Encoding.UTF8.GetString(origin);
         }

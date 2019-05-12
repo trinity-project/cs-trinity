@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading;
@@ -37,7 +38,8 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Trinity;
-using System.Runtime.InteropServices;
+using Trinity.TrinityDB;
+
 
 namespace Trinity.Network.TCP
 {
@@ -51,6 +53,10 @@ namespace Trinity.Network.TCP
         private string serverIp;
         private string serverPort;
         private ConcurrentQueue<string> messageQueue;
+
+        // for parse the messages from the gateway temperorily. Should be changed later
+        private string messageHeaderStart => this.messageHeaderStart ?? this.ConvertHeaderContent(0x1);
+        private string messageHeaderEnd => this.messageHeaderEnd ?? this.ConvertHeaderContent(0x65);
 
         public TrinityTcpClient(string ip, string port)
         {
@@ -111,8 +117,15 @@ namespace Trinity.Network.TCP
         public void SendData(string msg)
         {
             try
-            {               
-                byte[] buffer = new byte[bufferSize];
+            {
+                if (0 >= msg.Length)
+                {
+                    throw new Exception(string.Format("Error Message Length {0}", msg.Length));
+                }
+                
+                byte[] buffer = new byte[msg.Length + 12];
+
+                string msgWithHeader = this.messageHeaderStart + this.ConvertHeaderContent(msg.Length) + this.messageHeaderEnd + msg;
                 buffer = Encoding.UTF8.GetBytes(msg);
                 clientSocket.Send(buffer);               
             }
@@ -122,66 +135,60 @@ namespace Trinity.Network.TCP
             }
         }
 
-        private UInt16 GetMessageCount(byte[] buffer, int recvLength)
+        private void UnWrapMessageToAdaptGateway(string messages, ref List<string> msgList)
         {
-            // Buffer has data and the received length is lager than zero
-            if (null != buffer && 0 < recvLength) {
-                // convert the message to the utf-8 string
-                string msg = Encoding.UTF8.GetString(buffer, 0, recvLength);
-
-            }
-            return 0;
-        }
-
-        private void UnWrapMessageToAdaptGateway(byte[] buffer, int recvLength, ref List<string> msgList)
-        {
-            //msgList = default(List<string>);
-
             try
             {
-                if (null == buffer || 0 >= recvLength)
+                if (null == messages || 0 >= messages.Length)
                 {
                     // TODO: record to log file later
-                    Console.WriteLine("Terminate unwrapping the message from gateway. Length={0}", recvLength);
+                    Console.WriteLine("Terminate unwrapping the message from gateway. Length={0}", messages.Length);
                     return;
                 }
 
                 // start parse the recevied data
-                int splitLength = 0;
-                string msg = null;
-                // Message without Header wrapped by gateway
-                if (123 == buffer[0])
+                if (-1 == messages.IndexOf(this.messageHeaderStart))
                 {
-                    msg = Encoding.UTF8.GetString(buffer, 0, recvLength);
-                    splitLength = 0;
+                    int splitPosition = messages.IndexOf("}{");
+                    // not include the Gateway Message Header. Simply split the message by "}{"
+                    if (-1 == splitPosition)
+                    {
+                        msgList.Add(messages);
+                    }
+                    else
+                    {
+                        msgList.Add(messages.Substring(0, splitPosition + 1));
+                        this.UnWrapMessageToAdaptGateway(messages.Substring(splitPosition + 1, messages.Length), ref msgList);
+                    }
                 }
-                else // Message with Header wrapped by gateway
+                else
                 {
-                    int msgLength = buffer.Skip(4).Take(4).ToArray().ToInt32();
-                    splitLength = msgLength + 12;
+                    int startPosition = messages.IndexOf(this.messageHeaderStart);
+                    int endPosition = messages.IndexOf(this.messageHeaderEnd);
 
-                    msg = Encoding.UTF8.GetString(buffer.Skip(12).Take(msgLength).ToArray(), 0, msgLength);
+                    // valid messages only satisfied below conditions
+                    if (0 == startPosition && 8 == endPosition)
+                    {
+                        string msg = messages.Substring(12, messages.Length);
+                        int splitPosition = msg.IndexOf(this.messageHeaderStart);
+
+                        if (-1 == splitPosition)
+                        {
+                            // Just only one messages
+                            msgList.Add(msg);
+                        }
+                        else
+                        {
+                            msgList.Add(msg.Substring(0, splitPosition));
+                            this.UnWrapMessageToAdaptGateway(msg.Substring(splitPosition, msg.Length), ref msgList);
+                        }
+                    }
                 }
-
-                if (!msg.EndsWith("}"))
-                {
-                    msg = msg.Substring(0, msg.LastIndexOf("}") + 1);
-                }
-
-                if (msg.StartsWith("{"))
-                {
-                    Log.Debug("Push message to queue. Message {0}", msg);
-                    msgList.Add(msg);
-                }
-
-                int newMsgLength = recvLength - splitLength;
-                this.UnWrapMessageToAdaptGateway(
-                    buffer.Skip(splitLength).Take(newMsgLength).ToArray(), newMsgLength, ref msgList);
             }
             catch (Exception Expinfo)
             {
                 // Record this exception to file in the future
-                Console.WriteLine("Failed to unwrap messages: {}", Expinfo);
+                Log.Fatal("Failed to unwrap messages: {0}. Exception: {1}", messages, Expinfo);
             } 
         }
 
@@ -216,8 +223,9 @@ namespace Trinity.Network.TCP
                     }
 
                     msgArray.Clear();
-                    this.UnWrapMessageToAdaptGateway(buffer, len, ref msgArray);
+                    this.UnWrapMessageToAdaptGateway(Encoding.UTF8.GetString(buffer, 0, len), ref msgArray);
 
+                    // Go through the message list
                     foreach (string msg in msgArray) {
                         if (msg.Contains(expected))
                         {
@@ -309,6 +317,11 @@ namespace Trinity.Network.TCP
             {
                 throw ex;
             }
+        }
+
+        private string ConvertHeaderContent(int content)
+        {
+            return BitConverter.GetBytes(content).Reverse().ToArray().ToStringUtf8();
         }
     }
 }
