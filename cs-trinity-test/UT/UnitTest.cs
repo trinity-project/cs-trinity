@@ -38,12 +38,17 @@ using Trinity.Wallets.Templates.Definitions;
 
 using TestTrinity.UT.Tests;
 
+using Trinity.Network.TCP;
+
 namespace TestTrinity
 {
     public sealed class UnitTest
     {
         public static void TestMain()
         {
+            TrinityTcpClient client = new TrinityTcpClient("localhost", "20556");
+            client.testStart();
+
             new UTestChannel();
             //TempTest();
         }

@@ -55,14 +55,17 @@ namespace Trinity.Network.TCP
         private ConcurrentQueue<string> messageQueue;
 
         // for parse the messages from the gateway temperorily. Should be changed later
-        private string messageHeaderStart => this.messageHeaderStart ?? this.ConvertHeaderContent(0x1);
-        private string messageHeaderEnd => this.messageHeaderEnd ?? this.ConvertHeaderContent(0x65);
+        private readonly string messageHeaderStart;
+        private readonly string messageHeaderEnd;
 
         public TrinityTcpClient(string ip, string port)
         {
             serverIp = ip;
             serverPort = port;
             messageQueue = new ConcurrentQueue<string>();
+
+            this.messageHeaderStart = this.ConvertHeaderContent(0x1);
+            this.messageHeaderEnd = this.ConvertHeaderContent(0x65);
         }
 
         public void CreateConnetion()
