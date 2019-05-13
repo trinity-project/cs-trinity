@@ -172,7 +172,7 @@ namespace Trinity.Network.TCP
                     // valid messages only satisfied below conditions
                     if (0 == startPosition && 8 == endPosition)
                     {
-                        string msg = messages.Substring(12, messages.Length);
+                        string msg = messages.Substring(12);
                         int splitPosition = msg.IndexOf(this.messageHeaderStart);
 
                         if (-1 == splitPosition)
@@ -182,8 +182,12 @@ namespace Trinity.Network.TCP
                         }
                         else
                         {
+                            if (splitPosition >= messages.Length)
+                            {
+                                return;
+                            }
                             msgList.Add(msg.Substring(0, splitPosition));
-                            this.UnWrapMessageToAdaptGateway(msg.Substring(splitPosition, msg.Length), ref msgList);
+                            this.UnWrapMessageToAdaptGateway(msg.Substring(splitPosition), ref msgList);
                         }
                     }
                 }
