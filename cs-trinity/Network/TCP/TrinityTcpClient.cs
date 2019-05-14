@@ -262,21 +262,21 @@ namespace Trinity.Network.TCP
             if (this.messageVersion != version)
             {
                 Log.Warn("Message with error version. {0}", version);
-                throw new Exception("DROP: Message with invalid version.");
+                throw new Exception(string.Format("DROP: Message with invalid version: {0}", version));
             }
 
             int end = BitConverter.ToInt32(buffer.Skip(8).Take(4).Reverse().ToArray(), 0);
             if (this.messageEnd != end)
             {
                 Log.Error("Message with error end bytes {0}", end);
-                throw new Exception("DROP: Message with Error end of flag.");
+                throw new Exception(string.Format("DROP: Message with Error end of flag: {0}.", end));
             }
 
             int length = BitConverter.ToInt32(buffer.Skip(4).Take(4).Reverse().ToArray(), 0);
             if (length + this.messageHeaderLength > recvLength)
             {
                 Log.Error("Message with error length: {0}, receive length: {1}", length, recvLength);
-                throw new Exception("DROP: Message with error length");
+                throw new Exception(string.Format("DROP: Message with error length: {0}", length));
             }
 
             return length;
@@ -311,7 +311,8 @@ namespace Trinity.Network.TCP
                         continue;
                     }
 
-                    this.UnWrapMessageFromGateway(buffer, len);
+                    Log.Debug("Received messages length: {0}", len);
+                    this.UnWrapMessageFromGateway(buffer.Take(len).ToArray(), len);
 
                     // for test method: break this while loop
                     if (VerificationResult)
