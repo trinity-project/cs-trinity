@@ -49,7 +49,7 @@ namespace Trinity.BlockChain
     public sealed class NeoTransaction
     {
         // Timestamp attribute for contract
-#if DEBUG
+#if DEBUG_LOCAL
         private readonly double timestamp = 1554866712.123456; // for test use;
         private readonly string timestampString = "1554866712.123456";
         private readonly long timestampLong = 1554866712;
@@ -326,14 +326,21 @@ namespace Trinity.BlockChain
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.scriptHash, this.pubKey, this.peerScriptHash, this.peerPubkey, this.timestampString);
             Log.Debug("timestamp: {0}", this.timestampString);
             Log.Debug("RSMCContract: {0}", RSMCContract);
+#if DEBUG_LOCAL
             JObject HTLCContract = NeoInterface.CreateHTLCContract((this.timestampLong + 600).ToString(), this.pubKey, this.peerPubkey, HashR);
+#else
+            JObject HTLCContract = NeoInterface.CreateHTLCContract(timestampString, this.pubKey, this.peerPubkey, HashR);
+#endif
             Log.Debug("HTLCContract: {0}", HTLCContract);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_funding = NeoInterface.ToScriptHash1(this.addressFunding);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_funding, attributes).MakeAttribute(out attributes);
-            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
 
             this.SetAddressRSMC(RSMCContract["address"].ToString());
             this.SetScripRSMC(RSMCContract["script"].ToString());
@@ -375,8 +382,11 @@ namespace Trinity.BlockChain
             string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId  ???
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
-            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
             new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
 
@@ -405,8 +415,11 @@ namespace Trinity.BlockChain
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
-            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
 
             string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.peerAddress, HtlcValue, this.assetId);
             Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
@@ -438,8 +451,11 @@ namespace Trinity.BlockChain
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
-            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
 
             string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.addressRsmc, HtlcValue, this.assetId);
             Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
@@ -470,8 +486,11 @@ namespace Trinity.BlockChain
             string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId ???
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
-            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
             new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
 
@@ -500,14 +519,21 @@ namespace Trinity.BlockChain
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
             Log.Debug("timestamp: {0}", this.timestampString);
             Log.Debug("RSMCContract: {0}", RSMCContract);
+#if DEBUG_LOCAL
             JObject HTLCContract = NeoInterface.CreateHTLCContract((this.timestampLong + 600).ToString(), this.peerPubkey, this.pubKey, HashR);
+#else
+            JObject HTLCContract = NeoInterface.CreateHTLCContract(this.timestampString, this.peerPubkey, this.pubKey, HashR);
+#endif
             Log.Debug("HTLCContract: {0}", HTLCContract);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_funding = NeoInterface.ToScriptHash1(this.addressFunding);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_funding, attributes).MakeAttribute(out attributes);
-            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
 
             this.SetAddressRSMC(RSMCContract["address"].ToString());
             this.SetScripRSMC(RSMCContract["script"].ToString());
@@ -549,8 +575,11 @@ namespace Trinity.BlockChain
             string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId  ???
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
-            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
             new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.peerScriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
 
@@ -580,8 +609,11 @@ namespace Trinity.BlockChain
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
-            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
 
             string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.peerAddress, HtlcValue, this.assetId);
             Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
@@ -613,8 +645,11 @@ namespace Trinity.BlockChain
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
-            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
 
             string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.addressRsmc, HtlcValue, this.assetId);
             Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
@@ -645,8 +680,11 @@ namespace Trinity.BlockChain
             string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId ???
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
-            //new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
             new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
 
