@@ -55,8 +55,15 @@ namespace Trinity.Network.TCP
         private ConcurrentQueue<string> messageQueue;
 
         // for parse the messages from the gateway temperorily. Should be changed later
-        private readonly string messageHeaderStart;
-        private readonly string messageHeaderEnd;
+        private readonly string messageHeaderStartString;
+        private readonly string messageHeaderEndString;
+
+        private readonly byte[] messageHeaderStartBytes;
+        private readonly byte[] messageHeaderEndBytes;
+
+        private readonly int messageVersion;
+        private readonly int messageEnd;
+        private readonly int messageHeaderLength;
 
         public TrinityTcpClient(string ip, string port)
         {
@@ -64,8 +71,15 @@ namespace Trinity.Network.TCP
             serverPort = port;
             messageQueue = new ConcurrentQueue<string>();
 
-            this.messageHeaderStart = this.ConvertHeaderContent(0x1);
-            this.messageHeaderEnd = this.ConvertHeaderContent(0x65);
+            this.messageVersion = 0x1;
+            this.messageEnd = 0x65;
+            this.messageHeaderLength = 12;
+
+            this.messageHeaderStartBytes = this.ConvertHeaderContent(this.messageVersion);
+            this.messageHeaderStartString = this.messageHeaderStartBytes.ToStringUtf8();
+
+            this.messageHeaderEndBytes = this.ConvertHeaderContent(this.messageEnd);
+            this.messageHeaderEndString = this.messageHeaderEndBytes.ToStringUtf8();
         }
 
         public void CreateConnetion()
@@ -128,7 +142,7 @@ namespace Trinity.Network.TCP
                 
                 byte[] buffer = new byte[msg.Length + 12];
 
-                string msgWithHeader = this.messageHeaderStart + this.ConvertHeaderContent(msg.Length) + this.messageHeaderEnd + msg;
+                string msgWithHeader = this.messageHeaderStartString + this.ConvertHeaderContent(msg.Length) + this.messageHeaderEndString + msg;
                 buffer = Encoding.UTF8.GetBytes(msg);
                 clientSocket.Send(buffer);               
             }
@@ -150,7 +164,7 @@ namespace Trinity.Network.TCP
                 }
 
                 // start parse the recevied data
-                if (-1 == messages.IndexOf(this.messageHeaderStart))
+                if (-1 == messages.IndexOf(this.messageHeaderStartString))
                 {
                     int splitPosition = messages.IndexOf("}{");
                     // not include the Gateway Message Header. Simply split the message by "}{"
@@ -166,14 +180,14 @@ namespace Trinity.Network.TCP
                 }
                 else
                 {
-                    int startPosition = messages.IndexOf(this.messageHeaderStart);
-                    int endPosition = messages.IndexOf(this.messageHeaderEnd);
+                    int startPosition = messages.IndexOf(this.messageHeaderStartString);
+                    int endPosition = messages.IndexOf(this.messageHeaderEndString);
 
                     // valid messages only satisfied below conditions
                     if (0 == startPosition && 8 == endPosition)
                     {
                         string msg = messages.Substring(12);
-                        int splitPosition = msg.IndexOf(this.messageHeaderStart);
+                        int splitPosition = msg.IndexOf(this.messageHeaderStartString);
 
                         if (-1 == splitPosition)
                         {
@@ -182,7 +196,7 @@ namespace Trinity.Network.TCP
                         }
                         else
                         {
-                            if (splitPosition >= messages.Length)
+                            if (splitPosition > messages.Length)
                             {
                                 return;
                             }
@@ -199,6 +213,75 @@ namespace Trinity.Network.TCP
             } 
         }
 
+        private void UnWrapMessageFromGateway(byte[] buffer, int recvLength)
+        {
+            // Decode the message from the Gateway
+            try
+            {
+                int msgLength = this.DecodeMessageHeader(buffer, recvLength);
+                string msg = buffer.Skip(this.messageHeaderLength).Take(msgLength).ToArray().ToStringUtf8();
+                if (null == msg)
+                {
+                    Log.Error("Failed to parse the message: {0} from gateway", buffer.ToStringUtf8());
+                    return;
+                }
+
+                // Add message to message queue
+                this.messageQueue.Enqueue(msg);
+
+                // to judge whether there are others messages or not
+                msgLength += this.messageHeaderLength;
+                if (msgLength + this.messageHeaderLength >= recvLength)
+                {
+                    // only one message existed in the buffer
+                    return;
+                }
+                else
+                {
+                    // parse the next message from the buffer
+                    this.UnWrapMessageFromGateway(buffer.Skip(msgLength).ToArray(), recvLength - msgLength);
+                }
+            }
+            catch(Exception ExpInfo)
+            {
+                Log.Warn("Exception occured during parse message:  {0} from gateway. Exception: {1}",
+                    (null != buffer) ? buffer.ToStringUtf8():"null", ExpInfo);
+            }
+        }
+
+        private int DecodeMessageHeader(byte[] buffer, int recvLength)
+        {
+            if (null == buffer || this.messageHeaderLength >= recvLength)
+            {
+                Log.Warn("Terminate unwrapping the message from gateway. Length={0}", recvLength);
+                throw new Exception("Null Messages");
+            }
+
+            // parse version
+            int version = BitConverter.ToInt32(buffer.Take(4).Reverse().ToArray(), 0);
+            if (this.messageVersion != version)
+            {
+                Log.Warn("Message with error version. {0}", version);
+                throw new Exception("DROP: Message with invalid version.");
+            }
+
+            int end = BitConverter.ToInt32(buffer.Skip(8).Take(4).Reverse().ToArray(), 0);
+            if (this.messageEnd != end)
+            {
+                Log.Error("Message with error end bytes {0}", end);
+                throw new Exception("DROP: Message with Error end of flag.");
+            }
+
+            int length = BitConverter.ToInt32(buffer.Skip(4).Take(4).Reverse().ToArray(), 0);
+            if (length + this.messageHeaderLength > recvLength)
+            {
+                Log.Error("Message with error length: {0}, receive length: {1}", length, recvLength);
+                throw new Exception("DROP: Message with error length");
+            }
+
+            return length;
+        }
+
         private int GetMessageLength(byte[] length)
         {
             if (null != length)
@@ -213,7 +296,6 @@ namespace Trinity.Network.TCP
         {
             bool VerificationResult = false;
             byte[] buffer = new byte[bufferSize];
-            List<string> msgArray = new List<string>();
 
             while (true)
             {
@@ -229,19 +311,7 @@ namespace Trinity.Network.TCP
                         continue;
                     }
 
-                    msgArray.Clear();
-                    this.UnWrapMessageToAdaptGateway(Encoding.UTF8.GetString(buffer, 0, len), ref msgArray);
-
-                    // Go through the message list
-                    foreach (string msg in msgArray) {
-                        if (msg.Contains(expected))
-                        {
-                            VerificationResult = true;
-                            Log.Debug("Received {0}: {1}", msg, expected);
-                            break;
-                        }
-                        messageQueue.Enqueue(msg);
-                    }
+                    this.UnWrapMessageFromGateway(buffer, len);
 
                     // for test method: break this while loop
                     if (VerificationResult)
@@ -326,9 +396,9 @@ namespace Trinity.Network.TCP
             }
         }
 
-        private string ConvertHeaderContent(int content)
+        private byte[] ConvertHeaderContent(int content)
         {
-            return BitConverter.GetBytes(content).Reverse().ToArray().ToStringUtf8();
+            return BitConverter.GetBytes(content).Reverse().ToArray();
         }
     }
 }

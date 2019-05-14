@@ -271,6 +271,8 @@ namespace TestTrinity.FT.Tests
             this.client = new TrinityTcpClient(this.ip, this.port);
             this.client.CreateConnetion();
             this.wallet = new TestTrinityWallet(null, null, this.pubKey, this.priKey, "19990331", this.ip, this.port);
+
+            startTrinity.trinityWallet = this.wallet;
         }
 
         public void WCCTestRegisterKeepAlive()

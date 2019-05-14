@@ -33,6 +33,7 @@ using Trinity;
 using Trinity.Network.TCP;
 using Trinity.Wallets;
 using Trinity.Wallets.Templates.Messages;
+using Trinity.BlockChain;
 
 namespace TestTrinity.FT.Tests
 
@@ -56,8 +57,6 @@ namespace TestTrinity.FT.Tests
         private readonly Wallet neoWallet;
         private readonly MockKeyPair walletKey;
 
-        private readonly TrinityTcpClient client;
-
         public string pubKey;
 
         public TestTrinityWallet(NeoSystem system, Wallet wallet, string pubKey, string prikey,
@@ -69,8 +68,11 @@ namespace TestTrinity.FT.Tests
             this.pubKey = pubKey;
             this.walletKey = new MockKeyPair(prikey, pubKey);
             // this.SetKeyPair(prikey);
+        }
 
-            this.client = this.GetClient();
+        public override string Sign(string content)
+        {
+            return NeoInterface.Sign(content, this.walletKey.PrivateKey);
         }
 
         public override void ProcessMessage(string message)
@@ -87,19 +89,19 @@ namespace TestTrinity.FT.Tests
             switch (header.MessageType)
             {
                 case "RegisterChannel":
-                    new TestRegisterChannelHandler(this, this.client, message).Handle();
+                    new TestRegisterChannelHandler(this, this.GetClient(), message).Handle();
                     break;
                 case "RegisterChannelFail":
-                    new TestRegisterChannelFailHandler(this, this.client, message).Handle();
+                    new TestRegisterChannelFailHandler(this, this.GetClient(), message).Handle();
                     break;
                 case "Founder":
-                    new TestFounderHandler(this, this.client, message).Handle();
+                    new TestFounderHandler(this, this.GetClient(), message).Handle();
                     break;
                 case "FounderSign":
-                    new TestFounderSignHandler(this, this.client, message).Handle();
+                    new TestFounderSignHandler(this, this.GetClient(), message).Handle();
                     break;
                 case "FounderFail":
-                    new TestFounderFailHandler(this, this.client, message).Handle();
+                    new TestFounderFailHandler(this, this.GetClient(), message).Handle();
                     break;
                 case "Rsmc":
                     // new RsmcHandler(message).Handle();
@@ -120,10 +122,10 @@ namespace TestTrinity.FT.Tests
                     // new HtlcFailHandler(message).Handle();
                     break;
                 case "Settle":
-                    new TestSettleHandler(this, this.client, message).Handle();
+                    new TestSettleHandler(this, this.GetClient(), message).Handle();
                     break;
                 case "SettleSign":
-                    new TestSettleSignHandler(this, this.client, message).Handle();
+                    new TestSettleSignHandler(this, this.GetClient(), message).Handle();
                     break;
                 case "RResponse":
                     //new RResponseHandler(message).Handle();

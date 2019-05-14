@@ -120,7 +120,7 @@ namespace Trinity
             return this.netMagic;
         }
         
-        public string Sign(string content)
+        public virtual string Sign(string content)
         {
             return NeoInterface.Sign(content, this.walletKey.PrivateKey);
         }

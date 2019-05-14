@@ -46,8 +46,6 @@ namespace TestTrinity
     {
         public static void TestMain()
         {
-            TrinityTcpClient client = new TrinityTcpClient("localhost", "20556");
-            client.testStart();
 
             new UTestChannel();
             //TempTest();
