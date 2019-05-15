@@ -32,91 +32,78 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// <summary>
     /// Class Handler for handling Rsmc Message
     /// </summary>
-    //public class RsmcHandler : TransferHandler<Rsmc, RsmcSignHandler, RsmcFailHandler>
-    //{
-    //    public RsmcHandler(string msg) : base(msg)
-    //    {
-    //    }
+    public class RsmcHandler : TransferHandler<Rsmc, RsmcSignHandler, RsmcFailHandler>
+    {
+        public RsmcHandler(string msg) : base(msg)
+        {
+        }
 
-    //    public override bool Handle()
-    //    {
-    //        return false;
-    //    }
+        public override bool Handle()
+        {
+            return false;
+        }
 
-    //    public override void FailStep()
-    //    {
-    //        this.FHandler = null;
+        public override bool FailStep()
+        {
+            return base.FailStep();
+        }
 
-    //    }
+        public override bool SucceedStep()
+        {
+            return base.SucceedStep();
+        }
+    }
 
-    //    public override void SucceedStep()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+    /// <summary>
+    /// Class Handler for handling RsmcSign Message
+    /// </summary>
+    public class RsmcSignHandler : TransferHandler<RsmcSign, RsmcHandler, RsmcFailHandler>
+    {
+        public RsmcSignHandler(string msg) : base(msg)
+        {
+        }
 
-    //    //public override void GetBodyAttribute<TValue>(string name, out TValue value)
-    //    //{
-    //    //    this.GetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, out value);
-    //    //}
+        public override bool Handle()
+        {
+            return false;
+        }
 
-    //    //public override void SetBodyAttribute<TValue>(string name, TValue value)
-    //    //{
-    //    //    this.SetMessageAttribute<RsmcBody, TValue>(this.Request.MessageBody, name, value);
-    //    //}
-    //}
+        public override bool FailStep()
+        {
+            return base.FailStep();
+        }
 
-    ///// <summary>
-    ///// Class Handler for handling RsmcSign Message
-    ///// </summary>
-    //public class RsmcSignHandler : TransferHandler<RsmcSign, RsmcHandler, RsmcFailHandler>
-    //{
-    //    public RsmcSignHandler(string msg) : base(msg)
-    //    {
-    //    }
+        public override bool SucceedStep()
+        {
+            return base.SucceedStep();
+        }
+    }
 
-    //    public override bool Handle()
-    //    {
-    //        return false;
-    //    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /// RsmcFailHandler start
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>
+    /// Class Handler for handling RsmcFail Message
+    /// </summary>
+    public class RsmcFailHandler : TransferHandler<RsmcFail, VoidHandler, VoidHandler>
+    {
+        public RsmcFailHandler(string msg) : base(msg)
+        {
+        }
 
-    //    public override void FailStep()
-    //    {
-    //        this.FHandler = null;
+        public override bool Handle()
+        {
+            return false;
+        }
 
-    //    }
+        public override bool FailStep()
+        {
+            return base.FailStep();
+        }
 
-    //    public override void SucceedStep()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    ///// RsmcFailHandler start
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    ///// <summary>
-    ///// Class Handler for handling RsmcFail Message
-    ///// </summary>
-    //public class RsmcFailHandler : TransferHandler<RsmcFail, VoidHandler, VoidHandler>
-    //{
-    //    public RsmcFailHandler(string msg) : base(msg)
-    //    {
-    //    }
-
-    //    public override bool Handle()
-    //    {
-    //        return false;
-    //    }
-
-    //    public override void FailStep()
-    //    {
-    //        this.FHandler = null;
-
-    //    }
-
-    //    public override void SucceedStep()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
+        public override bool SucceedStep()
+        {
+            return base.SucceedStep();
+        }
+    }
 }

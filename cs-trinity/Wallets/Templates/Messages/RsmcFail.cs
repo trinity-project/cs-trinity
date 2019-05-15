@@ -34,10 +34,8 @@ using MessagePack;
 
 namespace Trinity.Wallets.Templates.Messages
 {
-    [MessagePackObject(keyAsPropertyName:true)]
-    public class HtlcSign : Htlc
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RsmcFail : RsmcSign
     {
-        public string Error { get; set; }
-        public string Comments { get; set; }
     }
 }

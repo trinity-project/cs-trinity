@@ -30,55 +30,77 @@ using Trinity.Wallets.Templates.Messages;
 
 namespace Trinity.Wallets.TransferHandler.TransactionHandler
 {
-    ///// <summary>
-    ///// Class Handler for handling HtlcSign Message
-    ///// </summary>
-    //public class HtlcSignHandler : TrinityTransaction<HtlcSign, HtlcHandler, HtlcFailHandler>
-    //{
-    //    public HtlcSignHandler(string msg) : base(msg)
-    //    {
-    //    }
+    
+    public class HtlcHandler : TransferHandler<Htlc, HtlcSignHandler, HtlcSignHandler>
+    {
+        public HtlcHandler(string msg) : base(msg)
+        {
+        }
 
-    //    public override bool Handle()
-    //    {
-    //        return false;
-    //    }
+        public override bool Handle()
+        {
+            return false;
+        }
 
-    //    public override void FailStep()
-    //    {
-    //        this.FHandler = null;
+        public override bool FailStep()
+        {
+            return base.FailStep();
+        }
 
-    //    }
+        public override bool SucceedStep()
+        {
+            return base.SucceedStep();
+        }
+    }
 
-    //    public override void SucceedStep()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
+    /// <summary>
+    /// Class Handler for handling HtlcSign Message
+    /// </summary>
+    public class HtlcSignHandler : TransferHandler<HtlcFail, HtlcHandler, HtlcFailHandler>
+    {
+        public HtlcSignHandler(string msg) : base(msg)
+        {
+        }
 
-    ///// <summary>
-    ///// Class Handler for handling HtlcFail Message
-    ///// </summary>
-    //public class HtlcFailHandler : TrinityTransaction<HtlcFail, VoidHandler, VoidHandler>
-    //{
-    //    public HtlcFailHandler(string msg) : base(msg)
-    //    {
-    //    }
+        public override bool Handle()
+        {
+            return false;
+        }
 
-    //    public override bool Handle()
-    //    {
-    //        return false;
-    //    }
+        public override bool FailStep()
+        {
+            return base.FailStep();
+        }
 
-    //    public override void FailStep()
-    //    {
-    //        this.FHandler = null;
+        public override bool SucceedStep()
+        {
+            return base.SucceedStep();
+        }
+    }
 
-    //    }
+    /// <summary>
+    /// Class Handler for handling HtlcFail Message
+    /// </summary>
+    public class HtlcFailHandler : TransferHandler<HtlcFail, VoidHandler, VoidHandler>
+    {
+        public HtlcFailHandler(string msg) : base(msg)
+        {
+        }
 
-    //    public override void SucceedStep()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
+        public override bool Handle()
+        {
+            return false;
+        }
+
+        public override bool FailStep()
+        {
+            return base.FailStep();
+        }
+
+
+        public override bool SucceedStep()
+        {
+            return base.SucceedStep();
+        }
+    }
 }

@@ -37,5 +37,7 @@ namespace Trinity.Wallets.Templates.Messages
     [MessagePackObject(keyAsPropertyName:true)]
     public class RsmcSign : Rsmc
     {
+        public string Error { get; set; }
+        public string Comments { get; set; }
     }
 }
