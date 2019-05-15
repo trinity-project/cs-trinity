@@ -41,7 +41,7 @@ using Trinity.Wallets;
 
 namespace Trinity.ChannelSet
 {
-    public class Channel
+    public class Channel        // : IDisposable
     {
         private string uri;
         private string peerUri;
@@ -259,9 +259,8 @@ namespace Trinity.ChannelSet
             return 0;
         }
 
-        //public bool IsFounder(string sender)
+        //public void Dispose()
         //{
-        //    return sender.Equals(this.uri);
         //}
 
         // Static Method Sets are implemented as below.

@@ -56,8 +56,6 @@ namespace Trinity
         private TrinityTcpClient client;
 
         public string pubKey;
-
-
         /// <summary>
         /// 
         /// </summary>
@@ -118,6 +116,11 @@ namespace Trinity
         public string GetNetMagic()
         {
             return this.netMagic;
+        }
+
+        public UInt160 GetPublicKeyHash()
+        {
+            return this.walletKey?.PublicKeyHash;
         }
         
         public virtual string Sign(string content)

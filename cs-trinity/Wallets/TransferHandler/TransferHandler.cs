@@ -30,6 +30,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neo;
 using Trinity.Network.TCP;
 using Trinity.Wallets.Templates.Messages;
 using Trinity.ChannelSet;
@@ -198,6 +199,11 @@ namespace Trinity.Wallets.TransferHandler
         public string GetPubKey()
         {
             return this.pubKey;
+        }
+
+        public UInt160 GetPublicKeyHash()
+        {
+            return this.wallet?.GetPublicKeyHash();
         }
 
         public string GetPeerPubKey()

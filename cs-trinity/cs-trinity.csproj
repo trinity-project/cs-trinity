@@ -303,6 +303,7 @@
     <Compile Include="Wallets\Templates\Definitions\HTTX.cs" />
     <Compile Include="Wallets\Templates\Messages\HtlcFail.cs" />
     <Compile Include="Wallets\Templates\Messages\RsmcFail.cs" />
+    <Compile Include="Wallets\TransferHandler\ControlHandler\PaymentLink.cs" />
     <Compile Include="Wallets\TrinityWallet.cs" />
     <Compile Include="Properties\Settings1.cs" />
     <Compile Include="Properties\Settings1.Designer.cs" />

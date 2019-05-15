@@ -46,7 +46,7 @@ namespace Trinity.BlockChain
         //////////////////////////////////////////////////////////////////////////////////////////
         ///  Adapt to Neo data type convertion                                                 ///
         ////////////////////////////////////////////////////////////////////////////////////////// 
-        #region NeoInterfaceAdaptor
+#region NeoInterfaceAdaptor
         /// <summary>
         /// Remove the useless chars in the string value for Neo
         /// </summary>
@@ -130,25 +130,44 @@ namespace Trinity.BlockChain
         {
             return value.ToHash160().ToAddress();
         }
+        #endregion // NeoInterfaceAdaptor
+
+        #region SHA1_CRYPTO
+        /// <summary>
+        /// 基于Sha1的自定义加密字符串方法：输入一个字符串，返回一个由40个字符组成的十六进制的哈希散列（字符串）。
+        /// </summary>
+        /// <param name="str">要加密的字符串</param>
+        /// <returns>加密后的十六进制的哈希散列（字符串）</returns>
+        public static string Sha1(this string str)
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(str);
+            return buffer?.Sha1();
+        }
 
         /// <summary>
-         /// 基于Sha1的自定义加密字符串方法：输入一个字符串，返回一个由40个字符组成的十六进制的哈希散列（字符串）。
-         /// </summary>
-         /// <param name="str">要加密的字符串</param>
-         /// <returns>加密后的十六进制的哈希散列（字符串）</returns>
-         public static string Sha1(this string str)
-         {
-             var buffer = Encoding.UTF8.GetBytes(str);
-             var data = System.Security.Cryptography.SHA1.Create().ComputeHash(buffer);
- 
-             var sb = new StringBuilder();
-             foreach (var t in data)
-             {
-                 sb.Append(t.ToString("X2"));
-             }
-             
-             return sb.ToString();
-         }
-        #endregion // NeoInterfaceAdaptor
+        /// 
+        /// </summary>
+        /// <param name="content"> bytes array with utf-8 encoding </param>
+        /// <returns></returns>
+        public static string Sha1(this byte[] content)
+        {
+            byte[] data = System.Security.Cryptography.SHA1.Create().ComputeHash(content);
+
+            StringBuilder sb = new StringBuilder();
+            foreach (var t in data)
+            {
+                sb.Append(t.ToString("x2"));
+            }
+
+            return sb.ToString();
+        }
+        #endregion // SHA1_CRYPTO
+
+        #region Timestamp_Attribute
+        public static byte[] TimeAttribute(this byte[] content)
+        {
+            return content.Concat(BitConverter.GetBytes((DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1))).TotalMilliseconds)).ToArray();
+        }
+        #endregion
     }
 }
