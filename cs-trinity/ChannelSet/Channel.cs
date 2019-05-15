@@ -54,8 +54,9 @@ namespace Trinity.ChannelSet
         //private Dictionary<string, double> Deposit;
         //private Dictionary<string, double> Balance;
         
-        private ChannelModel TableChannel;
-        private TransactionModel TableTransaction;
+        private readonly ChannelModel TableChannel;
+        private readonly TransactionModel TableTransaction;
+        private readonly BlockModel TableBlock;
 
         /// <summary>
         /// Default Constructor
@@ -74,6 +75,7 @@ namespace Trinity.ChannelSet
             string dbPath = "./trinity/leveldb";
             this.TableChannel = new ChannelModel(dbPath, uri, peerUri);
             this.TableTransaction = new TransactionModel(dbPath, channel);
+            this.TableBlock = new BlockModel(dbPath, uri);
         }
 
         public ChannelTableContent GetChannel(string channel)
@@ -240,6 +242,21 @@ namespace Trinity.ChannelSet
         public void DeleteTransaction(string txid)
         {
             this.TableTransaction.Db.Delete(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid);
+        }
+
+        public void AddBlockHeight(string uri, uint value)
+        {
+            this.TableBlock.Db.Add(this.TableBlock.keyword, uri, value);
+        }
+
+        public uint TryGetBlockHeight(string uri)
+        {
+            if (this.TableBlock.Db.TryGet(this.TableBlock.keyword, uri, out Slice height))
+            {
+                return height.ToUInt32();
+            }
+
+            return 0;
         }
 
         //public bool IsFounder(string sender)

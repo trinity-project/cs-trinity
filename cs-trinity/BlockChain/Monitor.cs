@@ -89,7 +89,7 @@ namespace Trinity.BlockChain
                 uint blockChainHeight = 0;
                 uint walletBlockHeitht = 0;
                 uint deltaBlockHeitht = 0;
-                
+
 
                 try
                 {
@@ -99,7 +99,12 @@ namespace Trinity.BlockChain
                 {
                     throw ex;
                 }
-                walletBlockHeitht = NeoInterface.GetWalletBlockHeight();
+
+                walletBlockHeitht = channel.TryGetBlockHeight(this.uri);
+                if (0 == walletBlockHeitht)
+                { 
+                    walletBlockHeitht = NeoInterface.GetWalletBlockHeight();
+                }
                 deltaBlockHeitht = blockChainHeight - walletBlockHeitht;
                 try
                 {
@@ -112,6 +117,7 @@ namespace Trinity.BlockChain
                         if (lastMonitoredBlockHeight != walletBlockHeitht)
                         {
                             MonitorTxId(walletBlockHeitht);
+                            channel.AddBlockHeight(this.uri, walletBlockHeitht);
                             lastMonitoredBlockHeight = walletBlockHeitht;
                         }                       
                     }

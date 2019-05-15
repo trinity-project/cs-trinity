@@ -294,6 +294,7 @@
     <Compile Include="Network\Utils.cs" />
     <Compile Include="startTrinity.cs" />
     <Compile Include="Trinity.cs" />
+    <Compile Include="TrinityDB\BlockModel.cs" />
     <Compile Include="Wallets\Log.cs" />
     <Compile Include="Wallets\Templates\Definitions\HCTX.cs" />
     <Compile Include="Wallets\Templates\Definitions\HEDTX.cs" />

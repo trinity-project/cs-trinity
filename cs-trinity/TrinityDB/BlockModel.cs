@@ -30,17 +30,25 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Trinity.TrinityDB.Definitions
+using Neo.IO.Data.LevelDB;
+using Trinity.TrinityDB.Definitions;
+
+namespace Trinity.TrinityDB
 {
-    internal static class ModelPrefix
+    public class BlockModel : BaseModel
     {
-        public const byte MPSummary = 0x1;
+        private readonly byte[] group;
 
-        public const byte MPChannel = 0x10;
+        public SliceBuilder keyword => SliceBuilder.Begin(ModelPrefix.MPBlockGroup).Add(this.group);
 
-        public const byte MPTransaction = 0x20;
-        public const byte MPTransactionTxId = 0x21;
-
-        public const byte MPBlockGroup = 0x40;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="uri"></param>
+        public BlockModel(string path, string uri) : base(path)
+        {
+            this.group = uri.ToHashBytes();
+        }
     }
 }
