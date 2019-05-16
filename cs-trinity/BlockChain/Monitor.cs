@@ -82,62 +82,40 @@ namespace Trinity.BlockChain
 
         public void monitorBlock()
         {
-            uint lastMonitoredBlockHeight = 0;
+            uint currentMonitordBlockHeight = 0;
+
+            currentMonitordBlockHeight = channel.TryGetBlockHeight(this.uri);
+            if (0 == currentMonitordBlockHeight)
+            {
+                currentMonitordBlockHeight = NeoInterface.GetWalletBlockHeight();
+            }
 
             while (true)
             {
                 uint blockChainHeight = 0;
-                uint walletBlockHeitht = 0;
-                uint deltaBlockHeitht = 0;
-
 
                 try
                 {
                     blockChainHeight = NeoInterface.GetBlockHeight();
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-
-                walletBlockHeitht = channel.TryGetBlockHeight(this.uri);
-                if (0 == walletBlockHeitht)
-                { 
-                    walletBlockHeitht = NeoInterface.GetWalletBlockHeight();
-                }
-                deltaBlockHeitht = blockChainHeight - walletBlockHeitht;
-                try
-                {
-                    if (deltaBlockHeitht >= 0 && deltaBlockHeitht < 2000)
+                    if (currentMonitordBlockHeight < blockChainHeight)
                     {
                         //TODO jugement whether there is matched txId, then trigger function to handle it.
                         //TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
                         //string t = cha.ToString();
                         //Console.WriteLine("①本地块高:" + walletBlockHeitht + " 链上:" + blockChainHeight + " 当前时间:" + t);
-                        if (lastMonitoredBlockHeight != walletBlockHeitht)
-                        {
-                            MonitorTxId(walletBlockHeitht);
-                            channel.AddBlockHeight(this.uri, walletBlockHeitht);
-                            lastMonitoredBlockHeight = walletBlockHeitht;
-                        }                       
+                        MonitorTxId(currentMonitordBlockHeight);
+                        channel.AddBlockHeight(this.uri, currentMonitordBlockHeight);
+                        currentMonitordBlockHeight++;
                     }
-                    /*
-                    else if (deltaBlockHeitht >= 2000)
-                    {
-                        //TODO if there is matched txId, Then punishment would be meaningless.
-                        MonitorTxId(walletBlockHeitht - 2000);
-                    }
-                    */
                 }
                 catch (Exception ex)
                 {
                     throw ex;
                 }
 
-
-                if (walletBlockHeitht < blockChainHeight)
+                if (currentMonitordBlockHeight < blockChainHeight)
                 {
-                    Thread.Sleep(5000);
+                    Thread.Sleep(100);
                 }
                 else
                 {
@@ -158,6 +136,7 @@ namespace Trinity.BlockChain
 
         public void MonitorTxId(uint block)
         {
+            Log.Debug("monitor block {0}", block);
             List<string> txidList = NeoInterface.GetBlockTxId(block);
             foreach (string id in txidList)
             {
