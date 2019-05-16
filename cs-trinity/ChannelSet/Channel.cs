@@ -71,11 +71,10 @@ namespace Trinity.ChannelSet
             this.peerUri = peerUri;
             this.channelName = channel;
             this.assetType = asset;
-
-            string dbPath = "./trinity/leveldb";
-            this.TableChannel = new ChannelModel(dbPath, uri, peerUri);
-            this.TableTransaction = new TransactionModel(dbPath, channel);
-            this.TableBlock = new BlockModel(dbPath, uri);
+            
+            this.TableChannel = new ChannelModel(this.dbPath(), uri, peerUri);
+            this.TableTransaction = new TransactionModel(this.dbPath(), channel);
+            this.TableBlock = new BlockModel(this.dbPath(), uri);
         }
 
         public ChannelTableContent GetChannel(string channel)
@@ -244,19 +243,25 @@ namespace Trinity.ChannelSet
             this.TableTransaction.Db.Delete(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid);
         }
 
+
         public void AddBlockHeight(string uri, uint value)
         {
-            this.TableBlock.Db.Add(this.TableBlock.keyword, uri, value);
+            this.TableBlock.Db.Update(this.TableBlock.keyword, uri, value);
         }
 
         public uint TryGetBlockHeight(string uri)
         {
             if (this.TableBlock.Db.TryGet(this.TableBlock.keyword, uri, out Slice height))
             {
-                return height.ToUInt32();
+                return  Convert.ToUInt32(height.ToString());
             }
 
             return 0;
+        }
+
+        public virtual string dbPath()
+        {
+            return "./trinity/leveldb";
         }
 
         //public void Dispose()

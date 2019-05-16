@@ -42,6 +42,7 @@ namespace Trinity.TrinityDB
     {
         private readonly byte[] group;
 
+        public SliceBuilder txlock = SliceBuilder.Begin(ModelPrefix.MPTransactionLockPair);
         public SliceBuilder txid => SliceBuilder.Begin(ModelPrefix.MPTransactionTxId);
         public SliceBuilder record
         {

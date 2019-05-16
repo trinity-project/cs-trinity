@@ -40,6 +40,7 @@ namespace Trinity.TrinityDB.Definitions
 
         public const byte MPTransaction = 0x20;
         public const byte MPTransactionTxId = 0x21;
+        public const byte MPTransactionLockPair = 0x22;
 
         public const byte MPBlockGroup = 0x40;
     }
