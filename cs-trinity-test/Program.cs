@@ -37,7 +37,7 @@ namespace TestTrinity
     {
         public static void Main()
         {
-            UnitTest.TestMain();
+            FunctionTest.TestMain();
 
             Console.ReadKey();
         }

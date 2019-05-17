@@ -51,8 +51,8 @@ namespace TestTrinity.UT.Tests
 
         public override string dbPath()
         {
-            string path = Path.GetPathRoot("./");
-            return @"./trinity/UTLeveldb";
+            string path = Directory.GetCurrentDirectory();
+            return @".\trinity\UTLeveldb";
         }
 
         public void Destroy()
@@ -118,7 +118,7 @@ namespace TestTrinity.UT.Tests
             channelName = ChannelMock.NewChannel(uri, peerUri);
 
             channelEntry = new ChannelMock(channelName, assetType, uri, peerUri);
-            // channelEntry.Destroy();
+            channelEntry.Destroy();
 
             // prepare leveldb
             PrepareExampleChannel();
