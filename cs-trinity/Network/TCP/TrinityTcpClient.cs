@@ -251,9 +251,9 @@ namespace Trinity.Network.TCP
                         else
                         {
                             // means a new message is received
-                            Log.Warn("Should never go here. Why???");
+                            Log.Warn("Should never go here. Why???. expectedLength: {0}", expectedLength);
                             int msgLength = expectedLength + this.messageHeaderLength;
-                            this.UnWrapMessageFromGateway(buffer.Take(msgLength).ToArray(), msgLength);
+                            this.UnWrapMessageFromGateway(message.Take(msgLength).ToArray(), msgLength);
 
                             message = message.Skip(msgLength).ToArray();
                         } 
