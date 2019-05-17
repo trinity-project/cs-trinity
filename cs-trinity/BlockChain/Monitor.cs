@@ -94,23 +94,17 @@ namespace Trinity.BlockChain
             {
                 uint blockChainHeight = 0;
 
-                try
+
+                blockChainHeight = NeoInterface.GetBlockHeight();
+                if (currentMonitordBlockHeight < blockChainHeight)
                 {
-                    blockChainHeight = NeoInterface.GetBlockHeight();
-                    if (currentMonitordBlockHeight < blockChainHeight)
-                    {
-                        //TODO jugement whether there is matched txId, then trigger function to handle it.
-                        //TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
-                        //string t = cha.ToString();
-                        //Console.WriteLine("①本地块高:" + walletBlockHeitht + " 链上:" + blockChainHeight + " 当前时间:" + t);
-                        MonitorTxId(currentMonitordBlockHeight);
-                        channel.AddBlockHeight(this.uri, currentMonitordBlockHeight);
-                        currentMonitordBlockHeight++;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
+                    //TODO jugement whether there is matched txId, then trigger function to handle it.
+                    //TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+                    //string t = cha.ToString();
+                    //Console.WriteLine("①本地块高:" + walletBlockHeitht + " 链上:" + blockChainHeight + " 当前时间:" + t);
+                    MonitorTxId(currentMonitordBlockHeight);
+                    channel.AddBlockHeight(this.uri, currentMonitordBlockHeight);
+                    currentMonitordBlockHeight++;
                 }
 
                 if (currentMonitordBlockHeight < blockChainHeight)
@@ -138,9 +132,14 @@ namespace Trinity.BlockChain
         {
             Log.Debug("monitor block {0}", block);
             List<string> txidList = NeoInterface.GetBlockTxId(block);
-            foreach (string id in txidList)
+            if (txidList == null)
             {
+                return;
+            }
+            foreach (string id in txidList)
+            {               
                 string id1 = NeoInterface.FormatJObject(id);
+                Log.Debug("monitor txid {0}", id1);
                 TransactionTabelSummary Summary = channel.TryGetTransaction(id1);
                 if (Summary != null)
                 {

@@ -112,6 +112,10 @@ namespace Trinity.BlockChain
             Block block;
             List<string> txidList = new List<string>();
             block = Blockchain.Singleton.Store.GetBlock(blockHeigh);
+            if (block == null)
+            {
+                return null;
+            }
             tx = (JArray)block.ToJson()["tx"];
             for (int txNum = 0; txNum < tx.Count(); txNum++)
             {
