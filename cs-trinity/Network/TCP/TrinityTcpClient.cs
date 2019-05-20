@@ -89,7 +89,7 @@ namespace Trinity.Network.TCP
                 this.tcpClient.Connect(EPServer);
 
                 // Set the socket with alive
-                this.tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 1000);
+                this.tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 0); // block model
                 this.tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 1000);
 
 
@@ -143,43 +143,30 @@ namespace Trinity.Network.TCP
 
         private void UnWrapMessageFromGateway(byte[] buffer, int recvLength)
         {
+            if (null == buffer)
+            {
+                Log.Error("Null messages. length: {0}", recvLength);
+                return;
+            }
+
             // Decode the message from the Gateway
             try
             {
-                int msgLength = this.DecodeMessageHeader(buffer, recvLength);
-                string msg = buffer.Skip(this.messageHeaderLength).Take(msgLength).ToArray().ToStringUtf8();
-                if (null == msg)
-                {
-                    Log.Error("Failed to parse the message: {0} from gateway", buffer.ToStringUtf8());
-                    return;
-                }
+                string msg = buffer.ToStringUtf8();
 
                 // Add message to message queue
                 this.messageQueue.Enqueue(msg);
-
-                // to judge whether there are others messages or not
-                msgLength += this.messageHeaderLength;
-                if (msgLength + this.messageHeaderLength >= recvLength)
-                {
-                    // only one message existed in the buffer
-                    return;
-                }
-                else
-                {
-                    // parse the next message from the buffer
-                    this.UnWrapMessageFromGateway(buffer.Skip(msgLength).ToArray(), recvLength - msgLength);
-                }
             }
             catch (Exception ExpInfo)
             {
                 Log.Warn("Exception occured during parse message:  {0} from gateway. Exception: {1}",
-                    (null != buffer) ? buffer.ToStringUtf8() : "null", ExpInfo);
+                    buffer.ToStringUtf8() , ExpInfo);
             }
         }
 
         private int DecodeMessageHeader(byte[] buffer, int recvLength)
         {
-            if (null == buffer || this.messageHeaderLength >= recvLength)
+            if (null == buffer || this.messageHeaderLength > recvLength)
             {
                 Log.Warn("Terminate unwrapping the message from gateway. Length={0}", recvLength);
                 throw new Exception("Null Messages");
@@ -201,7 +188,7 @@ namespace Trinity.Network.TCP
             }
 
             int length = BitConverter.ToInt32(buffer.Skip(4).Take(4).Reverse().ToArray(), 0);
-            if (length + this.messageHeaderLength > recvLength)
+            if (0 >= length)
             {
                 Log.Error("Message with error length: {0}, receive length: {1}", length, recvLength);
                 throw new Exception(string.Format("DROP: Message with error length: {0}", length));
@@ -210,62 +197,55 @@ namespace Trinity.Network.TCP
             return length;
         }
 
+        private int ReceiveHeader()
+        {
+            byte[] msgHeader = new byte[this.messageHeaderLength];
+            int received = 0;
+            int offset = 0;
+            int readSize = this.messageHeaderLength;
+
+            while (this.messageHeaderLength > received)
+            {
+                received += this.tcpClient.Client.Receive(msgHeader, offset, readSize, SocketFlags.None);
+                offset = received;
+                readSize = this.messageHeaderLength - offset;
+            }
+
+            // parse the message header
+            return this.DecodeMessageHeader(msgHeader, received);
+        }
+
         private int Receive(out byte[] message)
         {
             message = new byte[0];
             byte[] buffer = new byte[bufferSize];
-            int recvLength = 0;
             int totalReceived = 0;
             int readSize = bufferSize;
 
-            // read the data until end each time.
-            while (true)
+            // Parse the message header firstly
+            int expectedLength = this.ReceiveHeader();
+
+            // read the message body until end each time.
+            while (expectedLength > totalReceived)
             {
                 // set buffer zero
                 buffer.Initialize();
 
                 // Read the message header firstly
-                recvLength = this.tcpClient.Client.Receive(buffer, readSize, SocketFlags.None);
-                if (0 >= recvLength)
+                int recvLength = this.tcpClient.Client.Receive(buffer, readSize, SocketFlags.None);
+
+                // record the received data
+                if (0 < recvLength)
                 {
-                    return -1;
-                }
-                else if (bufferSize > recvLength)
-                {
-                    totalReceived += recvLength;
                     message = message.Concat(buffer.Take(recvLength)).ToArray();
-
-                    // parse this message header firstly
-                    if (message.Length > this.messageHeaderLength)
-                    {
-                        int expectedLength = BitConverter.ToInt32(message.Skip(4).Take(4).Reverse().ToArray(), 0);
-                        if (expectedLength + this.messageHeaderLength == totalReceived)
-                        {
-                            break;
-                        }
-                        else if (expectedLength + this.messageHeaderLength > totalReceived)
-                        {
-                            readSize = expectedLength + this.messageHeaderLength - totalReceived;
-                            readSize = readSize <= bufferSize ? readSize : bufferSize;
-                        }
-                        else
-                        {
-                            // means a new message is received
-                            Log.Warn("Should never go here. Why???. expectedLength: {0}", expectedLength);
-                            int msgLength = expectedLength + this.messageHeaderLength;
-                            this.UnWrapMessageFromGateway(message.Take(msgLength).ToArray(), msgLength);
-
-                            message = message.Skip(msgLength).ToArray();
-                        } 
-                    }
                 }
-                else
-                {
-                    totalReceived += bufferSize;
-                    message = message.Concat(buffer).ToArray();
-                    continue;
-                }
+                totalReceived += recvLength;
+                readSize = expectedLength - recvLength;
+                readSize = readSize < bufferSize ? readSize : bufferSize;
             }
+
+            // unwrap the messages
+            this.UnWrapMessageFromGateway(message.ToArray(), totalReceived);
 
             return totalReceived;
         }
@@ -287,8 +267,6 @@ namespace Trinity.Network.TCP
                         continue;
                     }
 
-                    this.UnWrapMessageFromGateway(messages, recvLength);
-
                     // for test method: break this while loop
                     if (VerificationResult)
                     {
@@ -298,7 +276,7 @@ namespace Trinity.Network.TCP
                 }
                 catch (Exception ExpInfo)
                 {
-                    //Log.Error("Exception occurred during receive message. Exception: {0}", ExpInfo);
+                    Log.Error("Exception occurred during receive message. Exception: {0}", ExpInfo);
                 }
 
                 Thread.Sleep(200);
