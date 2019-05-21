@@ -45,6 +45,7 @@ namespace Trinity.BlockChain
         private readonly string netMagic;
         private string uri;
         private Channel channel;
+        private const uint maxRepeatNumbe = 10;
 
         public MonitorTransction(string uri, string magic)
         {
@@ -89,14 +90,13 @@ namespace Trinity.BlockChain
             {
                 currentMonitordBlockHeight = NeoInterface.GetWalletBlockHeight();
             }
-
+            Thread.Sleep(1000);
             while (true)
             {
                 uint blockChainHeight = 0;
 
-
                 blockChainHeight = NeoInterface.GetBlockHeight();
-                if (currentMonitordBlockHeight < blockChainHeight)
+                if (currentMonitordBlockHeight <= blockChainHeight)
                 {
                     //TODO jugement whether there is matched txId, then trigger function to handle it.
                     //TimeSpan cha = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
@@ -105,10 +105,6 @@ namespace Trinity.BlockChain
                     MonitorTxId(currentMonitordBlockHeight);
                     channel.AddBlockHeight(this.uri, currentMonitordBlockHeight);
                     currentMonitordBlockHeight++;
-                }
-
-                if (currentMonitordBlockHeight < blockChainHeight)
-                {
                     Thread.Sleep(100);
                 }
                 else
@@ -130,22 +126,28 @@ namespace Trinity.BlockChain
 
         public void MonitorTxId(uint block)
         {
-            Log.Debug("monitor block {0}", block);
+            uint tryGetTxidNumber = 0; ;
             List<string> txidList = NeoInterface.GetBlockTxId(block);
-            if (txidList == null)
+
+            //try to get txid repeatedly if list is null 
+            while (txidList == null)
             {
-                return;
+                Thread.Sleep(1000);
+                txidList = NeoInterface.GetBlockTxId(block);               
+                if (tryGetTxidNumber == maxRepeatNumbe)
+                {
+                    return;
+                }
+                tryGetTxidNumber++;
             }
             foreach (string id in txidList)
             {               
                 string id1 = NeoInterface.FormatJObject(id);
-                Log.Debug("monitor txid {0}", id1);
                 TransactionTabelSummary Summary = channel.TryGetTransaction(id1);
                 if (Summary != null)
                 {
                     ConductEvent(Summary);
                 }
-
             }
         }
 
