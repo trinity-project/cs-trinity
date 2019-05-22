@@ -284,14 +284,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public bool MakeupRefundTxSign(TxContents contents)
         {
-            string txDataSign = this.Sign(contents.txData);
-
-            this.Request.MessageBody.Settlement = new TxContentsSign
-            {
-                txDataSign = txDataSign,
-                originalData = contents
-            };
-
+            this.Request.MessageBody.Settlement = this.MakeupSignature(contents);
             return true;
         }
 

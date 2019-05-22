@@ -29,7 +29,12 @@ using MessagePack;
 namespace Trinity.Wallets.Templates.Definitions
 {
     [MessagePackObject(keyAsPropertyName: true)]
-    public class BreachRemedyTx
+    public class BreachRemedyTx : TxContents
+    {
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class BreachRemedySignTx
     {
         // Don't change these vriable name, if do so, it will cause to fail 
         // to handle the message

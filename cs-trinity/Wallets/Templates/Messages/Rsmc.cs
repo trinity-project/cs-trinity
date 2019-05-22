@@ -25,6 +25,7 @@ SOFTWARE.
 */
 
 using MessagePack;
+using Trinity.Wallets.Templates.Definitions;
 
 namespace Trinity.Wallets.Templates.Messages
 {
@@ -35,10 +36,10 @@ namespace Trinity.Wallets.Templates.Messages
     public class RsmcBody
     {
         public string AssetType { get; set; }
-        public string Value { get; set; }
-        public string Commitment { get; set; }
-        public string RevocableDelivery { get; set; }
-        public string BreachRemedy { get; set; }
+        public long Value { get; set; }
+        public CommitmentTx Commitment { get; set; }
+        public RevocableDeliveryTx RevocableDelivery { get; set; }
+        public BreachRemedySignTx BreachRemedy { get; set; }
         public int RoleIndex { get; set; }
     }
 

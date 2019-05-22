@@ -32,10 +32,12 @@ using System.Threading.Tasks;
 
 using Neo;
 using Trinity.Network.TCP;
+using Trinity.Wallets.Templates.Definitions;
 using Trinity.Wallets.Templates.Messages;
 using Trinity.ChannelSet;
 using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
+
 
 namespace Trinity.Wallets.TransferHandler
 {
@@ -63,6 +65,9 @@ namespace Trinity.Wallets.TransferHandler
 
         // Record current Header
         public TransactionHeader header;
+
+        // 
+        public const ulong fundingTradeNonce = 0;
 
         /// <summary>
         /// Virtual Method sets. Should be overwritten in child classes.
@@ -278,8 +283,23 @@ namespace Trinity.Wallets.TransferHandler
 
             return false;
         }
-        
 
+        public long[] CalculateBalance(int role, long balance, long peerBalance, long payment)
+        {
+            if (this.IsRole0(role) || this.IsRole2(role))
+            {
+                return new long[2] { balance - payment, peerBalance + payment };
+            }
+            else if (this.IsRole1(role) || this.IsRole3(role))
+            {
+                return new long[2] { balance + payment, peerBalance - payment };
+            }
+            else
+            {
+                throw new Exception(string.Format("Invalid role: {0}", role));
+            }
+        }
+        
         /// <summary>
         /// Trinity Transaction Role define here.
         /// </summary>
@@ -317,6 +337,61 @@ namespace Trinity.Wallets.TransferHandler
         public string Sign(string content)
         {
             return this.wallet?.Sign(content);
+        }
+
+        public virtual FundingSignTx MakeupSignature(FundingTx txContent)
+        {
+            string txDataSign = this.Sign(txContent.txData);
+
+            return new FundingSignTx
+            {
+                txDataSign = txDataSign,
+                originalData = txContent
+            };
+        }
+        
+        public virtual CommitmentSignTx MakeupSignature(CommitmentTx txContent)
+        {
+            string txDataSign = this.Sign(txContent.txData);
+
+            return new CommitmentSignTx
+            {
+                txDataSign = txDataSign,
+                originalData = txContent
+            };
+        }
+
+        public virtual RevocableDeliverySignTx MakeupSignature(RevocableDeliveryTx txContent)
+        {
+            string txDataSign = this.Sign(txContent.txData);
+
+            return new RevocableDeliverySignTx
+            {
+                txDataSign = txDataSign,
+                originalData = txContent
+            };
+        }
+
+        public virtual BreachRemedySignTx MakeupSignature(BreachRemedyTx txContent)
+        {
+            string txDataSign = this.Sign(txContent.txData);
+
+            return new BreachRemedySignTx
+            {
+                txDataSign = txDataSign,
+                originalData = txContent
+            };
+        }
+
+        public virtual TxContentsSign MakeupSignature(TxContents txContent)
+        {
+            string txDataSign = this.Sign(txContent.txData);
+
+            return new TxContentsSign
+            {
+                txDataSign = txDataSign,
+                originalData = txContent
+            };
         }
 
         public bool VerifySignarture(string content, string contentSign)

@@ -260,7 +260,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="txId"></param>
         /// <returns></returns>
-        public bool CreateBRTX(string txId)
+        public bool CreateBRTX(out BreachRemedyTx breachRemedyTx, string txId)
         {
             string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.peerAddress, this.balance, this.assetId);
             Console.WriteLine("createBRTX: opdata: {0}", opdata);
@@ -278,10 +278,12 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
 
-            JObject result = new JObject();
-            result["txData"] = tx.GetHashData().ToHexString();
-            result["txId"] = tx.Hash.ToString();
-            result["witness"] = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc);
+            breachRemedyTx = new BreachRemedyTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
 
             return true;
         }

@@ -31,11 +31,22 @@ using System.Text;
 using System.Threading.Tasks;
 
 using MessagePack;
+using Trinity.Wallets.Templates.Definitions;
 
 namespace Trinity.Wallets.Templates.Messages
 {
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RsmcSignBody
+    {
+        public string AssetType { get; set; }
+        public long Value { get; set; }
+        public CommitmentSignTx Commitment { get; set; }
+        public RevocableDeliverySignTx RevocableDelivery { get; set; }
+        public int RoleIndex { get; set; }
+    }
+
     [MessagePackObject(keyAsPropertyName:true)]
-    public class RsmcSign : Rsmc
+    public class RsmcSign : Header<RsmcSignBody>
     {
         public string Error { get; set; }
         public string Comments { get; set; }

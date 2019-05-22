@@ -475,36 +475,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public void MakeupFundingTx(FundingTx txContent)
         {
-            string txDataSign = this.Sign(txContent.txData);
-
-            this.Request.MessageBody.Founder = new FundingSignTx
-            {
-                txDataSign = txDataSign,
-                originalData = txContent
-            };
+            this.Request.MessageBody.Founder = this.MakeupSignature(txContent);
         }
 
-        // Below 2 mothods could be move to base class
         public void MakeupCommitmentTx(CommitmentTx txContent)
         {
-            string txDataSign = this.Sign(txContent.txData);
-
-            this.Request.MessageBody.Commitment = new CommitmentSignTx
-            {
-                txDataSign = txDataSign,
-                originalData = txContent
-            };
+            this.Request.MessageBody.Commitment = this.MakeupSignature(txContent);
         }
 
         public void MakeupRevocableDeliveryTx(RevocableDeliveryTx txContent)
         {
-            string txDataSign = this.Sign(txContent.txData);
-
-            this.Request.MessageBody.RevocableDelivery = new RevocableDeliverySignTx
-            {
-                txDataSign = txDataSign,
-                originalData = txContent
-            };
+            this.Request.MessageBody.RevocableDelivery = this.MakeupSignature(txContent);
         }
 
         // Todo: impmentation this method in the base class in future
