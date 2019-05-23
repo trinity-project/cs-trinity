@@ -29,20 +29,18 @@ using MessagePack;
 namespace Trinity.Wallets.Templates.Definitions
 {
     [MessagePackObject(keyAsPropertyName: true)]
-    public class HETX : TxContents
+    public class HtlcTimeoutRevocableDelivertyTx : TxContents
     {
         // Don't change these vriable name, if do so, it will cause to fail 
         // to handle the message
-        public string addressRSMC { get; set; }
-        public string scriptRSMC { get; set; }
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class HESignTx
+    public class HtlcTimeoutRevocableDelivertySignTx
     {
         // Don't change these vriable name, if do so, it will cause to fail 
         // to handle the message
         public string txDataSign { get; set; }
-        public RevocableDeliveryTx originalData { get; set; }
+        public HtlcTimeoutRevocableDelivertyTx originalData { get; set; }
     }
 }

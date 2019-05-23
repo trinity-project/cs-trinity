@@ -117,7 +117,7 @@ namespace TestTrinity
 
             NeoTransaction neoTransaction1 = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
             Console.WriteLine("---------Sender_HCTX---------");
-            neoTransaction1.CreateSenderHCTX(out HCTX hctx, HtlcValue, balance, peerBalance, HashR);
+            neoTransaction1.CreateSenderHCTX(out HtlcCommitTx hctx, HtlcValue, balance, peerBalance, HashR);
             Log.Debug("HCTX: {0}", hctx.Serialize());
 
             Log.Debug("---------Sender_RDTX---------");
@@ -125,11 +125,11 @@ namespace TestTrinity
             Log.Debug("RDTX: {0}", RevocableDeliveryTx.Serialize());
 
             Log.Debug("---------HEDTX---------");
-            neoTransaction1.CreateHEDTX(out HEDTX HEDTX, HtlcValue);
+            neoTransaction1.CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, HtlcValue);
             Log.Debug("HEDTX: {0}", HEDTX.Serialize());
 
             Log.Debug("---------HTTX---------");
-            neoTransaction1.CreateHTTX(out HTTX HTTX, HtlcValue);
+            neoTransaction1.CreateHTTX(out HtlcTimoutTx HTTX, HtlcValue);
             Log.Debug("HTTX: {0}", HTTX.Serialize());
 
             Log.Debug("---------HTRDTX---------");
@@ -165,7 +165,7 @@ namespace TestTrinity
 
             NeoTransaction neoTransaction1 = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
             Console.WriteLine("---------Receiver_HCTX---------");
-            neoTransaction1.CreateReceiverHCTX(out HCTX hctx, HtlcValue, balance, peerBalance, HashR);
+            neoTransaction1.CreateReceiverHCTX(out HtlcCommitTx hctx, HtlcValue, balance, peerBalance, HashR);
             Log.Debug("HCTX: {0}", hctx.Serialize());
 
             Log.Debug("---------Receiver_RDTX---------");
@@ -173,11 +173,11 @@ namespace TestTrinity
             Log.Debug("RDTX: {0}", RevocableDeliveryTx.Serialize());
 
             Log.Debug("---------HTDTX---------");
-            neoTransaction1.CreateHTDTX(out HTDTX HTDTX, HtlcValue);
+            neoTransaction1.CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, HtlcValue);
             Log.Debug("HTDTX: {0}", HTDTX.Serialize());
 
             Log.Debug("---------HETX---------");
-            neoTransaction1.CreateHETX(out HETX HETX, HtlcValue);
+            neoTransaction1.CreateHETX(out HtlcExecutionTx HETX, HtlcValue);
             Log.Debug("HETX: {0}", HETX.Serialize());
 
             Log.Debug("---------HERDTX---------");

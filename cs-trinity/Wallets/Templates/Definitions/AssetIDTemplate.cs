@@ -32,21 +32,21 @@ using System.Threading.Tasks;
 
 namespace Trinity.Wallets.Templates.Definitions
 {
-    public class AssetIDTemplate
+    public sealed class AssetIDTemplate
     {
         public const string TNC = "0x849d095d07950b9e56d0c895ec48ec5100cfdff1";
         public const string NEO = "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
         public const string GAS = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
     }
 
-    public class AssetIDTemplateMainNet
+    public sealed class AssetIDTemplateMainNet
     {
         public const string TNC = "0x08e8c4400f1af2c20c28e0018f29535eb85d15b6";
         public const string NEO = "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
         public const string GAS = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
     }
 
-    public class AssetTypeTemplate
+    public sealed class AssetTypeTemplate
     {
         public const string TNC = "TNC";
         public const string NEO = "NEO";

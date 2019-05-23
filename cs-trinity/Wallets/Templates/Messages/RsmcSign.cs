@@ -42,6 +42,7 @@ namespace Trinity.Wallets.Templates.Messages
         public long Value { get; set; }
         public CommitmentSignTx Commitment { get; set; }
         public RevocableDeliverySignTx RevocableDelivery { get; set; }
+        public BreachRemedySignTx BreachRemedy { get; set; }
         public int RoleIndex { get; set; }
     }
 

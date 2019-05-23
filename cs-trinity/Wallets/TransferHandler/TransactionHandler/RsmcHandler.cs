@@ -24,10 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 using System;
-using Trinity.BlockChain;
-using Trinity.Wallets.Templates.Messages;
-
-using Neo;
 
 using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
@@ -35,7 +31,6 @@ using Trinity.BlockChain;
 using Trinity.ChannelSet;
 using Trinity.Wallets.Templates.Definitions;
 using Trinity.Wallets.Templates.Messages;
-using Trinity.Network.TCP;
 
 namespace Trinity.Wallets.TransferHandler.TransactionHandler
 {
@@ -160,8 +155,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.SHandler = new RsmcSignHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                     this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Value,
                     this.Request.MessageBody.RoleIndex);
-            this.SHandler.MakeupCommitmentTx(this.Request.MessageBody.Commitment);
-            this.SHandler.MakeupRevocableDeliveryTx(this.Request.MessageBody.RevocableDelivery);
+            this.SHandler.MakeupCommitmentSignTx(this.Request.MessageBody.Commitment);
+            this.SHandler.MakeupRevocableDeliverySignTx(this.Request.MessageBody.RevocableDelivery);
             this.SHandler.MakeTransaction();
             #endregion
 
@@ -210,7 +205,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             if (this.IsIllegalRole(this.Request.MessageBody.RoleIndex))
             {
-                Console.WriteLine("Invalid nonce for founder. Nonce: {0}", this.Request.TxNonce);
+                Console.WriteLine("Invalid nonce for Rsmc. Nonce: {0}", this.Request.TxNonce);
                 return false;
             }
 
@@ -359,7 +354,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Handle()
         {
-            return false;
+            Log.Debug("Handle Message {0}. Channel name {1}, Asset Type: {2}, Value: {3}.",
+                this.Request.MessageType,
+                this.Request.ChannelName,
+                this.Request.MessageBody.AssetType,
+                this.Request.MessageBody.Value);
+            return base.Handle();
         }
 
         public override bool FailStep()
@@ -372,12 +372,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return base.SucceedStep();
         }
 
-        public void MakeupCommitmentTx(CommitmentTx txContent)
+        public void MakeupCommitmentSignTx(CommitmentTx txContent)
         {
             this.Request.MessageBody.Commitment = this.MakeupSignature(txContent);
         }
 
-        public void MakeupRevocableDeliveryTx(RevocableDeliveryTx txContent)
+        public void MakeupRevocableDeliverySignTx(RevocableDeliveryTx txContent)
         {
             this.Request.MessageBody.RevocableDelivery = this.MakeupSignature(txContent);
         }

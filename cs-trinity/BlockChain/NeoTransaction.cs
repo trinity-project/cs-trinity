@@ -323,7 +323,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HCTX"> output the HCTX body </param>
         /// <returns></returns>
-        public bool CreateSenderHCTX(out HCTX HCTX, string HtlcValue, string balance, string peerBalance, string HashR)
+        public bool CreateSenderHCTX(out HtlcCommitTx HCTX, string HtlcValue, string balance, string peerBalance, string HashR)
         {
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.scriptHash, this.pubKey, this.peerScriptHash, this.peerPubkey, this.timestampString);
             Log.Debug("timestamp: {0}", this.timestampString);
@@ -358,7 +358,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdataToRsmc + OpdataToPeer + opdataToHTLC, attributes);
 
-            HCTX = new HCTX
+            HCTX = new HtlcCommitTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 addressRSMC = this.addressRsmc,
@@ -412,7 +412,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HEDTX"> output the HEDTX body </param>
         /// <returns></returns>
-        public bool CreateHEDTX(out HEDTX HEDTX, string HtlcValue)
+        public bool CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, string HtlcValue)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
@@ -428,7 +428,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
 
-            HEDTX = new HEDTX
+            HEDTX = new HtlcExecutionDeliveryTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 txId = tx.Hash.ToString().Strip("\""),
@@ -443,7 +443,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HTTX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHTTX(out HTTX HTTX, string HtlcValue)
+        public bool CreateHTTX(out HtlcTimoutTx HTTX, string HtlcValue)
         {
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.scriptHash, this.pubKey, this.peerScriptHash, this.peerPubkey, this.timestampString);
             Log.Debug("RSMCContract: {0}", RSMCContract);
@@ -464,7 +464,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
 
-            HTTX = new HTTX
+            HTTX = new HtlcTimoutTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 txId = tx.Hash.ToString().Strip("\""),
@@ -516,7 +516,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HCTX"> output the HCTX body </param>
         /// <returns></returns>
-        public bool CreateReceiverHCTX(out HCTX HCTX, string HtlcValue, string balance, string peerBalance, string HashR)
+        public bool CreateReceiverHCTX(out HtlcCommitTx HCTX, string HtlcValue, string balance, string peerBalance, string HashR)
         {
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
             Log.Debug("timestamp: {0}", this.timestampString);
@@ -551,7 +551,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdataToRsmc + OpdataToSender + opdataToHTLC, attributes);
 
-            HCTX = new HCTX
+            HCTX = new HtlcCommitTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 addressRSMC = this.addressRsmc,
@@ -606,7 +606,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HTDTX"> output the HTDTX body </param>
         /// <returns></returns>
-        public bool CreateHTDTX(out HTDTX HTDTX, string HtlcValue)
+        public bool CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, string HtlcValue)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
@@ -622,7 +622,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
 
-            HTDTX = new HTDTX
+            HTDTX = new HtlcTimeoutDeliveryTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 txId = tx.Hash.ToString().Strip("\""),
@@ -637,7 +637,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HETX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHETX(out HETX HETX, string HtlcValue)
+        public bool CreateHETX(out HtlcExecutionTx HETX, string HtlcValue)
         {
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
             Log.Debug("RSMCContract: {0}", RSMCContract);
@@ -658,7 +658,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
 
-            HETX = new HETX
+            HETX = new HtlcExecutionTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 txId = tx.Hash.ToString().Strip("\""),

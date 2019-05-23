@@ -1,4 +1,4 @@
-/*
+﻿/*
 Author: Trinity Core Team
 
 MIT License
@@ -26,33 +26,19 @@ SOFTWARE.
 
 using MessagePack;
 
-using Trinity.Wallets.Templates.Definitions;
-
-namespace Trinity.Wallets.Templates.Messages
+namespace Trinity.Wallets.Templates.Definitions
 {
-    /// <summary>
-    /// This file define the HTLC Message Body.
-    /// </summary>
     [MessagePackObject(keyAsPropertyName: true)]
-    public class HtlcBody
+    class HtlcExecutionRevocableDeliveryTx : TxContents
     {
-        public string AssetType { get; set; }
-        public long Count { get; set; }
-        public int RoleIndex { get; set; }
-        public string HashR { get; set; }
-        public HtlcCommitTx HCTX { get; set; }
-        public HtlcRevocableDeliveryTx RDTX { get; set; }
-        public HtlcExecutionDeliveryTx HEDTX { get; set; }
-        public HtlcTimoutTx HTTX { get; set; }
-        public HtlcTimeoutDeliveryTx HTDTX { get; set; }
-        public HtlcTimeoutRevocableDelivertyTx HTRDTX { get; set; }
-        
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Htlc : Header<HtlcBody>
+    class HtlcExecutionRevocableDeliverySignTx
     {
-        public string Router { get; set; }
-        public string Next { get; set; }
+        // Don't change these vriable name, if do so, it will cause to fail 
+        // to handle the message
+        public string txDataSign { get; set; }
+        public HtlcExecutionRevocableDeliveryTx originalData { get; set; }
     }
 }
