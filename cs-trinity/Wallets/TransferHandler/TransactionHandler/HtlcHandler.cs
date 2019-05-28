@@ -43,7 +43,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private readonly Channel currentChannel = null;
         private readonly ChannelTableContent currentChannelInfo = null;
-        private readonly TransactionTabelContent fundingTrade = null;
+        private readonly TransactionFundingContent fundingTrade = null;
         private readonly long balance = 0;
         private readonly long peerBalance = 0;
 
@@ -56,7 +56,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public HtlcHandler(string sender, string receiver, string channel, string asset,
             string magic, UInt64 nonce, long payment, string hashcode, int role = 0) : base()
         {
-            this.RoleMax = 3;
+            this.RoleMax = 1;
 
             this.Request = new Htlc
             {
@@ -81,7 +81,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.currentChannel = new Channel(channel, asset, sender, receiver);
             this.currentChannelInfo = this.currentChannel.TryGetChannel(channel);
-            this.fundingTrade = this.currentChannel.TryGetTransaction(fundingTradeNonce);
+            this.fundingTrade = this.currentChannel.TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
 
             if (null != this.currentChannelInfo
                 && this.currentChannelInfo.balance.TryGetValue(sender, out this.balance)
@@ -269,14 +269,14 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private readonly Channel currentChannel = null;
         private readonly ChannelTableContent currentChannelInfo = null;
-        private readonly TransactionTabelContent fundingTrade = null;
+        private readonly TransactionFundingContent fundingTrade = null;
         private readonly long balance = 0;
         private readonly long peerBalance = 0;
 
         public HtlcSignHandler(string sender, string receiver, string channel, string asset,
             string magic, UInt64 nonce, long payment, string hashcode, int role = 0) : base()
         {
-            this.RoleMax = 3;
+            this.RoleMax = 1;
 
             this.Request = new HtlcSign
             {
@@ -303,7 +303,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.currentChannel = new Channel(channel, asset, sender, receiver);
             this.currentChannelInfo = this.currentChannel.TryGetChannel(channel);
-            this.fundingTrade = this.currentChannel.TryGetTransaction(fundingTradeNonce);
+            this.fundingTrade = this.currentChannel.TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
 
             if (null != this.currentChannelInfo
                 && this.currentChannelInfo.balance.TryGetValue(sender, out this.balance)

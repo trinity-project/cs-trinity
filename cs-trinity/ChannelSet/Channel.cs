@@ -165,19 +165,19 @@ namespace Trinity.ChannelSet
         }
 
         // transaction info
-        public TransactionTabelContent GetTransaction(UInt64 nonce)
+        public TItemContent GetTransaction<TItemContent>(UInt64 nonce)
         {
             try
             {
                 Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString());
-                return txContent.ToString().Deserialize<TransactionTabelContent>();
+                return txContent.ToString().Deserialize<TItemContent>();
             }
             catch (Exception ExpInfo)
             {
                 Console.WriteLine("Failed to get transaction with nonce: {0}. Exception: {1}", nonce, ExpInfo);
             }
 
-            return null;
+            return default;
         }
 
         public TransactionTabelSummary GetTransaction(string txid)
@@ -191,15 +191,15 @@ namespace Trinity.ChannelSet
             return null;
         }
 
-        public TransactionTabelContent TryGetTransaction(UInt64 nonce)
+        public TItemContent TryGetTransaction<TItemContent>(UInt64 nonce)
         {
             if (this.TableTransaction.Db.TryGet(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()),
                 nonce.ToString(), out Slice txContent))
             {
-                return txContent.ToString().Deserialize<TransactionTabelContent>();
+                return txContent.ToString().Deserialize<TItemContent>();
             }
 
-            return null;
+            return default;
         }
 
         public TransactionTabelSummary TryGetTransaction(string txid)
@@ -212,13 +212,13 @@ namespace Trinity.ChannelSet
             return null;
         }
 
-        public List<TransactionTabelContent> GetTransactionList()
+        public List<TItemContent> GetTransactionList<TItemContent>()
         {
             // Fuzzy get
-            return this.TableTransaction.Db.FuzzyGet<TransactionTabelContent>(this.TableTransaction.record);
+            return this.TableTransaction.Db.FuzzyGet<TItemContent>(this.TableTransaction.record);
         }
 
-        public void AddTransaction(UInt64 nonce, TransactionTabelContent value)
+        public void AddTransaction<TItemContent>(UInt64 nonce, TItemContent value)
         {
             this.TableTransaction.Db.Add(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString(), value);
         }
@@ -228,7 +228,7 @@ namespace Trinity.ChannelSet
             this.TableTransaction.Db.Add(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid, value);
         }
 
-        public void UpdateTransaction(UInt64 nonce, TransactionTabelContent value)
+        public void UpdateTransaction<TItemContent>(UInt64 nonce, TItemContent value)
         {
             this.TableTransaction.Db.Update(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString(), value);
         }

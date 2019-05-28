@@ -215,7 +215,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             else if (this.IsRole1(this.Request.MessageBody.RoleIndex))
             {
                 // TODO: Read from the database
-                TransactionTabelContent transactionContent = this.GetChannelInterface().GetTransaction(this.Request.TxNonce);
+                TransactionFundingContent transactionContent = this.GetChannelInterface().GetTransaction<TransactionFundingContent>(this.Request.TxNonce);
                 if (null != transactionContent)
                 {
                     this.fundingTx = new FundingTx
@@ -296,7 +296,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             else if (IsRole1(this.Request.MessageBody.RoleIndex))
             {
                 // update this records of founder
-                TransactionTabelContent txUpdateContent = this.GetChannelInterface().TryGetTransaction(this.Request.TxNonce);
+                TransactionFundingContent txUpdateContent = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
                 if (null != txUpdateContent)
                 {
                     txUpdateContent.commitment.originalData = this.Request.MessageBody.Commitment;
@@ -311,7 +311,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private void AddTransaction(bool isPeer = false)
         {
-            TransactionTabelContent txContent = new TransactionTabelContent
+            TransactionFundingContent txContent = new TransactionFundingContent
             {
                 nonce = this.Request.TxNonce,
                 founder = new FundingSignTx(),
@@ -458,7 +458,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private void UpdateTransaction()
         {
-            TransactionTabelContent content = this.GetChannelInterface().TryGetTransaction(this.Request.TxNonce);
+            TransactionFundingContent content = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
 
             if (null == content)
             {

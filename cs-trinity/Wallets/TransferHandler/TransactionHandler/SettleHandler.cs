@@ -42,7 +42,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// </summary>
     public class SettleHandler : TransferHandler<Settle, SettleSignHandler, SettleSignHandler>
     {
-        private readonly TransactionTabelContent fundingTrade;
+        private readonly TransactionFundingContent fundingTrade;
         private readonly ChannelTableContent channelContent;
         private readonly NeoTransaction neoTransaction;
 
@@ -55,7 +55,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
             this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
                 this.Request.ChannelName, this.Request.MessageBody.AssetType);
-            this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
+            this.fundingTrade = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
             this.channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
 
             // Whatever happens, we set the channel settling when call this class
@@ -91,7 +91,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.ParsePubkeyPair(sender, receiver);
             this.SetChannelInterface(sender, receiver, channel, asset);
-            this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
+            this.fundingTrade = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
             this.channelContent = this.GetChannelInterface().TryGetChannel(channel);
 
             this.channelContent.balance.TryGetValue(this.Request.Sender, out long balance);
@@ -206,7 +206,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// </summary>
     public class SettleSignHandler : TransferHandler<SettleSign, VoidHandler, VoidHandler>
     {
-        private readonly TransactionTabelContent fundingTrade;
+        private readonly TransactionFundingContent fundingTrade;
         private readonly ChannelTableContent channelContent;
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
             this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
                 this.Request.ChannelName, this.Request.MessageBody.AssetType);
-            this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
+            this.fundingTrade = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
             this.channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
         }
 
@@ -247,7 +247,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.ParsePubkeyPair(sender, receiver);
             this.SetChannelInterface(sender, receiver, channel, asset);
-            this.fundingTrade = this.GetChannelInterface().TryGetTransaction(0);
+            this.fundingTrade = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
             this.channelContent = this.GetChannelInterface().TryGetChannel(channel);
         }
 

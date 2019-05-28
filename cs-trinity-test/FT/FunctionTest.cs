@@ -58,16 +58,16 @@ namespace TestTrinity
             //TransactionTabelSummary content = channel.GetTransaction("123456789");
             //Console.WriteLine("type = {0}, channel = {1}, nonce = {2}", content.txType, content.channel, content.nonce);
 
-            TransactionTabelContent txtcontent = new TransactionTabelContent()
+            TransactionFundingContent txtcontent = new TransactionFundingContent()
             {
                 nonce = 1,
                 monitorTxId = "0xtest_txid"
             };
             channel.AddTransaction(1, txtcontent);
 
-            TransactionTabelContent txContent = channel.GetTransaction(1);
+            TransactionFundingContent txContent = channel.GetTransaction<TransactionFundingContent>(1);
 
-            txContent = channel.TryGetTransaction(2);
+            txContent = channel.TryGetTransaction<TransactionFundingContent>(2);
 
             ChannelTableContent channelContent = new ChannelTableContent()
             {

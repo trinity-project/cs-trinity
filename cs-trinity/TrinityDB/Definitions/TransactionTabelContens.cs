@@ -36,22 +36,47 @@ using Trinity.Wallets.Templates.Definitions;
 namespace Trinity.TrinityDB.Definitions
 {
     [MessagePackObject(keyAsPropertyName: true)]
-    public class TransactionTabelContent
-    {
-        public UInt64 nonce;
-        public string monitorTxId;
-        public FundingSignTx founder;
-        public CommitmentSignTx commitment;// { get; set; }
-        public RevocableDeliverySignTx revocableDelivery;// { get; set; }
-        // public Dictionary<string, double> balance; // Not used this time
-        public string state;
-    }
-
-    [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionTabelSummary
     {
         public UInt64 nonce;// { get; set; }
         public string channel;// { get; set; }
         public string txType;
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class TransactionTabelContentBase
+    {
+        public UInt64 nonce;
+        public string monitorTxId;
+        public string state;
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class TransactionFundingContent : TransactionTabelContentBase
+    {
+        public FundingSignTx founder;
+        public CommitmentSignTx commitment;
+        public RevocableDeliverySignTx revocableDelivery;
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class TransactionRsmcContent : TransactionTabelContentBase
+    {
+        public CommitmentSignTx commitment;
+        public RevocableDeliverySignTx revocableDelivery;
+        public BreachRemedySignTx breachRemedy;
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class TransactionHtlcContent : TransactionTabelContentBase
+    {
+        public HtlcCommitSignTx commitment;
+        public HtlcRevocableDeliverySignTx revocableDelivery;
+        public HtlcExecutionSignTx HETX;
+        public HtlcExecutionDeliverySignTx HEDTX;
+        public HtlcExecutionRevocableDeliverySignTx HERDTX;
+        public HtlcTimoutSignTx HTTX;
+        public HtlcTimeoutDeliverySignTx HTDTX;
+        public HtlcTimeoutRevocableDelivertySignTx HTRDTX;
     }
 }

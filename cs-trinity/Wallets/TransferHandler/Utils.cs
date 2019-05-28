@@ -53,8 +53,7 @@ namespace Trinity.Wallets
             }
             catch (Exception ExpInfo)
             {
-                // TODO: Write to file later.
-                Console.WriteLine("Failed to set attribute<{0}> to {1}: {2}",
+                Log.Error("Failed to set attribute<{0}> to {1}: {2}",
                     name, typeof(TContext), ExpInfo);
             }
         }
@@ -69,7 +68,7 @@ namespace Trinity.Wallets
             catch (Exception ExpInfo)
             {
                 // TODO: Write to file later.
-                Console.WriteLine("Failed to get attribute<{0}> : {1}",
+                Log.Error("Failed to get attribute<{0}> : {1}",
                     name, ExpInfo);
             }
 

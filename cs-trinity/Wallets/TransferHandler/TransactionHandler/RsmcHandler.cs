@@ -43,7 +43,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private readonly Channel currentChannel = null;
         private readonly ChannelTableContent currentChannelInfo = null;
-        private readonly TransactionTabelContent fundingTrade = null;
+        private readonly TransactionFundingContent fundingTrade = null;
         private readonly long balance = 0;
         private readonly long peerBalance = 0;
 
@@ -80,7 +80,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.currentChannel = new Channel(channel, asset, sender, receiver);
             this.currentChannelInfo = this.currentChannel.TryGetChannel(channel);
-            this.fundingTrade = this.currentChannel.TryGetTransaction(fundingTradeNonce);
+            this.fundingTrade = this.currentChannel.TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
 
             if (null != this.currentChannelInfo
                 && this.currentChannelInfo.balance.TryGetValue(sender, out this.balance)
@@ -261,12 +261,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private void AddTransaction(bool isPeer = false)
         {
-            TransactionTabelContent txContent = new TransactionTabelContent
+            TransactionRsmcContent txContent = new TransactionRsmcContent
             {
                 nonce = this.Request.TxNonce,
                 commitment = new CommitmentSignTx(),
                 revocableDelivery = new RevocableDeliverySignTx(),
-
+                breachRemedy = new BreachRemedySignTx(),
                 state = EnumTransactionState.initial.ToString()
             };
             
@@ -295,7 +295,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private readonly Channel currentChannel = null;
         private readonly ChannelTableContent currentChannelInfo = null;
-        private readonly TransactionTabelContent fundingTrade = null;
+        private readonly TransactionFundingContent fundingTrade = null;
         private readonly long balance = 0;
         private readonly long peerBalance = 0;
 
@@ -328,7 +328,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.currentChannel = new Channel(channel, asset, sender, receiver);
             this.currentChannelInfo = this.currentChannel.TryGetChannel(channel);
-            this.fundingTrade = this.currentChannel.TryGetTransaction(fundingTradeNonce);
+            this.fundingTrade = this.currentChannel.TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
 
             if (null != this.currentChannelInfo
                 && this.currentChannelInfo.balance.TryGetValue(sender, out this.balance)
