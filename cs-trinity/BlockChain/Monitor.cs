@@ -45,7 +45,6 @@ namespace Trinity.BlockChain
         private readonly string netMagic;
         private string uri;
         private Channel channel;
-        private const uint maxRepeatNumbe = 10;
 
         public MonitorTransction(string uri, string magic)
         {
@@ -132,13 +131,10 @@ namespace Trinity.BlockChain
             //try to get txid repeatedly if list is null 
             while (txidList == null)
             {
-                Thread.Sleep(1000);
-                txidList = NeoInterface.GetBlockTxId(block);               
-                if (tryGetTxidNumber == maxRepeatNumbe)
-                {
-                    return;
-                }
+                Thread.Sleep(5000);
+                txidList = NeoInterface.GetBlockTxId(block);
                 tryGetTxidNumber++;
+                Log.Warn(">>>>>monitor block {0} with {1} times", block, tryGetTxidNumber);
             }
             foreach (string id in txidList)
             {               
