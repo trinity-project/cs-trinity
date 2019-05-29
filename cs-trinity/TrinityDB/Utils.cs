@@ -119,7 +119,6 @@ namespace Trinity.TrinityDB
         {
             if (TryGet(db, slice, item, out Slice itemvalue))
             {
-                // TODO: add logs here
                 Log.Fatal("Items {0} already exists in database:", item);
                 return;
             }
@@ -130,7 +129,6 @@ namespace Trinity.TrinityDB
         public static void Update<TValue>(this DB db, SliceBuilder slice, string item, TValue value)
         {
             WriteBatch batch = new WriteBatch();
-            string content = value.Serialize();
             batch.Put(slice, value.Serialize());
             db.Write(WriteOptions.Default, batch);
         }

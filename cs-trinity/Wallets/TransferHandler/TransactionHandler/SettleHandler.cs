@@ -84,10 +84,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 NetMagic = magic ?? this.GetNetMagic(),
                 MessageBody = new SettleBody(),
             };
-            this.Request.TxNonce = this.NextNonce(channel);
 
             this.ParsePubkeyPair(sender, receiver);
             this.SetChannelInterface(sender, receiver, channel, asset);
+            this.Request.TxNonce = this.NextNonce(channel);
             this.fundingTrade = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
             this.channelContent = this.GetChannelInterface().TryGetChannel(channel);
 

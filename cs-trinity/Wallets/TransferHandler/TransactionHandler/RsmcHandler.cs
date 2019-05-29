@@ -58,16 +58,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.RoleMax = 3;
 
-            // create RSMC request if role is 0
-            if (IsRole0(role) || IsRole1(role))
-            {
-                this.Request.TxNonce = this.NextNonce(channel);
-            }
-            else
-            {
-                this.Request.TxNonce = nonce;
-            }
-
             // Generate RSMC request.
             this.Request = new Rsmc
             {
@@ -87,6 +77,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             this.ParsePubkeyPair(sender, receiver);
             this.SetChannelInterface(sender, receiver, channel, asset);
+
+            // create RSMC request if role is 0
+            if (IsRole0(role) || IsRole1(role))
+            {
+                this.Request.TxNonce = this.NextNonce(channel);
+            }
+            else
+            {
+                this.Request.TxNonce = nonce;
+            }
 
             this.currentChannel = new Channel(channel, asset, sender, receiver);
             this.currentChannelInfo = this.currentChannel.TryGetChannel(channel);
