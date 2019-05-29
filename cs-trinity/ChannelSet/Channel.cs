@@ -133,7 +133,7 @@ namespace Trinity.ChannelSet
             }
             catch (Exception ExpInfo)
             {
-                Console.WriteLine("Failed to get summary of the channel: {0}. Exception: {1}", channel, ExpInfo);
+                Log.Fatal("Failed to get summary of the channel: {0}. Exception: {1}", channel, ExpInfo);
             }
 
             return null;

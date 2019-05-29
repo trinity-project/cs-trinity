@@ -42,7 +42,7 @@ namespace Trinity.TrinityDB
     public class ChannelModel : BaseModel
     {
         private readonly byte[] group;
-        private readonly byte[] peerGroup;
+        // private readonly byte[] peerGroup;
 
         public SliceBuilder keyword => SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
         public SliceBuilder bothKeyword => SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);

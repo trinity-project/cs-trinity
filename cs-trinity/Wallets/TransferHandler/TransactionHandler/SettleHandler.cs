@@ -24,6 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 using System;
+using System.Collections.Generic;
 
 using Neo.IO.Json;
 using Neo.Wallets;
@@ -83,21 +84,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 NetMagic = magic ?? this.GetNetMagic(),
                 MessageBody = new SettleBody(),
             };
-
-            if (this.NextNonce(channel, out UInt64 nonce))
-            {
-                this.Request.TxNonce = nonce;
-            }
+            this.Request.TxNonce = this.NextNonce(channel);
 
             this.ParsePubkeyPair(sender, receiver);
             this.SetChannelInterface(sender, receiver, channel, asset);
             this.fundingTrade = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
             this.channelContent = this.GetChannelInterface().TryGetChannel(channel);
 
-            this.channelContent.balance.TryGetValue(this.Request.Sender, out long balance);
-            this.channelContent.balance.TryGetValue(this.Request.Sender, out long peerBalance);
+            long balance = this.channelContent.balance;
+            long peerBalance = this.channelContent.peerBalance;
 
-            
 
             this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balance.ToString(),
                 this.GetPeerPubKey(), peerBalance.ToString(), this.fundingTrade.founder.originalData.addressFunding,
@@ -173,20 +169,22 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // makeup refund trade
             if (null == this.fundingTrade || null == this.channelContent)
             {
-                Console.WriteLine("No funding trade is found for channel: {}", this.Request.ChannelName);
+                Log.Error("No funding trade is found for channel: {0}", this.Request.ChannelName);
                 return false;
             }
 
             // Start to create refund trade
             if (!this.neoTransaction.CreateSettle(out TxContents refundTx))
             {
-                Console.WriteLine("Failed to create refunding trade for channel: {}", this.Request.ChannelName);
+                Log.Error("Failed to create refunding trade for channel: {0}", this.Request.ChannelName);
                 return false;
             }
 
             // set the message body
             this.Request.MessageBody.Settlement = refundTx;
-            this.Request.MessageBody.Balance = this.channelContent.balance;
+            this.Request.MessageBody.Balance = new Dictionary<string, long> {
+                { this.Request.Sender, this.channelContent.balance}, { this.Request.Receiver, this.channelContent.peerBalance }
+            };
             this.Request.MessageBody.AssetType = this.channelContent.asset;
 
             // Add txid for monitor
@@ -259,7 +257,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool FailStep()
         {
-            Console.WriteLine(this.Request.Error);
+            Log.Error(this.Request.Error);
             return true;
         }
 

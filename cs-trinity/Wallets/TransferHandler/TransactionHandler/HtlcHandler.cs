@@ -84,12 +84,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.fundingTrade = this.currentChannel.TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
 
             if (null != this.currentChannelInfo
-                && this.currentChannelInfo.balance.TryGetValue(sender, out this.balance)
-                && this.currentChannelInfo.balance.TryGetValue(receiver, out this.peerBalance)
                 && null != this.fundingTrade
                 && null != this.fundingTrade.founder.originalData.scriptFunding
                 && null != this.fundingTrade.founder.originalData.addressFunding)
             {
+                this.balance = this.currentChannelInfo.balance;
+                this.peerBalance = this.currentChannelInfo.peerBalance;
                 long[] balanceOfPeers = this.CalculateBalance(role, this.balance, this.peerBalance, payment);
                 this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balanceOfPeers[0].ToString(),
                             this.GetPeerPubKey(), balanceOfPeers[1].ToString(),
@@ -306,12 +306,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.fundingTrade = this.currentChannel.TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
 
             if (null != this.currentChannelInfo
-                && this.currentChannelInfo.balance.TryGetValue(sender, out this.balance)
-                && this.currentChannelInfo.balance.TryGetValue(receiver, out this.peerBalance)
                 && null != this.fundingTrade
                 && null != this.fundingTrade.founder.originalData.scriptFunding
                 && null != this.fundingTrade.founder.originalData.addressFunding)
             {
+                this.balance = this.currentChannelInfo.balance;
+                this.peerBalance = this.currentChannelInfo.peerBalance;
                 long[] balanceOfPeers = this.CalculateBalance(role, this.balance, this.peerBalance, payment);
                 this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balanceOfPeers[0].ToString(),
                             this.GetPeerPubKey(), balanceOfPeers[1].ToString(),

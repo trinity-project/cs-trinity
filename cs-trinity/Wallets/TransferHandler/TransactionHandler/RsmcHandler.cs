@@ -58,6 +58,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.RoleMax = 3;
 
+            // create RSMC request if role is 0
+            if (IsRole0(role) || IsRole1(role))
+            {
+                this.Request.TxNonce = this.NextNonce(channel);
+            }
+            else
+            {
+                this.Request.TxNonce = nonce;
+            }
+
+            // Generate RSMC request.
             this.Request = new Rsmc
             {
                 Sender = sender,
@@ -65,7 +76,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 ChannelName = channel,
                 AssetType = asset,
                 NetMagic = magic,
-                TxNonce = nonce,
 
                 MessageBody = new RsmcBody
                 {
@@ -83,12 +93,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.fundingTrade = this.currentChannel.TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
 
             if (null != this.currentChannelInfo
-                && this.currentChannelInfo.balance.TryGetValue(sender, out this.balance)
-                && this.currentChannelInfo.balance.TryGetValue(receiver, out this.peerBalance)
                 && null != this.fundingTrade
                 && null != this.fundingTrade.founder.originalData.scriptFunding
                 && null != this.fundingTrade.founder.originalData.addressFunding)
             {
+                this.balance = this.currentChannelInfo.balance;
+                this.peerBalance = this.currentChannelInfo.peerBalance;
                 long[] balanceOfPeers = this.CalculateBalance(role, this.balance, this.peerBalance, payment);
                 this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balanceOfPeers[0].ToString(),
                             this.GetPeerPubKey(), balanceOfPeers[1].ToString(),
@@ -120,13 +130,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 return false;
             }
 
-            // Add txid for monitor
-            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Commitment.txId,
-                this.Request.ChannelName, EnumTxType.FUNDING);
-
-            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.RevocableDelivery.txId,
-                this.Request.ChannelName, EnumTxType.COMMITMENT);
-
             return true;
         }
 
@@ -146,7 +149,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             if (this.IsIllegalRole(this.Request.MessageBody.RoleIndex))
             {
                 this.FailStep();
-                Console.WriteLine("Invalid nonce for Rsmc. Nonce: {0}", this.Request.MessageBody.RoleIndex);
+                Log.Error("Invalid nonce for Rsmc. Nonce: {0}", this.Request.MessageBody.RoleIndex);
                 return false;
             }
 
@@ -160,29 +163,24 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.SHandler.MakeTransaction();
             #endregion
 
-            #region New_Rsmchandler
-            if (this.IsRole0(this.Request.MessageBody.RoleIndex) 
-                || this.IsRole1(this.Request.MessageBody.RoleIndex)
-                || this.IsRole2(this.Request.MessageBody.RoleIndex))
-            {
-                // record the peer data to the database ??? update ???
-                this.AddTransaction(true);
+            // Add or update the data to the database
+            this.AddOrUpdateTransaction(true);
+            this.AddTransactionSummaryForRsmc();
 
-                // Send RSMC to peer
-                RsmcHandler rsmcHandler = new RsmcHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                        this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Value,
-                        this.Request.MessageBody.RoleIndex+1);
-                rsmcHandler.MakeTransaction();
-            }
-            #endregion
-            else if (this.IsRole3(this.Request.MessageBody.RoleIndex))
+            // Terminate RSMC when Role is equal to 3
+            if (this.IsTerminatedRole(this.Request.MessageBody.RoleIndex, out int newRole))
             {
-                // update 
-                this.AddTransaction(true);
+                Log.Info("Terminate current RSMC. Role index: {0}", this.Request.MessageBody.RoleIndex);
+                return true;
             }
             else
             {
-                Log.Error("Unkown Role index: {0}", this.Request.MessageBody.RoleIndex);
+                #region New_Rsmchandler
+                RsmcHandler rsmcHandler = new RsmcHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
+                            this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Value,
+                            newRole);
+                rsmcHandler.MakeTransaction();
+                #endregion
             }
 
             return true;
@@ -205,7 +203,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             if (this.IsIllegalRole(this.Request.MessageBody.RoleIndex))
             {
-                Console.WriteLine("Invalid nonce for Rsmc. Nonce: {0}", this.Request.TxNonce);
+                Log.Error("Invalid nonce for Rsmc. Nonce: {0}", this.Request.TxNonce);
                 return false;
             }
 
@@ -246,35 +244,69 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.Request.MessageBody.Commitment = this.commTx;
                 this.Request.MessageBody.RevocableDelivery = this.rdTx;
 
-                this.AddTransaction();
+                this.AddOrUpdateTransaction();
+
+                if (this.IsRole1(this.Request.MessageBody.RoleIndex))
+                {
+                    // Add channel summary information
+                    this.UpdateChannelSummaryContent(this.Request.ChannelName, this.Request.TxNonce, this.Request.Receiver);
+                }
             }
             else if (IsRole2(this.Request.MessageBody.RoleIndex) || IsRole3(this.Request.MessageBody.RoleIndex))
             {
-                this.neoTransaction.CreateBRTX(out this.brTx, this.Request.MessageBody.Commitment.txId);
+                TransactionRsmcContent txContent = this.GetChannelInterface().TryGetTransaction<TransactionRsmcContent>(this.Request.TxNonce-1);
+                if (null == txContent)
+                {
+                    Log.Error("Why no RSMC content is found with nonce: {0}", this.Request.TxNonce-1);
+                    return false;
+                }
+
+                this.neoTransaction.CreateBRTX(out this.brTx, txContent.commitment.originalData.txId);
                 this.Request.MessageBody.BreachRemedy = this.MakeupSignature(this.brTx);
-                
-                // TODO: update the transaction data to the database
             }
 
             return true;
         }
 
-        private void AddTransaction(bool isPeer = false)
+        private void AddOrUpdateTransaction(bool isPeer = false)
         {
-            TransactionRsmcContent txContent = new TransactionRsmcContent
+            TransactionRsmcContent txContent = this.GetChannelInterface().TryGetTransaction<TransactionRsmcContent>(this.Request.TxNonce);
+            bool isAdd = false;
+
+            if (null == txContent)
             {
-                nonce = this.Request.TxNonce,
-                commitment = new CommitmentSignTx(),
-                revocableDelivery = new RevocableDeliverySignTx(),
-                breachRemedy = new BreachRemedySignTx(),
-                state = EnumTransactionState.initial.ToString()
-            };
+                isAdd = true;
+                txContent = new TransactionRsmcContent
+                {
+                    nonce = this.Request.TxNonce,
+                    commitment = new CommitmentSignTx(),
+                    revocableDelivery = new RevocableDeliverySignTx(),
+                    breachRemedy = new BreachRemedySignTx(),
+                    state = EnumTransactionState.initial.ToString()
+                };
+            }
             
             // add peer information from the message
             if (isPeer)
             {
                 // Add commitment Tx id for monitoring
-                txContent.monitorTxId = this.Request.MessageBody.Commitment.txId;
+                if (this.IsRole0(this.Request.MessageBody.RoleIndex) || this.IsRole1(this.Request.MessageBody.RoleIndex))
+                {
+                    txContent.monitorTxId = this.Request.MessageBody.Commitment.txId;
+                    txContent.state = EnumTransactionState.confirming.ToString();
+                }
+                else
+                {
+                    txContent.breachRemedy = this.Request.MessageBody.BreachRemedy;
+                    txContent.state = EnumTransactionState.confirmed.ToString();
+
+                    // update the channel balance
+                    long[] balanceOfPeers = this.CalculateBalance(this.Request.MessageBody.RoleIndex, 
+                        this.currentChannelInfo.balance, this.currentChannelInfo.peerBalance, this.Request.MessageBody.Value);
+                    currentChannelInfo.balance = balanceOfPeers[1];
+                    currentChannelInfo.peerBalance = balanceOfPeers[2];
+                    this.GetChannelInterface().UpdateChannel(this.Request.ChannelName, currentChannelInfo);
+                }
             }
             else
             {
@@ -282,7 +314,34 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 txContent.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
             }
 
-            this.GetChannelInterface().AddTransaction(this.Request.TxNonce, txContent);
+            // Add transaction if no item exsited in leveldb
+            if (isAdd)
+            {
+                this.GetChannelInterface().AddTransaction(this.Request.TxNonce, txContent);
+            }
+            else
+            {
+                this.GetChannelInterface().UpdateTransaction(this.Request.TxNonce, txContent);
+            }
+        }
+
+        private void AddTransactionSummaryForRsmc()
+        {
+            if (this.IsRole0(this.Request.MessageBody.RoleIndex) || this.IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                // Add transaction summary for monitoring
+                this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Commitment.txId,
+                    this.Request.ChannelName, EnumTxType.COMMITMENT);
+
+                this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.RevocableDelivery.txId,
+                    this.Request.ChannelName, EnumTxType.REVOCABLE);
+            }
+            else
+            {
+                // Add BreachRemedy TxId for setting the current channel closed status.
+                this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.BreachRemedy.originalData.txId,
+                    this.Request.ChannelName, EnumTxType.BREACHREMEDY);
+            }
         }
     }
 
@@ -331,12 +390,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.fundingTrade = this.currentChannel.TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
 
             if (null != this.currentChannelInfo
-                && this.currentChannelInfo.balance.TryGetValue(sender, out this.balance)
-                && this.currentChannelInfo.balance.TryGetValue(receiver, out this.peerBalance)
                 && null != this.fundingTrade
                 && null != this.fundingTrade.founder.originalData.scriptFunding
                 && null != this.fundingTrade.founder.originalData.addressFunding)
             {
+                this.balance = this.currentChannelInfo.balance;
+                this.peerBalance = this.currentChannelInfo.peerBalance;
                 long[] balanceOfPeers = this.CalculateBalance(role, this.balance, this.peerBalance, payment);
                 this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balanceOfPeers[0].ToString(),
                             this.GetPeerPubKey(), balanceOfPeers[1].ToString(),
@@ -364,11 +423,25 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool FailStep()
         {
+            Log.Error("Fail to handle RsmcSign. Nonce: {0}, role: {1}", this.Request.TxNonce, this.Request.MessageBody.RoleIndex);
             return base.FailStep();
         }
 
         public override bool SucceedStep()
         {
+            if (this.IsRole0(this.Request.MessageBody.RoleIndex) || this.IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                // TODO: Verify the message body in future.
+
+                // update the transaction info
+                this.UpdateTransactionForRsmc();
+                
+                if (this.IsRole1(this.Request.MessageBody.RoleIndex))
+                {
+                    // Add channel summary information
+                    this.UpdateChannelSummaryContent(this.Request.ChannelName, this.Request.TxNonce, this.Request.Sender);
+                }
+            }
             return base.SucceedStep();
         }
 
@@ -385,6 +458,24 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public void SetTransactionErrorCode(TransactionErrorCode errCode)
         {
             this.Request.Error = errCode.ToString();
+        }
+
+        private bool UpdateTransactionForRsmc()
+        {
+            TransactionRsmcContent txContent = this.GetChannelInterface().TryGetTransaction<TransactionRsmcContent>(this.Request.TxNonce);
+            
+            if (null == txContent)
+            {
+                Log.Error("Fail to update RSMC transaction with nonce: {0}", this.Request.TxNonce);
+                return false;
+            }
+
+            txContent.commitment.txDataSign = this.Request.MessageBody.Commitment.txDataSign;
+            txContent.revocableDelivery.txDataSign = this.Request.MessageBody.RevocableDelivery.txDataSign;
+
+            this.GetChannelInterface().UpdateTransaction(this.Request.TxNonce, txContent);
+
+            return true;
         }
     }
 

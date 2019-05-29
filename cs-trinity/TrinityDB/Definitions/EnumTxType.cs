@@ -34,9 +34,15 @@ namespace Trinity.TrinityDB.Definitions
 {
     public enum EnumTxType : byte
     {
+        // For creating channel
         FUNDING = 0,
-        COMMITMENT = 0x1,
-        REVOCABLE = 0x2,
-        SETTLE=0xFF
+
+        // For RSMC transaction
+        COMMITMENT = 0x10,
+        REVOCABLE = 0x11,
+        BREACHREMEDY = 0x12,
+
+        // For closing channel
+        SETTLE =0xFF
     }
 }

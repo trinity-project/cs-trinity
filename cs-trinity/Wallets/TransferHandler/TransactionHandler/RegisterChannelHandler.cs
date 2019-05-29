@@ -169,14 +169,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 role = role.ToString(),
                 state = EnumChannelState.INIT.ToString(),
                 alive = 0,
-                deposit = new Dictionary<string, long> {
-                    { uri, this.Request.MessageBody.Deposit},
-                    { peerUri, this.Request.MessageBody.Deposit},
-                },
-                balance = new Dictionary<string, long> {
-                    { uri, this.Request.MessageBody.Deposit},
-                    { peerUri, this.Request.MessageBody.Deposit},
-                }
+
+                deposit = this.Request.MessageBody.Deposit,
+                peerDeposit = this.Request.MessageBody.Deposit,
+
+                balance = this.Request.MessageBody.Deposit,
+                peerBalance = this.Request.MessageBody.Deposit
             };
             this.GetChannelInterface().AddChannel(this.Request.ChannelName, content);
         }

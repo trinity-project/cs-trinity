@@ -68,6 +68,7 @@ namespace Trinity.Wallets.TransferHandler
 
         // 
         public const ulong fundingTradeNonce = 0;
+        private UInt64 latestNonce = 0;
 
         /// <summary>
         /// Virtual Method sets. Should be overwritten in child classes.
@@ -255,33 +256,38 @@ namespace Trinity.Wallets.TransferHandler
             this.channelDbInterface?.AddTransaction(txId, txContent);
         }
 
-        public bool CurrentNonce(string channel, out UInt64 nonce)
+        public void UpdateChannelSummaryContent(string channel, UInt64 nonce, string peerUri)
         {
-            nonce = 0;
-
-            ChannelSummaryContents content = this.channelDbInterface?.TryGetChannelSummary(channel);
-
-            if (null == content)
+            ChannelSummaryContents txContent = new ChannelSummaryContents
             {
-                Log.Error("Not found summary information for channel: {0}", channel);
-                return false;
-            }
+                nonce = nonce,
+                peer = peerUri,
+                type = null
+            };
 
-            nonce = content.nonce;
-            return true;
+            this.channelDbInterface?.UpdateChannelSummary(channel, txContent);
         }
 
-        public bool NextNonce(string channel, out UInt64 nonce)
+        public UInt64 CurrentNonce(string channel)
         {
-            nonce = 0;
-
-            if (this.CurrentNonce(channel, out UInt64 currentNonce))
+            if (0 != this.latestNonce)
             {
-                nonce = currentNonce + 1;
-                return true;
+                return this.latestNonce;
             }
 
-            return false;
+            ChannelSummaryContents content = this.channelDbInterface?.TryGetChannelSummary(channel);
+            if (null == content)
+            {
+                throw new Exception( string.Format("Not found summary information for channel: {0}", channel) );
+            }
+            this.latestNonce = content.nonce;
+
+            return this.latestNonce;
+        }
+
+        public UInt64 NextNonce(string channel)
+        {
+            return this.CurrentNonce(channel) + 1;
         }
 
         public long[] CalculateBalance(int role, long balance, long peerBalance, long payment)
@@ -332,6 +338,12 @@ namespace Trinity.Wallets.TransferHandler
         public bool IsRole3(int role)
         {
             return role.Equals(Role3);
+        }
+
+        public bool IsTerminatedRole(int role, out int newRole)
+        {
+            newRole = role + 1;
+            return this.IsIllegalRole(newRole);
         }
 
         public string Sign(string content)

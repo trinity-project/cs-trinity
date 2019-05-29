@@ -44,15 +44,17 @@ namespace Trinity.TrinityDB.Definitions
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class TransactionTabelContentBase
+    public class TransactionTabelContent
     {
         public UInt64 nonce;
         public string monitorTxId;
         public string state;
+        public long balance;
+        public long peerBalance;
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class TransactionFundingContent : TransactionTabelContentBase
+    public class TransactionFundingContent : TransactionTabelContent
     {
         public FundingSignTx founder;
         public CommitmentSignTx commitment;
@@ -60,7 +62,7 @@ namespace Trinity.TrinityDB.Definitions
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class TransactionRsmcContent : TransactionTabelContentBase
+    public class TransactionRsmcContent : TransactionTabelContent
     {
         public CommitmentSignTx commitment;
         public RevocableDeliverySignTx revocableDelivery;
@@ -68,7 +70,7 @@ namespace Trinity.TrinityDB.Definitions
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class TransactionHtlcContent : TransactionTabelContentBase
+    public class TransactionHtlcContent : TransactionTabelContent
     {
         public HtlcCommitSignTx commitment;
         public HtlcRevocableDeliverySignTx revocableDelivery;

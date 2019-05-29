@@ -47,7 +47,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         //private readonly double Deposit;
         //private readonly UInt64 Nonce;
 
-        private int RoleIndex;
         private FundingTx fundingTx;
         private CommitmentTx commTx;
         private RevocableDeliveryTx rdTx;
@@ -182,6 +181,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 // Update the channel to opening state
                 this.UpdateChannelState(this.Request.Receiver, this.Request.Sender, 
                     this.Request.ChannelName, EnumChannelState.OPENING);
+
+                // Add channel summary information
+                this.UpdateChannelSummaryContent(this.Request.ChannelName, this.Request.TxNonce, this.Request.Sender);
             }
             else {
                 Log.Error("Unkown Role index: {0}", this.Request.MessageBody.RoleIndex);
@@ -440,6 +442,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 // Update the channel to opening state
                 this.UpdateChannelState(this.Request.Receiver, this.Request.Sender,
                     this.Request.ChannelName, EnumChannelState.OPENING);
+
+                // Add channel summary information
+                this.UpdateChannelSummaryContent(this.Request.ChannelName, this.Request.TxNonce, this.Request.Sender);
             }
             return true;
         }

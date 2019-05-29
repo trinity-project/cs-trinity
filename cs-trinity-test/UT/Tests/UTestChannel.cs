@@ -86,12 +86,6 @@ namespace TestTrinity.UT.Tests
         {
             Assert.IsNotNull(channelEntry);
 
-            Dictionary<string, long> deposit = new Dictionary<string, long>
-            {
-                { uri, 10}, { peerUri, 10}
-            };
-
-
             ChannelTableContent channelContentItem = new ChannelTableContent
             {
                 channel = channelNameExample,
@@ -102,9 +96,10 @@ namespace TestTrinity.UT.Tests
                 role = EnumRole.FOUNDER.ToString(),
                 state = EnumChannelState.INIT.ToString(),
                 alive = 0,
-                deposit = deposit,
-                balance = deposit
-
+                deposit = 10,
+                peerDeposit = 10,
+                balance = 10,
+                peerBalance = 10
             };
             channelEntry.AddChannel(channelNameExample, channelContentItem);
         }
