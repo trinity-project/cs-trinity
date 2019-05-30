@@ -310,7 +310,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     txContent.state = EnumTransactionState.confirmed.ToString();
 
                     // update the channel balance
-                    long[] balanceOfPeers = this.CalculateBalance(this.Request.MessageBody.RoleIndex, 
+                    long[] balanceOfPeers = this.CalculateBalance(this.Request.MessageBody.RoleIndex,
                         this.currentChannelInfo.balance, this.currentChannelInfo.peerBalance, this.Request.MessageBody.Value);
                     this.currentChannelInfo.balance = balanceOfPeers[1];
                     this.currentChannelInfo.peerBalance = balanceOfPeers[2];
@@ -319,6 +319,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
             else
             {
+                long[] balanceOfPeers = this.CalculateBalance(this.Request.MessageBody.RoleIndex,
+                        this.currentChannelInfo.balance, this.currentChannelInfo.peerBalance, this.Request.MessageBody.Value);
+
+                txContent.balance = balanceOfPeers[1];
+                txContent.peerBalance = balanceOfPeers[2];
                 txContent.commitment.originalData = this.Request.MessageBody.Commitment;
                 txContent.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
             }
