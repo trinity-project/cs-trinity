@@ -311,7 +311,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
                     // update the channel balance
                     long[] balanceOfPeers = this.CalculateBalance(this.Request.MessageBody.RoleIndex,
-                        this.currentChannelInfo.balance, this.currentChannelInfo.peerBalance, this.Request.MessageBody.Value);
+                        this.currentChannelInfo.balance, this.currentChannelInfo.peerBalance, this.Request.MessageBody.Value, true);
                     this.currentChannelInfo.balance = balanceOfPeers[0];
                     this.currentChannelInfo.peerBalance = balanceOfPeers[1];
                     this.GetChannelInterface().UpdateChannel(this.Request.ChannelName, currentChannelInfo);
@@ -413,7 +413,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 this.balance = this.currentChannelInfo.balance;
                 this.peerBalance = this.currentChannelInfo.peerBalance;
-                long[] balanceOfPeers = this.CalculateBalance(role, this.balance, this.peerBalance, payment);
+                long[] balanceOfPeers = this.CalculateBalance(role, this.balance, this.peerBalance, payment, true);
                 this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balanceOfPeers[0].ToString(),
                             this.GetPeerPubKey(), balanceOfPeers[1].ToString(),
                             this.fundingTrade.founder.originalData.addressFunding,
