@@ -319,13 +319,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
             else
             {
-                long[] balanceOfPeers = this.CalculateBalance(this.Request.MessageBody.RoleIndex,
-                        this.currentChannelInfo.balance, this.currentChannelInfo.peerBalance, this.Request.MessageBody.Value);
+                if (this.IsRole0(this.Request.MessageBody.RoleIndex) || this.IsRole1(this.Request.MessageBody.RoleIndex))
+                {
+                    long[] balanceOfPeers = this.CalculateBalance(this.Request.MessageBody.RoleIndex,
+                            this.currentChannelInfo.balance, this.currentChannelInfo.peerBalance, this.Request.MessageBody.Value);
 
-                txContent.balance = balanceOfPeers[1];
-                txContent.peerBalance = balanceOfPeers[2];
-                txContent.commitment.originalData = this.Request.MessageBody.Commitment;
-                txContent.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
+                    txContent.balance = balanceOfPeers[1];
+                    txContent.peerBalance = balanceOfPeers[2];
+                    txContent.commitment.originalData = this.Request.MessageBody.Commitment;
+                    txContent.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
+                }
             }
 
             // Add transaction if no item exsited in leveldb
