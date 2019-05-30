@@ -114,6 +114,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
             this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
                 this.Request.ChannelName, this.Request.MessageBody.AssetType);
+
+            this.currentChannel = new Channel(this.Request.ChannelName, this.Request.MessageBody.AssetType,
+                this.Request.Receiver, this.Request.Sender);
+            this.currentChannelInfo = this.currentChannel.TryGetChannel(this.Request.ChannelName);
         }
 
         public override bool Handle()
@@ -154,14 +158,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // Send RsmcSign to peer
-            #region New_RsmcSignHandler
-            this.SHandler = new RsmcSignHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                    this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Value,
-                    this.Request.MessageBody.RoleIndex);
-            this.SHandler.MakeupCommitmentSignTx(this.Request.MessageBody.Commitment);
-            this.SHandler.MakeupRevocableDeliverySignTx(this.Request.MessageBody.RevocableDelivery);
-            this.SHandler.MakeTransaction();
-            #endregion
+            if (this.IsRole0(this.Request.MessageBody.RoleIndex) || this.IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                #region New_RsmcSignHandler
+                this.SHandler = new RsmcSignHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
+                        this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Value,
+                        this.Request.MessageBody.RoleIndex);
+                this.SHandler.MakeupCommitmentSignTx(this.Request.MessageBody.Commitment);
+                this.SHandler.MakeupRevocableDeliverySignTx(this.Request.MessageBody.RevocableDelivery);
+                this.SHandler.MakeTransaction();
+                #endregion
+            }
 
             // Add or update the data to the database
             this.AddOrUpdateTransaction(true);
@@ -262,6 +269,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 }
 
                 this.neoTransaction?.SetAddressRSMC(txContent.commitment.originalData.addressRSMC);
+                this.neoTransaction?.SetScripRSMC(txContent.commitment.originalData.scriptRSMC);
                 this.neoTransaction.CreateBRTX(out this.brTx, txContent.commitment.originalData.txId);
                 this.Request.MessageBody.BreachRemedy = this.MakeupSignature(this.brTx);
             }
@@ -304,8 +312,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     // update the channel balance
                     long[] balanceOfPeers = this.CalculateBalance(this.Request.MessageBody.RoleIndex, 
                         this.currentChannelInfo.balance, this.currentChannelInfo.peerBalance, this.Request.MessageBody.Value);
-                    currentChannelInfo.balance = balanceOfPeers[1];
-                    currentChannelInfo.peerBalance = balanceOfPeers[2];
+                    this.currentChannelInfo.balance = balanceOfPeers[1];
+                    this.currentChannelInfo.peerBalance = balanceOfPeers[2];
                     this.GetChannelInterface().UpdateChannel(this.Request.ChannelName, currentChannelInfo);
                 }
             }
