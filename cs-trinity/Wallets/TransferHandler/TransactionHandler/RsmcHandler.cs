@@ -261,6 +261,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     return false;
                 }
 
+                this.neoTransaction?.SetAddressRSMC(txContent.commitment.originalData.addressRSMC);
                 this.neoTransaction.CreateBRTX(out this.brTx, txContent.commitment.originalData.txId);
                 this.Request.MessageBody.BreachRemedy = this.MakeupSignature(this.brTx);
             }

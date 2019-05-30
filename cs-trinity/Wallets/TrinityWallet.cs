@@ -198,13 +198,13 @@ namespace Trinity
                     new FounderFailHandler(message).Handle();
                     break;
                 case "Rsmc":
-                    // new RsmcHandler(message).Handle();
+                    new RsmcHandler(message).Handle();
                     break;
                 case "RsmcSign":
-                    // new RsmcSignHandler(message).Handle();
+                    new RsmcSignHandler(message).Handle();
                     break;
                 case "RsmcFail":
-                    // new RsmcFailHandler(message).Handle();
+                    new RsmcFailHandler(message).Handle();
                     break;
                 case "Htlc":
                     // new HtlcHandler(message).Handle();
