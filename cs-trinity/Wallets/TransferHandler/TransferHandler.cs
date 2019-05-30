@@ -290,15 +290,30 @@ namespace Trinity.Wallets.TransferHandler
             return this.CurrentNonce(channel) + 1;
         }
 
-        public long[] CalculateBalance(int role, long balance, long peerBalance, long payment)
+        public long[] CalculateBalance(int role, long balance, long peerBalance, long payment, bool isPeer=false)
         {
             if (this.IsRole0(role) || this.IsRole2(role))
             {
-                return new long[2] { balance - payment, peerBalance + payment };
+                if (isPeer)
+                {
+                    return new long[2] { balance + payment, peerBalance - payment };
+                }
+                else
+                {
+                    return new long[2] { balance - payment, peerBalance + payment };
+                }
+                
             }
             else if (this.IsRole1(role) || this.IsRole3(role))
             {
-                return new long[2] { balance + payment, peerBalance - payment };
+                if (isPeer)
+                {
+                    return new long[2] { balance - payment, peerBalance + payment };
+                }
+                else
+                {
+                    return new long[2] { balance + payment, peerBalance - payment };
+                }
             }
             else
             {
