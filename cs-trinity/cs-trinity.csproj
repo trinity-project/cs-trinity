@@ -281,7 +281,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BlockChain\Funding.cs" />
     <Compile Include="BlockChain\NeoInterface.cs" />
     <Compile Include="BlockChain\Monitor.cs" />
     <Compile Include="BlockChain\NeoTransaction.cs" />

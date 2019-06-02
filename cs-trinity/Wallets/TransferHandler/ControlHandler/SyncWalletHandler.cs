@@ -108,10 +108,5 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
 
             this.Request.MessageBody.SetAttribute("Channel", ChannelInfo);
         }
-
-        public override void SetBodyAttribute<TValue>(string name, TValue value)
-        {
-            this.Request.MessageBody.SetAttribute(name, value);
-        }
     }
 }
