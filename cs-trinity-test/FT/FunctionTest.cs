@@ -36,6 +36,10 @@ using TestTrinity.FT.Tests;
 using Trinity;
 using Trinity.BlockChain;
 using Trinity.Wallets.Templates.Definitions;
+using Trinity.Network.RPC;
+using Trinity.Wallets.Templates.Messages;
+using Neo.IO.Json;
+using System.Text;
 
 namespace TestTrinity
 {
@@ -251,6 +255,28 @@ namespace TestTrinity
             TCCHHandler.WCCTestSyncWallet();
 
             //TCCHHandler.WCCTestTriggerCreateChannel();
+        }
+
+        public static void TestRpc()
+        {
+            string uri = "http://47.97.198.8:8077";
+        
+            GetRouterInfo content = new GetRouterInfo
+            {
+                Sender = "03745d64d8f1fd71c7dbb05dd043eaa94e114290642678e36d33ee5df23970e881@47.97.198.8:8089",
+                Receiver = "028ec43f00663b037e2c6d32e4cbe5052d6705bb6aa4e3b0a54f607550c2b54174@47.98.228.81:8089",
+
+                NetMagic = "195378745719990331",
+
+                MessageBody = new RouteInfoBody
+                {
+                    AssetType = "TNC",
+                    Value = 1,
+                }
+            };
+
+            string result = TrinityRpcRequest.Post<GetRouterInfo>(uri, content.MessageType, content);
+            Console.WriteLine(result);
         }
     }
 }
