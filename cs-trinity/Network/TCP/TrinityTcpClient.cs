@@ -220,10 +220,10 @@ namespace Trinity.Network.TCP
             message = new byte[0];
             byte[] buffer = new byte[bufferSize];
             int totalReceived = 0;
-            int readSize = bufferSize;
 
             // Parse the message header firstly
             int expectedLength = this.ReceiveHeader();
+            int readSize = expectedLength < bufferSize ? expectedLength : bufferSize;
 
             // read the message body until end each time.
             while (expectedLength > totalReceived)
