@@ -289,6 +289,7 @@
     <Compile Include="ChannelSet\Definitions\EnumChannelState.cs" />
     <Compile Include="ChannelSet\Definitions\EnumRole.cs" />
     <Compile Include="ChannelSet\Definitions\EnumTransactionState.cs" />
+    <Compile Include="Network\RPC\TrinityRcpRequest.cs" />
     <Compile Include="Network\RPC\TrinityRpcServer.cs" />
     <Compile Include="Network\Utils.cs" />
     <Compile Include="startTrinity.cs" />
@@ -305,6 +306,7 @@
     <Compile Include="Wallets\Templates\Definitions\HtlcTimoutTx.cs" />
     <Compile Include="Wallets\Templates\Definitions\TransactionType.cs" />
     <Compile Include="Wallets\Templates\Messages\HtlcFail.cs" />
+    <Compile Include="Wallets\Templates\Messages\RouteInfo.cs" />
     <Compile Include="Wallets\Templates\Messages\RsmcFail.cs" />
     <Compile Include="Wallets\TransferHandler\ControlHandler\PaymentLink.cs" />
     <Compile Include="Wallets\TrinityWallet.cs" />
