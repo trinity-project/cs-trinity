@@ -79,7 +79,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.SetChannelInterface(sender, receiver, channel, asset);
 
             // create RSMC request if role is 0
-            if (IsRole0(role) || IsRole1(role))
+            if (IsRole0(role))
             {
                 this.Request.TxNonce = this.NextNonce(channel);
             }
