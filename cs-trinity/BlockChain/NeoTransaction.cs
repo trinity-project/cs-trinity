@@ -377,7 +377,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="RDTX"> output the RDTX body </param>
         /// <returns></returns>
-        public bool CreateSenderRDTX(out RevocableDeliveryTx revocableDeliveryTx, string balance, string txId)
+        public bool CreateSenderRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string balance, string txId)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
@@ -397,7 +397,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
 
-            revocableDeliveryTx = new RevocableDeliveryTx
+            revocableDeliveryTx = new HtlcRevocableDeliveryTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 txId = tx.Hash.ToString().Strip("\""),
@@ -481,7 +481,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HTRDTX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHTRDTX(out RevocableDeliveryTx revocableDeliveryTx, string txId, string HtlcValue)
+        public bool CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx revocableDeliveryTx, string txId, string HtlcValue)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
@@ -501,7 +501,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
 
-            revocableDeliveryTx = new RevocableDeliveryTx
+            revocableDeliveryTx = new HtlcTimeoutRevocableDelivertyTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 txId = tx.Hash.ToString().Strip("\""),
@@ -570,7 +570,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="RDTX"> output the RDTX body </param>
         /// <returns></returns>
-        public bool CreateReceiverRDTX(out RevocableDeliveryTx revocableDeliveryTx, string balance, string txId)
+        public bool CreateReceiverRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string balance, string txId)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
@@ -590,7 +590,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
 
-            revocableDeliveryTx = new RevocableDeliveryTx
+            revocableDeliveryTx = new HtlcRevocableDeliveryTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 txId = tx.Hash.ToString().Strip("\""),
@@ -675,7 +675,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HERDTX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHERDTX(out RevocableDeliveryTx revocableDeliveryTx, string txId, string HtlcValue)
+        public bool CreateHERDTX(out HtlcTimeoutRevocableDelivertyTx revocableDeliveryTx, string txId, string HtlcValue)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
@@ -695,7 +695,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
 
-            revocableDeliveryTx = new RevocableDeliveryTx
+            revocableDeliveryTx = new HtlcTimeoutRevocableDelivertyTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 txId = tx.Hash.ToString().Strip("\""),
