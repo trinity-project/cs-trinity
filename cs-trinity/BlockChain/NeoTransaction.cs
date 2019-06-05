@@ -675,7 +675,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HERDTX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHERDTX(out HtlcTimeoutRevocableDelivertyTx revocableDeliveryTx, string txId, string HtlcValue)
+        public bool CreateHERDTX(out HtlcExecutionRevocableDeliveryTx revocableDeliveryTx, string txId, string HtlcValue)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
@@ -695,7 +695,7 @@ namespace Trinity.BlockChain
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
 
-            revocableDeliveryTx = new HtlcTimeoutRevocableDelivertyTx
+            revocableDeliveryTx = new HtlcExecutionRevocableDeliveryTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 txId = tx.Hash.ToString().Strip("\""),
