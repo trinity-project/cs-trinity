@@ -149,21 +149,38 @@ namespace Trinity.BlockChain
 
         public void ConductEvent(TransactionTabelSummary Summary)
         {
-            ChannelTableContent ChannelData;
-            switch (Summary.txType.ToLower())
-            {               
-                case "funding":
-                    ChannelData = channel.TryGetChannel(Summary.channel);
-                    ChannelData.state = EnumChannelState.OPENED.ToString();
-                    channel.UpdateChannel(Summary.channel, ChannelData);
-                    Log.Debug("Change {0} to OPENED state.", Summary.channel);
-                    break;
-                case "settle":
-                    ChannelData = channel.TryGetChannel(Summary.channel);
-                    ChannelData.state = EnumChannelState.SETTLED.ToString();
-                    channel.UpdateChannel(Summary.channel, ChannelData);
-                    Log.Debug("Change {0} to SETTLED state.", Summary.channel);
-                    break;
+            try
+            {
+                ChannelTableContent ChannelData = channel.TryGetChannel(Summary.channel);
+                if (null == ChannelData)
+                {
+                    Log.Error("Channel: {0} is not found for updating operation({1}).", Summary.channel, Summary.txType);
+                    return;
+                }
+
+                switch (Summary.txType.ToLower())
+                {
+                    case "funding":
+                        ChannelData.state = EnumChannelState.OPENED.ToString();
+                        Log.Debug("Change {0} to OPENED state.", Summary.channel);
+                        break;
+                    case "settle":
+                        ChannelData.state = EnumChannelState.SETTLED.ToString();
+                        
+                        Log.Debug("Change {0} to SETTLED state.", Summary.channel);
+                        break;
+                    default:
+                        Log.Debug("Unsuport transaction type -- {0} for trinity channel.", Summary.txType);
+                        return;
+                }
+
+                // update the channel data
+                channel.UpdateChannel(Summary.channel, ChannelData);
+            }
+            catch(Exception ExpInfo)
+            {
+                Log.Error("Exception occurred during update channel: {0}. Operation: {1}. Exception: {2}", 
+                    Summary?.channel, Summary?.txType, ExpInfo);
             }
         }
     }
