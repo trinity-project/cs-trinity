@@ -323,7 +323,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HCTX"> output the HCTX body </param>
         /// <returns></returns>
-        public bool CreateSenderHCTX(out HtlcCommitTx HCTX, string HtlcValue, string balance, string peerBalance, string HashR)
+        public bool CreateSenderHCTX(out HtlcCommitTx HCTX, string HtlcValue, string HashR)
         {
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.scriptHash, this.pubKey, this.peerScriptHash, this.peerPubkey, this.timestampString);
             Log.Debug("timestamp: {0}", this.timestampString);
@@ -351,9 +351,9 @@ namespace Trinity.BlockChain
 
             string opdataToHTLC = NeoInterface.CreateOpdata(this.addressFunding, this.addressHtlc, HtlcValue, this.assetId);
             Log.Debug("opdataToHTLC: {0}", opdataToHTLC);
-            string opdataToRsmc = NeoInterface.CreateOpdata(this.addressFunding, this.addressRsmc, balance, this.assetId);
+            string opdataToRsmc = NeoInterface.CreateOpdata(this.addressFunding, this.addressRsmc, this.balance, this.assetId);
             Log.Debug("opdataToRsmc: {0}", opdataToRsmc);
-            string OpdataToPeer = NeoInterface.CreateOpdata(this.addressFunding, this.peerAddress, peerBalance, this.assetId);
+            string OpdataToPeer = NeoInterface.CreateOpdata(this.addressFunding, this.peerAddress, this.peerBalance, this.assetId);
             Log.Debug("OpdataToPeer: {0}", OpdataToPeer);
 
             this.GetInvocationTransaction(out Transaction tx, opdataToRsmc + OpdataToPeer + opdataToHTLC, attributes);

@@ -47,9 +47,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private readonly long balance = 0;
         private readonly long peerBalance = 0;
 
+        private readonly string payment = null;
+        private readonly string hashcode = null;
+
         private readonly bool isHtlcValid = false;
 
-        private CommitmentTx commTx;
+        private HtlcCommitTx commTx;
         private RevocableDeliveryTx rdTx;
         private BreachRemedyTx brTx;
 
@@ -90,6 +93,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 this.balance = this.currentChannelInfo.balance;
                 this.peerBalance = this.currentChannelInfo.peerBalance;
+                this.hashcode = hashcode;
+                this.payment = payment.ToString();
                 long[] balanceOfPeers = this.CalculateBalance(role, this.balance, this.peerBalance, payment);
                 this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balanceOfPeers[0].ToString(),
                             this.GetPeerPubKey(), balanceOfPeers[1].ToString(),
@@ -237,7 +242,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             if (IsRole0(this.Request.MessageBody.RoleIndex) || IsRole1(this.Request.MessageBody.RoleIndex))
             {
                 // Create Commitment transaction
-                this.neoTransaction.CreateCTX(out this.commTx);
+                this.neoTransaction.CreateSenderHCTX(out this.commTx, this.payment, this.hashcode);
 
                 // create Revocable commitment transaction
                 this.neoTransaction.createRDTX(out this.rdTx, this.commTx.txId);
