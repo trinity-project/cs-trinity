@@ -377,7 +377,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="RDTX"> output the RDTX body </param>
         /// <returns></returns>
-        public bool CreateSenderRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string balance, string txId)
+        public bool CreateSenderRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
@@ -392,7 +392,7 @@ namespace Trinity.BlockChain
             new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
 
-            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.address, balance, this.assetId);
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.address, this.balance, this.assetId);
             Log.Debug("createRDTX opdata: {0}", opdata);
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);
@@ -516,7 +516,8 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HCTX"> output the HCTX body </param>
         /// <returns></returns>
-        public bool CreateReceiverHCTX(out HtlcCommitTx HCTX, string HtlcValue, string balance, string peerBalance, string HashR)
+        /// attention: balance is Receiver balance, peerBalance is Sender balance
+        public bool CreateReceiverHCTX(out HtlcCommitTx HCTX, string HtlcValue, string HashR)
         {
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
             Log.Debug("timestamp: {0}", this.timestampString);
@@ -544,9 +545,9 @@ namespace Trinity.BlockChain
 
             string opdataToHTLC = NeoInterface.CreateOpdata(this.addressFunding, this.addressHtlc, HtlcValue, this.assetId);
             Log.Debug("opdataToHTLC: {0}", opdataToHTLC);
-            string opdataToRsmc = NeoInterface.CreateOpdata(this.addressFunding, this.addressRsmc, peerBalance, this.assetId);
+            string opdataToRsmc = NeoInterface.CreateOpdata(this.addressFunding, this.addressRsmc, this.balance, this.assetId);
             Log.Debug("opdataToRsmc: {0}", opdataToRsmc);
-            string OpdataToSender = NeoInterface.CreateOpdata(this.addressFunding, this.address, balance, this.assetId);
+            string OpdataToSender = NeoInterface.CreateOpdata(this.addressFunding, this.peerAddress, this.peerBalance, this.assetId);
             Log.Debug("OpdataToSender: {0}", OpdataToSender);
 
             this.GetInvocationTransaction(out Transaction tx, opdataToRsmc + OpdataToSender + opdataToHTLC, attributes);
@@ -570,7 +571,8 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="RDTX"> output the RDTX body </param>
         /// <returns></returns>
-        public bool CreateReceiverRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string balance, string txId)
+        /// attention: balance is Receiver balance, peerBalance is Sender balance
+        public bool CreateReceiverRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
@@ -585,7 +587,7 @@ namespace Trinity.BlockChain
             new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.peerScriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
 
-            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.peerAddress, balance, this.assetId);
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.address, this.balance, this.assetId);
             Log.Debug("createRDTX opdata: {0}", opdata);
 
             this.GetInvocationTransaction(out Transaction tx, opdata, attributes);

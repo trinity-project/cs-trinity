@@ -53,7 +53,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private readonly bool isHtlcValid = false;
 
         private HtlcCommitTx commTx;
-        private RevocableDeliveryTx rdTx;
+        private HtlcRevocableDeliveryTx rdTx;
+        private HtlcExecutionDeliveryTx hedTx;
+        private HtlcTimoutTx htTx;
+        private HtlcTimeoutRevocableDelivertyTx htrdTx;
+
+        // TODO
         private BreachRemedyTx brTx;
 
         public HtlcHandler(string sender, string receiver, string channel, string asset,
@@ -239,20 +244,44 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // record the item to database
-            if (IsRole0(this.Request.MessageBody.RoleIndex) || IsRole1(this.Request.MessageBody.RoleIndex))
+            if (IsRole0(this.Request.MessageBody.RoleIndex))
             {
-                // Create Commitment transaction
+                // Create Htlc Commitment transaction
                 this.neoTransaction.CreateSenderHCTX(out this.commTx, this.payment, this.hashcode);
 
-                // create Revocable commitment transaction
-                this.neoTransaction.createRDTX(out this.rdTx, this.commTx.txId);
+                // create Htlc Revocable commitment transaction
+                this.neoTransaction.CreateSenderRDTX(out this.rdTx, this.commTx.txId);
+
+                // create HTLC execution delivery transaction
+                this.neoTransaction.CreateHEDTX(out this.hedTx, this.payment);
+
+                // create HTLC timeout transaction
+                this.neoTransaction.CreateHTTX(out this.htTx, this.payment);
+
+                // create Htlc timeout revocable commitment transaction
+                this.neoTransaction.CreateHTRDTX(out this.htrdTx, this.htTx.txId, this.payment);
 
                 // TODO: makeup message body
 
                 this.AddTransaction();
             }
-            else if (IsRole2(this.Request.MessageBody.RoleIndex) || IsRole3(this.Request.MessageBody.RoleIndex))
+            else if (IsRole1(this.Request.MessageBody.RoleIndex))
             {
+                // Create Htlc Commitment transaction
+                this.neoTransaction.CreateReceiverHCTX(out this.commTx, this.payment, this.hashcode);
+
+                // create Htlc Revocable commitment transaction
+                this.neoTransaction.CreateReceiverRDTX(out this.rdTx, this.commTx.txId);
+
+                // create HTLC execution delivery transaction
+                //this.neoTransaction.CreateHEDTX(out this.hedTx, this.payment);
+
+                // create HTLC timeout transaction
+                //this.neoTransaction.CreateHTTX(out this.htTx, this.payment);
+
+                // create Htlc timeout revocable commitment transaction
+                //this.neoTransaction.CreateHTRDTX(out this.htrdTx, this.htTx.txId, this.payment);
+
                 // TODO: update the transaction data to the database
             }
 
