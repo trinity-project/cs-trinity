@@ -239,7 +239,7 @@ namespace Trinity.Network.TCP
                 {
                     message = message.Concat(buffer.Take(recvLength)).ToArray();
                     totalReceived += recvLength;
-                    readSize = expectedLength - recvLength;
+                    readSize = expectedLength - totalReceived;
                 }
 
                 readSize = readSize < bufferSize ? readSize : bufferSize;
