@@ -38,13 +38,4 @@ namespace Trinity.Wallets.Templates.Definitions
         public string addressHTLC { get; set; }
         public string scriptHTLC { get; set; }
     }
-
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class HtlcCommitSignTx
-    {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txDataSign { get; set; }
-        public HtlcCommitTx originalData { get; set; }
-    }
 }

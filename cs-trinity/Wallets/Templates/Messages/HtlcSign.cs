@@ -39,11 +39,11 @@ namespace Trinity.Wallets.Templates.Messages
         public long Count { get; set; }
         public int RoleIndex { get; set; }
         public string HashR { get; set; }
-        public HtlcCommitSignTx HCTX { get; set; }
-        public HtlcRevocableDeliverySignTx RDTX { get; set; }
-        public HtlcTimoutSignTx HTTX { get; set; }
-        public HtlcTimeoutDeliverySignTx HTDTX { get; set; }
-        public HtlcTimeoutRevocableDelivertySignTx HTRDTX { get; set; }
+        public TxContentsSignGeneric<HtlcCommitTx> HCTX { get; set; }
+        public TxContentsSignGeneric<HtlcRevocableDeliveryTx> RDTX { get; set; }
+        public TxContentsSignGeneric<HtlcTimoutTx> HTTX { get; set; }
+        public TxContentsSignGeneric<HtlcTimeoutDeliveryTx> HTDTX { get; set; }
+        public TxContentsSignGeneric<HtlcTimeoutRevocableDelivertyTx> HTRDTX { get; set; }
 
     }
 

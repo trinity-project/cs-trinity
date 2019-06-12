@@ -36,13 +36,4 @@ namespace Trinity.Wallets.Templates.Definitions
         public string addressFunding { get; set; }
         public string scriptFunding { get; set; }
     }
-
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class FundingSignTx
-    {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txDataSign { get; set; }
-        public FundingTx originalData { get; set; }
-    }
 }

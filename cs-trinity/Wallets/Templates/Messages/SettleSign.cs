@@ -38,7 +38,7 @@ namespace Trinity.Wallets.Templates.Messages
     [MessagePackObject(keyAsPropertyName: true)]
     public class SettleSignBody
     {
-        public TxContentsSign Settlement { get; set; }
+        public TxContentsSignGeneric<TxContents> Settlement { get; set; }
         public Dictionary<string, long> Balance { get; set; }
         public string AssetType { get; set; }
     }

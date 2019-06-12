@@ -288,9 +288,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 txContent = new TransactionRsmcContent
                 {
                     nonce = this.Request.TxNonce,
-                    commitment = new CommitmentSignTx(),
-                    revocableDelivery = new RevocableDeliverySignTx(),
-                    breachRemedy = new BreachRemedySignTx(),
+                    commitment = new TxContentsSignGeneric<CommitmentTx>(),
+                    revocableDelivery = new TxContentsSignGeneric<RevocableDeliveryTx>(),
+                    breachRemedy = new TxContentsSignGeneric<BreachRemedyTx>(),
                     state = EnumTransactionState.initial.ToString()
                 };
             }

@@ -34,9 +34,9 @@ namespace Trinity.Wallets.Templates.Messages
     {
         public string AssetType { get; set; }
         public long Deposit { get; set; }
-        public FundingSignTx Founder { get; set; }
-        public CommitmentSignTx Commitment { get; set; }
-        public RevocableDeliverySignTx RevocableDelivery { get; set; }
+        public TxContentsSignGeneric<FundingTx> Founder { get; set; }
+        public TxContentsSignGeneric<CommitmentTx> Commitment { get; set; }
+        public TxContentsSignGeneric<RevocableDeliveryTx> RevocableDelivery { get; set; }
         public int RoleIndex { get; set; }
     }
 

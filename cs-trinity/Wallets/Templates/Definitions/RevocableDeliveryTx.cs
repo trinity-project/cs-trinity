@@ -34,13 +34,4 @@ namespace Trinity.Wallets.Templates.Definitions
         // Don't change these vriable name, if do so, it will cause to fail 
         // to handle the message
     }
-
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class RevocableDeliverySignTx
-    {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txDataSign { get; set; }
-        public RevocableDeliveryTx originalData { get; set; }
-    }
 }

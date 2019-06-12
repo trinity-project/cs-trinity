@@ -29,6 +29,15 @@ using MessagePack;
 namespace Trinity.Wallets.Templates.Definitions
 {
     [MessagePackObject(keyAsPropertyName: true)]
+    public class TxContentsSignGeneric<TContent>
+    {
+        // Don't change these vriable name, if do so, it will cause to fail 
+        // to handle the message
+        public string txDataSign { get; set; }
+        public TContent originalData { get; set; }
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
     public class TxContents
     {
         // Don't change these vriable name, if do so, it will cause to fail 
@@ -37,14 +46,5 @@ namespace Trinity.Wallets.Templates.Definitions
         public string txId { get; set; }
         public string witness { get; set; }
         public string timeAttribute { get; set; }
-    }
-
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class TxContentsSign
-    {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txDataSign { get; set; }
-        public TxContents originalData { get; set; }
     }
 }

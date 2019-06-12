@@ -32,13 +32,4 @@ namespace Trinity.Wallets.Templates.Definitions
     public class BreachRemedyTx : TxContents
     {
     }
-
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class BreachRemedySignTx
-    {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txDataSign { get; set; }
-        public TxContents originalData { get; set; }
-    }
 }

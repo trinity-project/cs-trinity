@@ -36,13 +36,4 @@ namespace Trinity.Wallets.Templates.Definitions
         public string addressRSMC { get; set; }
         public string scriptRSMC { get; set; }
     }
-
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class CommitmentSignTx
-    {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txDataSign { get; set; }
-        public CommitmentTx originalData { get; set; }
-    }
 }

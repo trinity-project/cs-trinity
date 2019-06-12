@@ -316,9 +316,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             TransactionFundingContent txContent = new TransactionFundingContent
             {
                 nonce = this.Request.TxNonce,
-                founder = new FundingSignTx(),
-                commitment = new CommitmentSignTx(),
-                revocableDelivery = new RevocableDeliverySignTx(),
+                founder = new TxContentsSignGeneric<FundingTx>(),
+                commitment = new TxContentsSignGeneric<CommitmentTx>(),
+                revocableDelivery = new TxContentsSignGeneric<RevocableDeliveryTx>(),
 
                 state = EnumTransactionState.initial.ToString()
             };

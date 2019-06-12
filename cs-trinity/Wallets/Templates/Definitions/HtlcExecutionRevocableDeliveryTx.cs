@@ -32,13 +32,4 @@ namespace Trinity.Wallets.Templates.Definitions
     public class HtlcExecutionRevocableDeliveryTx : TxContents
     {
     }
-
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class HtlcExecutionRevocableDeliverySignTx
-    {
-        // Don't change these vriable name, if do so, it will cause to fail 
-        // to handle the message
-        public string txDataSign { get; set; }
-        public HtlcExecutionRevocableDeliveryTx originalData { get; set; }
-    }
 }

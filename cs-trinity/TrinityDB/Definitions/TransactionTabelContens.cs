@@ -65,29 +65,29 @@ namespace Trinity.TrinityDB.Definitions
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionFundingContent : TransactionTabelContent
     {
-        public FundingSignTx founder;
-        public CommitmentSignTx commitment;
-        public RevocableDeliverySignTx revocableDelivery;
+        public TxContentsSignGeneric<FundingTx> founder;
+        public TxContentsSignGeneric<CommitmentTx> commitment;
+        public TxContentsSignGeneric<RevocableDeliveryTx> revocableDelivery;
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionRsmcContent : TransactionTabelContent
     {
-        public CommitmentSignTx commitment;
-        public RevocableDeliverySignTx revocableDelivery;
-        public BreachRemedySignTx breachRemedy;
+        public TxContentsSignGeneric<CommitmentTx> commitment;
+        public TxContentsSignGeneric<RevocableDeliveryTx> revocableDelivery;
+        public TxContentsSignGeneric<BreachRemedyTx> breachRemedy;
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionHtlcContent : TransactionTabelContent
     {
-        public HtlcCommitSignTx commitment;
-        public HtlcRevocableDeliverySignTx revocableDelivery;
-        public HtlcExecutionSignTx HETX;
-        public HtlcExecutionDeliverySignTx HEDTX;
-        public HtlcExecutionRevocableDeliverySignTx HERDTX;
-        public HtlcTimoutSignTx HTTX;
-        public HtlcTimeoutDeliverySignTx HTDTX;
-        public HtlcTimeoutRevocableDelivertySignTx HTRDTX;
+        public TxContentsSignGeneric<HtlcCommitTx> commitment;
+        public TxContentsSignGeneric<HtlcRevocableDeliveryTx> revocableDelivery;
+        public TxContentsSignGeneric<HtlcExecutionTx> HETX;
+        public TxContentsSignGeneric<HtlcExecutionDeliveryTx> HEDTX;
+        public TxContentsSignGeneric<HtlcExecutionRevocableDeliveryTx> HERDTX;
+        public TxContentsSignGeneric<HtlcTimoutTx> HTTX;
+        public TxContentsSignGeneric<HtlcTimeoutDeliveryTx> HTDTX;
+        public TxContentsSignGeneric<HtlcTimeoutRevocableDelivertyTx> HTRDTX;
     }
 }

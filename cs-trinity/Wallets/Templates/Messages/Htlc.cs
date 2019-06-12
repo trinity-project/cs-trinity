@@ -44,9 +44,9 @@ namespace Trinity.Wallets.Templates.Messages
         public string HashR { get; set; }
         public HtlcCommitTx HCTX { get; set; }
         public HtlcRevocableDeliveryTx RDTX { get; set; }
-        public HtlcExecutionSignTx HETX { get; set; }
-        public HtlcExecutionDeliverySignTx HEDTX { get; set; }
-        public HtlcExecutionRevocableDeliverySignTx HERDTX { get; set; }
+        public TxContentsSignGeneric<HtlcExecutionTx> HETX { get; set; }
+        public TxContentsSignGeneric<HtlcExecutionDeliveryTx> HEDTX { get; set; }
+        public TxContentsSignGeneric<HtlcExecutionRevocableDeliveryTx> HERDTX { get; set; }
         public HtlcTimoutTx HTTX { get; set; }
         public HtlcTimeoutDeliveryTx HTDTX { get; set; }
         public HtlcTimeoutRevocableDelivertyTx HTRDTX { get; set; }
