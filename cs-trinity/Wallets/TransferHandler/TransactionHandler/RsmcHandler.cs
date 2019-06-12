@@ -99,7 +99,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 this.balance = this.currentChannelInfo.balance;
                 this.peerBalance = this.currentChannelInfo.peerBalance;
-                long[] balanceOfPeers = this.CalculateBalance(role, this.balance, this.peerBalance, payment);
+                long[] balanceOfPeers = this.CalculateBalanceForRsmc(role, this.balance, this.peerBalance, payment);
                 this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balanceOfPeers[0].ToString(),
                             this.GetPeerPubKey(), balanceOfPeers[1].ToString(),
                             this.fundingTrade.founder.originalData.addressFunding,
@@ -310,7 +310,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     txContent.state = EnumTransactionState.confirmed.ToString();
 
                     // update the channel balance
-                    long[] balanceOfPeers = this.CalculateBalance(this.Request.MessageBody.RoleIndex,
+                    long[] balanceOfPeers = this.CalculateBalanceForRsmc(this.Request.MessageBody.RoleIndex,
                         this.currentChannelInfo.balance, this.currentChannelInfo.peerBalance, this.Request.MessageBody.Value, true);
                     this.currentChannelInfo.balance = balanceOfPeers[0];
                     this.currentChannelInfo.peerBalance = balanceOfPeers[1];
@@ -321,7 +321,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 if (this.IsRole0(this.Request.MessageBody.RoleIndex) || this.IsRole1(this.Request.MessageBody.RoleIndex))
                 {
-                    long[] balanceOfPeers = this.CalculateBalance(this.Request.MessageBody.RoleIndex,
+                    long[] balanceOfPeers = this.CalculateBalanceForRsmc(this.Request.MessageBody.RoleIndex,
                             this.currentChannelInfo.balance, this.currentChannelInfo.peerBalance, this.Request.MessageBody.Value);
 
                     txContent.balance = balanceOfPeers[0];
@@ -413,7 +413,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 this.balance = this.currentChannelInfo.balance;
                 this.peerBalance = this.currentChannelInfo.peerBalance;
-                long[] balanceOfPeers = this.CalculateBalance(role, this.balance, this.peerBalance, payment, true);
+                long[] balanceOfPeers = this.CalculateBalanceForRsmc(role, this.balance, this.peerBalance, payment, true);
                 this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balanceOfPeers[0].ToString(),
                             this.GetPeerPubKey(), balanceOfPeers[1].ToString(),
                             this.fundingTrade.founder.originalData.addressFunding,

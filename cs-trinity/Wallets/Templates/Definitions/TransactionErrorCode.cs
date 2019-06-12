@@ -42,6 +42,7 @@ namespace Trinity.Wallets.Templates.Definitions
         Invalid_ChannelName_Or_ID = 0x12,
         Invalid_NetMagic_ID = 0x13,
         Invalid_Nonce = 0x14,
+        Invalid_Role = 0x15,
 
         // Error Code for RegisterChannel Message
         RegisterChannel_Unkown_Error = 0x100,

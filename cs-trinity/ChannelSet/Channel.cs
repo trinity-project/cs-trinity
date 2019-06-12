@@ -182,7 +182,7 @@ namespace Trinity.ChannelSet
 
         public TransactionTabelSummary GetTransaction(string txid)
         {
-            Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid);
+            Slice txContent = this.TableTransaction.Db.Get(this.TableTransaction.txIdGroup.Add(txid.ToBytesUtf8()), txid);
             if (null != txContent.ToString())
             {
                 return txContent.ToString().Deserialize<TransactionTabelSummary>();
@@ -204,7 +204,7 @@ namespace Trinity.ChannelSet
 
         public TransactionTabelSummary TryGetTransaction(string txid)
         {
-            if (this.TableTransaction.Db.TryGet(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid, out Slice txContent))
+            if (this.TableTransaction.Db.TryGet(this.TableTransaction.txIdGroup.Add(txid.ToBytesUtf8()), txid, out Slice txContent))
             {
                 return txContent.ToString().Deserialize<TransactionTabelSummary>();
             }
@@ -225,7 +225,7 @@ namespace Trinity.ChannelSet
 
         public void AddTransaction(string txid, TransactionTabelSummary value)
         {
-            this.TableTransaction.Db.Add(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid, value);
+            this.TableTransaction.Db.Add(this.TableTransaction.txIdGroup.Add(txid.ToBytesUtf8()), txid, value);
         }
 
         public void UpdateTransaction<TItemContent>(UInt64 nonce, TItemContent value)
@@ -240,10 +240,45 @@ namespace Trinity.ChannelSet
 
         public void DeleteTransaction(string txid)
         {
-            this.TableTransaction.Db.Delete(this.TableTransaction.txid.Add(txid.ToBytesUtf8()), txid);
+            this.TableTransaction.Db.Delete(this.TableTransaction.txIdGroup.Add(txid.ToBytesUtf8()), txid);
         }
 
+        /// =============================================================================================
+        /// record the HashR-R pair
+        public TransactionTabelHLockPair TryGetTransactionHLockPair(string hashcode)
+        {
+            if (this.TableTransaction.Db.TryGet(
+                this.TableTransaction.txHashPairGroup.Add(hashcode.ToBytesUtf8()), hashcode, out Slice txContent))
+            {
+                return txContent.ToString().Deserialize<TransactionTabelHLockPair>();
+            }
 
+            return null;
+        }
+
+        public void AddTransactionHLockPair(string hashcode, TransactionTabelHLockPair value)
+        {
+            this.TableTransaction.Db.Add(this.TableTransaction.txHashPairGroup.Add(hashcode.ToBytesUtf8()), hashcode, value);
+        }
+
+        public void UpdateTransactionHLockPair(string hashcode, TransactionTabelHLockPair value)
+        {
+            if (null != this.TryGetTransactionHLockPair(hashcode))
+            {
+                this.TableTransaction.Db.Update(this.TableTransaction.txHashPairGroup.Add(hashcode.ToBytesUtf8()), hashcode, value);
+            }
+            else
+            {
+                Log.Error("Failed to update HTLC Lock pair with HashR: {0} since HLockPair not found!", hashcode);
+            }
+        }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="value"></param>
         public void AddBlockHeight(string uri, uint value)
         {
             this.TableBlock.Db.Update(this.TableBlock.keyword, uri, value);

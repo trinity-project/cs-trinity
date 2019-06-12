@@ -24,18 +24,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using MessagePack;
+using Trinity.Wallets.Templates.Definitions;
 
 namespace Trinity.Wallets.Templates.Messages
 {
+    /// <summary>
+    /// This file define the HtlcSign Message Body.
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class HtlcSignBody
+    {
+        public string AssetType { get; set; }
+        public long Count { get; set; }
+        public int RoleIndex { get; set; }
+        public string HashR { get; set; }
+        public HtlcCommitSignTx HCTX { get; set; }
+        public HtlcRevocableDeliverySignTx RDTX { get; set; }
+        public HtlcTimoutSignTx HTTX { get; set; }
+        public HtlcTimeoutDeliverySignTx HTDTX { get; set; }
+        public HtlcTimeoutRevocableDelivertySignTx HTRDTX { get; set; }
+
+    }
+
     [MessagePackObject(keyAsPropertyName:true)]
-    public class HtlcSign : Htlc
+    public class HtlcSign : Header<HtlcSignBody>
     {
         public string Error { get; set; }
         public string Comments { get; set; }

@@ -290,37 +290,76 @@ namespace Trinity.Wallets.TransferHandler
             return this.CurrentNonce(channel) + 1;
         }
 
-        public long[] CalculateBalance(int role, long balance, long peerBalance, long payment, bool isPeer=false)
+        private long[] CalculateBalanceForRsmc(long balance, long peerBalance, long payment, bool isPeer = false, bool isH2R = false)
         {
-            if (this.IsRole0(role) || this.IsRole2(role))
+            if (isPeer)
             {
-                if (isPeer)
+                if (isH2R)
                 {
-                    return new long[2] { balance + payment, peerBalance - payment };
+                    return new long[2] { balance + payment, peerBalance };
                 }
                 else
-                {
-                    return new long[2] { balance - payment, peerBalance + payment };
-                }
-                
-            }
-            else if (this.IsRole1(role) || this.IsRole3(role))
-            {
-                if (isPeer)
-                {
-                    return new long[2] { balance - payment, peerBalance + payment };
-                }
-                else
-                {
+                { 
                     return new long[2] { balance + payment, peerBalance - payment };
                 }
             }
             else
             {
-                throw new Exception(string.Format("Invalid role: {0}", role));
+                if (isH2R)
+                {
+                    return new long[2] { balance, peerBalance + payment };
+                }
+                else
+                {
+                    return new long[2] { balance - payment, peerBalance + payment };
+                }
             }
         }
-        
+
+        public long[] CalculateBalanceForRsmc(int role, long balance, long peerBalance, long payment, bool isPeer=false, bool isH2R=false)
+        {
+            if (this.IsRole0(role) || this.IsRole2(role))
+            {
+                return this.CalculateBalanceForRsmc(balance, peerBalance, payment, isPeer, isH2R);
+            }
+            else if (this.IsRole1(role) || this.IsRole3(role))
+            {
+                return this.CalculateBalanceForRsmc(balance, peerBalance, payment, !isPeer, isH2R);
+            }
+            else
+            {
+                throw new Exception(string.Format("Invalid role: {0} for RSMC transaction", role));
+            }
+        }
+
+        private long[] CalculateBalanceForHtlc(long balance, long peerBalance, long payment, bool isPeer = false)
+        {
+            if (isPeer)
+            {
+                return new long[2] { balance , peerBalance - payment };
+            }
+            else
+            {
+                return new long[2] { balance - payment, peerBalance };
+            }
+        }
+
+        public long[] CalculateBalanceForHtlc(int role, long balance, long peerBalance, long payment, bool isPeer = false)
+        {
+            if (this.IsRole0(role))
+            {
+                return this.CalculateBalanceForHtlc(balance, peerBalance, payment, isPeer);
+            }
+            else if (this.IsRole1(role))
+            {
+                return this.CalculateBalanceForHtlc(balance, peerBalance, payment, !isPeer);
+            }
+            else
+            {
+                throw new Exception(string.Format("Invalid role: {0} for RSMC transaction", role));
+            }
+        }
+
         /// <summary>
         /// Trinity Transaction Role define here.
         /// </summary>
@@ -395,6 +434,78 @@ namespace Trinity.Wallets.TransferHandler
             return new RevocableDeliverySignTx
             {
                 txDataSign = txDataSign,
+                originalData = txContent
+            };
+        }
+
+        public virtual HtlcCommitSignTx MakeupSignature(HtlcCommitTx txContent)
+        {
+            return new HtlcCommitSignTx
+            {
+                txDataSign = this.Sign(txContent.txData),
+                originalData = txContent
+            };
+        }
+
+        public virtual HtlcRevocableDeliverySignTx MakeupSignature(HtlcRevocableDeliveryTx txContent)
+        {
+            return new HtlcRevocableDeliverySignTx
+            {
+                txDataSign = this.Sign(txContent.txData),
+                originalData = txContent
+            };
+        }
+
+        public virtual HtlcExecutionSignTx MakeupSignature(HtlcExecutionTx txContent)
+        {
+            return new HtlcExecutionSignTx
+            {
+                txDataSign = this.Sign(txContent.txData),
+                originalData = txContent
+            };
+        }
+
+        public virtual HtlcExecutionDeliverySignTx MakeupSignature(HtlcExecutionDeliveryTx txContent)
+        {
+            return new HtlcExecutionDeliverySignTx
+            {
+                txDataSign = this.Sign(txContent.txData),
+                originalData = txContent
+            };
+        }
+        
+        public virtual HtlcExecutionRevocableDeliverySignTx MakeupSignature(HtlcExecutionRevocableDeliveryTx txContent)
+        {
+            return new HtlcExecutionRevocableDeliverySignTx
+            {
+                txDataSign = this.Sign(txContent.txData),
+                originalData = txContent
+            };
+        }
+
+        public virtual HtlcTimoutSignTx MakeupSignature(HtlcTimoutTx txContent)
+        {
+            return new HtlcTimoutSignTx
+            {
+                txDataSign = this.Sign(txContent.txData),
+                originalData = txContent
+            };
+        }
+
+        public virtual HtlcTimeoutDeliverySignTx MakeupSignature(HtlcTimeoutDeliveryTx txContent)
+        {
+            return new HtlcTimeoutDeliverySignTx
+            {
+                txDataSign = this.Sign(txContent.txData),
+                originalData = txContent
+            };
+        }
+
+        public virtual HtlcTimeoutRevocableDelivertySignTx MakeupSignature(HtlcTimeoutRevocableDelivertyTx txContent)
+        {
+            return new HtlcTimeoutRevocableDelivertySignTx
+            {
+                txDataSign = this.Sign(txContent.txData),
                 originalData = txContent
             };
         }

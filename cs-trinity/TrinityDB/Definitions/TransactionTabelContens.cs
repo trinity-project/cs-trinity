@@ -40,7 +40,16 @@ namespace Trinity.TrinityDB.Definitions
     {
         public UInt64 nonce;// { get; set; }
         public string channel;// { get; set; }
-        public string txType;
+        public string txType; // mapping to EnumTxType
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class TransactionTabelHLockPair
+    {
+        public UInt64 nonce;// { get; set; }
+        public string channel;// { get; set; }
+        public string txType; // mapping to EnumTxType
+        public string rcode;
     }
 
     [MessagePackObject(keyAsPropertyName: true)]

@@ -24,6 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System.Collections.Generic;
+
 using MessagePack;
 
 using Trinity.Wallets.Templates.Definitions;
@@ -42,7 +44,9 @@ namespace Trinity.Wallets.Templates.Messages
         public string HashR { get; set; }
         public HtlcCommitTx HCTX { get; set; }
         public HtlcRevocableDeliveryTx RDTX { get; set; }
-        public HtlcExecutionDeliveryTx HEDTX { get; set; }
+        public HtlcExecutionSignTx HETX { get; set; }
+        public HtlcExecutionDeliverySignTx HEDTX { get; set; }
+        public HtlcExecutionRevocableDeliverySignTx HERDTX { get; set; }
         public HtlcTimoutTx HTTX { get; set; }
         public HtlcTimeoutDeliveryTx HTDTX { get; set; }
         public HtlcTimeoutRevocableDelivertyTx HTRDTX { get; set; }
@@ -52,7 +56,7 @@ namespace Trinity.Wallets.Templates.Messages
     [MessagePackObject(keyAsPropertyName: true)]
     public class Htlc : Header<HtlcBody>
     {
-        public string Router { get; set; }
+        public List<string> Router { get; set; }
         public string Next { get; set; }
     }
 }
