@@ -217,9 +217,28 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
+        public override bool VerifySignature()
+        {
+            if (IsRole2(this.Request.MessageBody.RoleIndex) || IsRole3(this.Request.MessageBody.RoleIndex))
+            {
+                bool verifyBRtxSign = NeoInterface.VerifySignature(this.Request.MessageBody.BreachRemedy.originalData.txData,
+                                                                   this.Request.MessageBody.BreachRemedy.txDataSign,
+                                                                   this.GetPeerPubKey());
+
+                if (!verifyBRtxSign)
+                {
+                    Log.Error("Verification signature failed for index {0}", this.Request.MessageBody.RoleIndex);
+                    return false;
+                }
+                Log.Info("Verification signature success for index {0}", this.Request.MessageBody.RoleIndex);
+                return true;
+            }
+            return true;
+        }
+
         public override bool Verify()
         {
-            return this.VerifyRoleIndex();
+            return (this.VerifyRoleIndex() && this.VerifySignature());
         }
 
         public override bool MakeupMessage()
@@ -493,6 +512,32 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.GetChannelInterface().UpdateTransaction(this.Request.TxNonce, txContent);
 
             return true;
+        }
+
+        public override bool VerifySignature()
+        {
+            TransactionFundingContent content = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
+
+            bool verifyCTxSign = NeoInterface.VerifySignature(content.commitment.originalData.txData,
+                                                              this.Request.MessageBody.Commitment.txDataSign,
+                                                              this.GetPeerPubKey());
+
+            bool verifyRDTxSign = NeoInterface.VerifySignature(content.revocableDelivery.originalData.txData,
+                                                               this.Request.MessageBody.RevocableDelivery.txDataSign,
+                                                               this.GetPeerPubKey());
+
+            if (!(verifyCTxSign && verifyRDTxSign))
+            {
+                Log.Error("Verification signature wrong for C_TX : {0}, RD_TX : {1}", verifyCTxSign.ToString(), verifyRDTxSign.ToString());
+                return false;
+            }
+            Log.Info("Verification signature for C_TX : {0}, RD_TX : {1}", verifyCTxSign.ToString(), verifyRDTxSign.ToString());
+            return true;
+        }
+
+        public override bool Verify()
+        {
+            return this.VerifySignature();
         }
     }
 

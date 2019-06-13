@@ -231,13 +231,14 @@ namespace Trinity.BlockChain
             return Bytes2HexString(newdata);// data1.Concat(data2).ToArray();
         }
 
-        public static bool VerifySignature(string messageData, string signatureData, byte[] pubkey)
+        public static bool VerifySignature(string messageData, string signatureData, string pubkey)
         {
             //unity dotnet不完整，不能用dotnet自带的ecdsa
+            byte[] publicKey = HexString2Bytes(pubkey);
 
             var message = HexString2Bytes(messageData);
             var signature = HexString2Bytes(signatureData);
-            var PublicKey = Neo.Cryptography.ECC.ECPoint.DecodePoint(pubkey, Neo.Cryptography.ECC.ECCurve.Secp256r1);
+            var PublicKey = Neo.Cryptography.ECC.ECPoint.DecodePoint(publicKey, Neo.Cryptography.ECC.ECCurve.Secp256r1);
             var ecdsa = new Neo.Cryptography.ECC.ECDsa(PublicKey);
             var b1 = signature.Take(32).Reverse().Concat(new byte[] { 0x00 }).ToArray();
             var b2 = signature.Skip(32).Reverse().Concat(new byte[] { 0x00 }).ToArray();

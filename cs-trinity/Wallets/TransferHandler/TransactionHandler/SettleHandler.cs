@@ -290,5 +290,25 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.Request.Error = error.ToString();
         }
+
+        public override bool VerifySignature()
+        {
+            bool verifySettleTxSign = NeoInterface.VerifySignature(this.Request.MessageBody.Settlement.originalData.txData,
+                                                                   this.Request.MessageBody.Settlement.txDataSign,
+                                                                   this.GetPeerPubKey());
+
+            if (!verifySettleTxSign)
+            {
+                Log.Error("Verification settle signature failed");
+                return false;
+            }
+            Log.Info("Verification settle signature successed");
+            return true;
+        }
+
+        public override bool Verify()
+        {
+            return this.VerifySignature();
+        }
     }
 }
