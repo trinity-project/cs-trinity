@@ -120,11 +120,11 @@ namespace TestTrinity
 
             NeoTransaction neoTransaction1 = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
             Console.WriteLine("---------Sender_HCTX---------");
-            neoTransaction1.CreateSenderHCTX(out HtlcCommitTx hctx, HtlcValue, balance, peerBalance, HashR);
+            neoTransaction1.CreateSenderHCTX(out HtlcCommitTx hctx, HtlcValue, HashR);
             Log.Debug("HCTX: {0}", hctx.Serialize());
 
             Log.Debug("---------Sender_RDTX---------");
-            neoTransaction1.CreateSenderRDTX(out RevocableDeliveryTx RevocableDeliveryTx, balance, hctx.txId);
+            neoTransaction1.CreateSenderRDTX(out HtlcRevocableDeliveryTx RevocableDeliveryTx, hctx.txId);
             Log.Debug("RDTX: {0}", RevocableDeliveryTx.Serialize());
 
             Log.Debug("---------HEDTX---------");
@@ -136,7 +136,7 @@ namespace TestTrinity
             Log.Debug("HTTX: {0}", HTTX.Serialize());
 
             Log.Debug("---------HTRDTX---------");
-            neoTransaction1.CreateHTRDTX(out RevocableDeliveryTx RevocableDeliveryTx1, HTTX.txId, HtlcValue);
+            neoTransaction1.CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx RevocableDeliveryTx1, HTTX.txId, HtlcValue);
             Log.Debug("HTRDTX: {0}", RevocableDeliveryTx1.Serialize());
 
         }
@@ -168,11 +168,11 @@ namespace TestTrinity
 
             NeoTransaction neoTransaction1 = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
             Console.WriteLine("---------Receiver_HCTX---------");
-            neoTransaction1.CreateReceiverHCTX(out HtlcCommitTx hctx, HtlcValue, balance, peerBalance, HashR);
+            neoTransaction1.CreateReceiverHCTX(out HtlcCommitTx hctx, HtlcValue, HashR);
             Log.Debug("HCTX: {0}", hctx.Serialize());
 
             Log.Debug("---------Receiver_RDTX---------");
-            neoTransaction1.CreateReceiverRDTX(out RevocableDeliveryTx RevocableDeliveryTx, peerBalance, hctx.txId);
+            neoTransaction1.CreateReceiverRDTX(out HtlcRevocableDeliveryTx RevocableDeliveryTx, hctx.txId);
             Log.Debug("RDTX: {0}", RevocableDeliveryTx.Serialize());
 
             Log.Debug("---------HTDTX---------");
@@ -184,7 +184,7 @@ namespace TestTrinity
             Log.Debug("HETX: {0}", HETX.Serialize());
 
             Log.Debug("---------HERDTX---------");
-            neoTransaction1.CreateHERDTX(out RevocableDeliveryTx RevocableDeliveryTx1, HETX.txId, HtlcValue);
+            neoTransaction1.CreateHERDTX(out HtlcExecutionRevocableDeliveryTx RevocableDeliveryTx1, HETX.txId, HtlcValue);
             Log.Debug("CreateHERDTX: {0}", RevocableDeliveryTx1.Serialize());
 
         }
@@ -277,6 +277,35 @@ namespace TestTrinity
 
             string result = TrinityRpcRequest.Post<GetRouterInfo>(uri, content.MessageType, content);
             Console.WriteLine(result);
+        }
+
+        public static void TestSignAndVefifySign()
+        {
+            //Make signature
+            string originData = "123";
+            string signedData = null;
+            string privateKey = "f78b197acdbee24e3bfbd06c375913752a7307cd0c60e042752412af365a8482";
+            string publicKey = "022949376faacb0c6783da8ab63548926cb3a2e8d786063a449833f927fa8853f0";
+
+            byte[] privateByte = NeoInterface.HexString2Bytes(privateKey);
+            byte[] publicByte = NeoInterface.HexString2Bytes(publicKey);
+
+            signedData = NeoInterface.Sign(originData, privateByte);
+            Console.WriteLine(signedData);
+
+            bool verifyResult = NeoInterface.VerifySignature(originData, signedData, publicByte);
+            Console.WriteLine(verifyResult.ToString());
+            
+
+            // Verify signature
+            string originData1 = "d101a00400e1f50514d4c3f3dc1498733ce4b726db8546a83502a891c214296ac124021a71c449a9bad320c16429b08ad6ee53c1087472616e7366657267f1dfcf0051ec48ec95c8d0569e0b95075d099d84f10400e1f50514b1fdddf658ce5ff9f83e66ede2f333ecfcc0463e14296ac124021a71c449a9bad320c16429b08ad6ee53c1087472616e7366657267f1dfcf0051ec48ec95c8d0569e0b95075d099d84f100000000000000000220296ac124021a71c449a9bad320c16429b08ad6eef00873d73ab53340d7410000";
+            string signedData1 = "107c164222d5abf1702982a5fc04fdec904c995a89b55f1549e38e45596b56cb039821262706c2d03da76c4c651ec1c731d8c089534f9e4a7f57cf953cb98ce0";
+
+            string publicKey1 = "022949376faacb0c6783da8ab63548926cb3a2e8d786063a449833f927fa8853f0";
+
+            byte[] publicByte1 = NeoInterface.HexString2Bytes(publicKey1);
+            bool verifyResult1 = NeoInterface.VerifySignature(originData1, signedData1, publicByte1);
+            Console.WriteLine(verifyResult1.ToString());
         }
     }
 }
