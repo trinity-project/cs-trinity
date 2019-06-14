@@ -748,7 +748,7 @@ namespace Trinity.BlockChain
         }
 
         //根据Vout计算input
-        public static CoinReference[] createInput(List<string> listData)
+        public static CoinReference[] getInputFormVout(List<string> listData)
         {
             if (listData == null)
             {
@@ -759,37 +759,51 @@ namespace Trinity.BlockChain
             foreach (string vinData in listData)
             {
                 Vin vin = vinData.Deserialize<Vin>();
-                CoinReference input = new CoinReference
-                {
-                    PrevHash = UInt256.Parse(vin.txid),
-                    PrevIndex = vin.n
-                };
-
+                CoinReference input = createInput(vin.txid, vin.n); 
                 inputList.Add(input);
-                //string inputData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(input));
-                //inputList.Add(inputData);
             }
             CoinReference[] inputArray = inputList.ToArray();
             return inputArray;
         }
 
+        public static CoinReference createInput(string txid, ushort n)
+        {
+            CoinReference input = new CoinReference
+            {
+                PrevHash = UInt256.Parse(txid),
+                PrevIndex = n
+            };
+
+            return input;
+        }
+
+        public static CoinReference[] createInputsData(string txid, ushort n)
+        {
+            List<CoinReference> inputList = new List<CoinReference> { };
+            CoinReference input = createInput(txid, n);
+            inputList.Add(input);
+            CoinReference[] inputArray = inputList.ToArray();
+            return inputArray;
+        }
+
         //计算output
-        public static TransactionOutput[] createOutput(string _assetId, uint _amount, string address, bool refunding = false)
+        public static TransactionOutput[] createOutput(string _assetId, string _amount, string address, bool refunding = false)
         {
             UInt256 assetId = UInt256.Parse(_assetId);
+            uint uAmount = uint.Parse(_amount);
             Fixed8 amount;
 
-            if (0 == _amount && refunding)
+            if (0 == uAmount && refunding)
             {
                 return null;
             }
-            else if (0 == _amount)
+            else if (0 == uAmount)
             {
                 amount = Fixed8.Zero;
             }
             else
             {
-                amount = Fixed8.FromDecimal(_amount);
+                amount = Fixed8.FromDecimal(uAmount);
             }
             UInt160 address_hash = ToScriptHash1(address);
 
