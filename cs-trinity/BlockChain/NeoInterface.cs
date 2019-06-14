@@ -746,5 +746,62 @@ namespace Trinity.BlockChain
             }
             return listData;
         }
+
+        //根据Vout计算input
+        public static CoinReference[] createInput(List<string> listData)
+        {
+            if (listData == null)
+            {
+                return null;
+            }
+
+            List<CoinReference> inputList = new List<CoinReference> { };
+            foreach (string vinData in listData)
+            {
+                Vin vin = vinData.Deserialize<Vin>();
+                CoinReference input = new CoinReference
+                {
+                    PrevHash = UInt256.Parse(vin.txid),
+                    PrevIndex = vin.n
+                };
+
+                inputList.Add(input);
+                //string inputData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(input));
+                //inputList.Add(inputData);
+            }
+            CoinReference[] inputArray = inputList.ToArray();
+            return inputArray;
+        }
+
+        //计算output
+        public static TransactionOutput[] createOutput(string _assetId, uint _amount, string address, bool refunding = false)
+        {
+            UInt256 assetId = UInt256.Parse(_assetId);
+            Fixed8 amount;
+
+            if (0 == _amount && refunding)
+            {
+                return null;
+            }
+            else if (0 == _amount)
+            {
+                amount = Fixed8.Zero;
+            }
+            else
+            {
+                amount = Fixed8.FromDecimal(_amount);
+            }
+            UInt160 address_hash = ToScriptHash1(address);
+
+            List<TransactionOutput> outputList = new List<TransactionOutput> { };
+            TransactionOutput Output = new TransactionOutput
+            {
+                AssetId = assetId,
+                Value = amount,
+                ScriptHash = address_hash,
+            };
+            outputList.Add(Output);
+            return outputList.ToArray();
+        }
     }
 }
