@@ -166,30 +166,21 @@ namespace Trinity.BlockChain
 
             uint amount = uint.Parse(balance) + uint.Parse(peerBalance);
             TransactionOutput[] output_to_fundingaddress = createOutput(assetId, amount, contract.Address);
-            long self_inputs_total = 0;
-            long other_inputs_total = 0;
-            foreach (string item in vouts)
-            {
-                Vin vin = item.Deserialize<Vin>();
-                self_inputs_total += vin.value;
-            }
-            foreach (string item in peerVouts)
-            {
-                Vin vin = item.Deserialize<Vin>();
-                other_inputs_total += vin.value;
-            }
+
+            long totalInputs = getTotalInputs(vouts);
+            long peerTotalInputs = getTotalInputs(peerVouts);
 
             // Assembly transaction with output for both wallets
             TransactionOutput[] output_to_self = new TransactionOutput[] { };
             TransactionOutput[] output_to_other = new TransactionOutput[] { };
-            if (self_inputs_total > long.Parse(balance))
+            if (totalInputs > long.Parse(balance))
             {
-                uint selfBalance = uint.Parse((self_inputs_total - long.Parse(balance)).ToString());
+                uint selfBalance = uint.Parse((totalInputs - long.Parse(balance)).ToString());
                 output_to_self = createOutput(assetId, selfBalance, address);
             }
-            if (other_inputs_total > long.Parse(balance))
+            if (peerTotalInputs > long.Parse(balance))
             {
-                uint otherBalance = uint.Parse((other_inputs_total - long.Parse(balance)).ToString());
+                uint otherBalance = uint.Parse((peerTotalInputs - long.Parse(balance)).ToString());
                 output_to_other = createOutput(assetId, otherBalance, peerAddress);
             }
             TransactionOutput[] outputsData = output_to_fundingaddress.Concat(output_to_self).Concat(output_to_other).ToArray();
@@ -225,7 +216,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="commitmentTx"></param>
         /// <returns></returns>
-        public bool CreateCTX(out CommitmentTx commitmentTx)
+        public bool CreateCTX()
         {
             //TODO
 
@@ -238,7 +229,7 @@ namespace Trinity.BlockChain
         /// <param name="revocableDeliveryTx"></param>
         /// <param name="txId"></param>
         /// <returns></returns>
-        public bool createRDTX(out RevocableDeliveryTx revocableDeliveryTx, string txId)
+        public bool createRDTX()
         {
             //TODO
 
@@ -250,7 +241,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="txId"></param>
         /// <returns></returns>
-        public bool CreateBRTX(out BreachRemedyTx breachRemedyTx, string txId)
+        public bool CreateBRTX()
         {
             //TODO
 
@@ -262,7 +253,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="settleTx"></param>
         /// <returns></returns>
-        public bool CreateSettle(out TxContents settleTx)
+        public bool CreateSettle()
         {
             //TODO
 
@@ -274,7 +265,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HCTX"> output the HCTX body </param>
         /// <returns></returns>
-        public bool CreateSenderHCTX(out HtlcCommitTx HCTX, string HtlcValue, string HashR)
+        public bool CreateSenderHCTX()
         {
             //TODO
 
@@ -286,7 +277,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="RDTX"> output the RDTX body </param>
         /// <returns></returns>
-        public bool CreateSenderRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId)
+        public bool CreateSenderRDTX()
         {
             //TODO
 
@@ -298,7 +289,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HEDTX"> output the HEDTX body </param>
         /// <returns></returns>
-        public bool CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, string HtlcValue)
+        public bool CreateHEDTX()
         {
             //TODO
 
@@ -310,7 +301,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HTTX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHTTX(out HtlcTimoutTx HTTX, string HtlcValue)
+        public bool CreateHTTX()
         {
             //TODO
 
@@ -322,7 +313,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HTRDTX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx revocableDeliveryTx, string txId, string HtlcValue)
+        public bool CreateHTRDTX()
         {
             //TODO
 
@@ -335,7 +326,7 @@ namespace Trinity.BlockChain
         /// <param name="HCTX"> output the HCTX body </param>
         /// <returns></returns>
         /// attention: balance is Receiver balance, peerBalance is Sender balance
-        public bool CreateReceiverHCTX(out HtlcCommitTx HCTX, string HtlcValue, string HashR)
+        public bool CreateReceiverHCTX()
         {
             //TODO
 
@@ -348,7 +339,7 @@ namespace Trinity.BlockChain
         /// <param name="RDTX"> output the RDTX body </param>
         /// <returns></returns>
         /// attention: balance is Receiver balance, peerBalance is Sender balance
-        public bool CreateReceiverRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId)
+        public bool CreateReceiverRDTX()
         {
             //TODO
 
@@ -361,7 +352,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HTDTX"> output the HTDTX body </param>
         /// <returns></returns>
-        public bool CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, string HtlcValue)
+        public bool CreateHTDTX()
         {
             //TODO
 
@@ -373,7 +364,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HETX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHETX(out HtlcExecutionTx HETX, string HtlcValue)
+        public bool CreateHETX()
         {
             //TODO
 
@@ -385,7 +376,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HERDTX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHERDTX(out HtlcExecutionRevocableDeliveryTx revocableDeliveryTx, string txId, string HtlcValue)
+        public bool CreateHERDTX()
         {
             //TODO
 
@@ -409,6 +400,27 @@ namespace Trinity.BlockChain
                 newRandom.Append(constant[rd.Next(16)]);
             }
             return newRandom.ToString();
+        }
+
+        /// <summary>
+        /// It helps Trinity to count total inputs from Vouts.
+        /// </summary>
+        /// <param name="vouts"> vouts that needs to be counted </param>
+        /// <returns></returns>
+        public long getTotalInputs(List<string> vouts)
+        {
+            long inputs_total = 0;
+            if (null == vouts)
+            {
+                return 0;
+            }
+            foreach (string item in vouts)
+            {
+                Vin vin = item.Deserialize<Vin>();
+                inputs_total += vin.value;
+            }
+
+            return inputs_total;
         }
 
         public void SetAddressFunding(string addressFunding)
