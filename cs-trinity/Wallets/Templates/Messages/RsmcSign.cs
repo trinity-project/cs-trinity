@@ -47,7 +47,7 @@ namespace Trinity.Wallets.Templates.Messages
     }
 
     [MessagePackObject(keyAsPropertyName:true)]
-    public class RsmcSign : Header<RsmcSignBody>
+    public class RsmcSign : TransactionPlaneGeneric<RsmcSignBody>
     {
         public string Error { get; set; }
         public string Comments { get; set; }

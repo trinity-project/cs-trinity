@@ -45,11 +45,8 @@ namespace Trinity.Wallets.Templates.Messages
     }
 
     [MessagePackObject(keyAsPropertyName:true)]
-    public class SyncWalletData
+    public class SyncWalletData : ControlHeader
     {
-        public string MessageType { get { return this.GetType().Name; } }
-        public string Sender { get; set; }
-        public string NetMagic { get; set; }
         public SyncWalletBody MessageBody { get; set; }
     }
 }

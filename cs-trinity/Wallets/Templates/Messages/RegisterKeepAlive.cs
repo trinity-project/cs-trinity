@@ -34,9 +34,8 @@ using MessagePack;
 namespace Trinity.Wallets.Templates.Messages
 {
     [MessagePackObject(keyAsPropertyName:true)]
-    public class RegisterKeepAlive
+    public class RegisterKeepAlive : ControlHeader
     {
-        public string MessageType { get { return this.GetType().Name; } }
         public string Ip { get; set; }
         public string Protocol { get; set; }
     }

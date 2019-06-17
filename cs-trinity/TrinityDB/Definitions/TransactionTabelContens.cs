@@ -40,16 +40,19 @@ namespace Trinity.TrinityDB.Definitions
     {
         public UInt64 nonce;// { get; set; }
         public string channel;// { get; set; }
-        public string txType; // mapping to EnumTxType
+        public string txType; // mapping to EnumTransactionType
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionTabelHLockPair
     {
-        public UInt64 nonce;// { get; set; }
-        public string channel;// { get; set; }
-        public string txType; // mapping to EnumTxType
         public string rcode;
+        public UInt64 nonce;            // rsmc nonce
+        public UInt64 htlcNonce;        // htlcNonce
+        public string incomeChannel;    // { get; set; }
+        public string paymentChannel;   // { get; set; }
+        public long income;     // How much gains
+        public long payment;    // How much is paid
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
@@ -57,9 +60,10 @@ namespace Trinity.TrinityDB.Definitions
     {
         public UInt64 nonce;
         public string monitorTxId;
-        public string state;
+        public string state;    // mapping to 
         public long balance;
         public long peerBalance;
+        public bool isPayer;
     }
 
     [MessagePackObject(keyAsPropertyName: true)]

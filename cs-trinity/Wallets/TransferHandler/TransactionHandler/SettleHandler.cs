@@ -41,26 +41,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// <summary>
     /// Class Handler for handling Settle Message
     /// </summary>
-    public class SettleHandler : TransferHandler<Settle, SettleSignHandler, SettleSignHandler>
+    public class SettleHandler : TransactionHandler<Settle, SettleSign, SettleHandler, SettleSignHandler>
     {
-        private readonly TransactionFundingContent fundingTrade;
-        private readonly ChannelTableContent channelContent;
-        private readonly NeoTransaction neoTransaction;
-
         /// <summary>
         /// Constructors
         /// </summary>
         /// <param name="message"></param>
         public SettleHandler(string message) : base(message)
         {
-            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
-            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
-                this.Request.ChannelName, this.Request.MessageBody.AssetType);
-            this.fundingTrade = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
-            this.channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
-
             // Whatever happens, we set the channel settling when call this class
-            this.UpdateChannelState(this.Request.Receiver, this.Request.Sender,
+            this.UpdateChannelState(this.GetUri(), this.GetPeerUri(),
                 this.Request.ChannelName, EnumChannelState.SETTLING);
         }
 
@@ -72,37 +62,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="channel"></param>
         /// <param name="asset"></param>
         /// <param name="magic"></param>
-        public SettleHandler(string sender, string receiver, string channel, string asset, string magic) : base()
+        public SettleHandler(string sender, string receiver, string channel, string asset, string magic)
+            : base(sender, receiver, channel, asset, magic, 0, 0)
         {
-            
-            this.Request = new Settle
-            {
-                Sender = sender,
-                Receiver = receiver,
-                ChannelName = channel,
-                AssetType = asset,
-                NetMagic = magic ?? this.GetNetMagic(),
-                MessageBody = new SettleBody(),
-            };
-
-            this.ParsePubkeyPair(sender, receiver);
-            this.SetChannelInterface(sender, receiver, channel, asset);
-            this.Request.TxNonce = this.NextNonce(channel);
-            this.fundingTrade = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
-            this.channelContent = this.GetChannelInterface().TryGetChannel(channel);
-
-            long balance = this.channelContent.balance;
-            long peerBalance = this.channelContent.peerBalance;
-
-
-            this.neoTransaction = new NeoTransaction(asset.ToAssetId(), this.GetPubKey(), balance.ToString(),
-                this.GetPeerPubKey(), peerBalance.ToString(), this.fundingTrade.founder.originalData.addressFunding,
-                this.fundingTrade.founder.originalData.scriptFunding);
-
             // Whatever happens, we set the channel settling when call this class
             this.UpdateChannelState(this.Request.Receiver, this.Request.Sender,
                 this.Request.ChannelName, EnumChannelState.SETTLING);
-
         }
 
         public override bool Handle()
@@ -116,47 +81,14 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             // Add txid for monitor
             this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Settlement.txId,
-                this.Request.ChannelName, EnumTxType.SETTLE);
-
-            return true;
-        }
-
-        public override bool FailStep()
-        {
-            this.FHandler = new SettleSignHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                    this.Request.MessageBody.AssetType, this.Request.NetMagic);
-
-            this.FHandler.MakeTransaction();
+                this.Request.ChannelName, EnumTransactionType.SETTLE);
 
             return true;
         }
 
         public override bool SucceedStep()
         {
-
-            // create SettleSign handler for send response to peer
-            this.SHandler = new SettleSignHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                    this.Request.MessageBody.AssetType, this.Request.NetMagic);
-            this.SHandler.MakeupRefundTxSign(this.Request.MessageBody.Settlement);
-
-            // send SettleSign to peer
-            this.SHandler.MakeTransaction();
-
-            return true;
-        }
-
-        public override bool MakeTransaction()
-        {
-            // makeup the message
-            if (this.MakeupRefundTx())
-            {
-                bool ret = base.MakeTransaction();
-                
-                Log.Debug("{0} to send Settle Message.", ret?"Succeed":"Fail");
-                return ret;
-            }
-
-            return false;
+            return new SettleSignHandler(this.Request).MakeTransaction();
         }
 
         public override bool MakeupMessage()
@@ -166,13 +98,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private bool MakeupRefundTx()
         {
-            // makeup refund trade
-            if (null == this.fundingTrade || null == this.channelContent)
-            {
-                Log.Error("No funding trade is found for channel: {0}", this.Request.ChannelName);
-                return false;
-            }
-
             // Start to create refund trade
             if (!this.neoTransaction.CreateSettle(out TxContents refundTx))
             {
@@ -183,16 +108,41 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // set the message body
             this.Request.MessageBody.Settlement = refundTx;
             this.Request.MessageBody.Balance = new Dictionary<string, long> {
-                { this.Request.Sender, this.channelContent.balance}, { this.Request.Receiver, this.channelContent.peerBalance }
+                { this.Request.Sender, this.GetCurrentChannel().balance}, { this.Request.Receiver, this.GetCurrentChannel().peerBalance }
             };
-            this.Request.MessageBody.AssetType = this.channelContent.asset;
+            this.Request.MessageBody.AssetType = this.GetCurrentChannel().asset;
 
             // Add txid for monitor
             this.AddTransactionSummary(this.Request.TxNonce, refundTx.txId,
-                this.Request.ChannelName, EnumTxType.SETTLE);
+                this.Request.ChannelName, EnumTransactionType.SETTLE);
 
             return true;
         }
+
+        #region Settle_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeMessageBody(string asset, long payment, int role = 0, string hashcode = null, string rcode = null)
+        {
+            this.Request.MessageBody = new SettleBody
+            {
+                AssetType = asset,
+            };
+        }
+
+        public override void SetLocalsFromBody()
+        {
+            // RoleIndex Related
+            this.RoleMax = 0;
+            this.currentRole = 0; // record current role Index
+
+            // Asset type from message body for adaptor old version trinity
+            this.AssetType = this.onGoingRequest.MessageBody.AssetType;
+        }
+
+        public override SettleSignHandler CreateResponseHndl(string errorCode = "Ok")
+        {
+            return new SettleSignHandler(this.Request, errorCode);
+        }
+        #endregion
     }
 
 
@@ -202,23 +152,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// <summary>
     /// Class Handler for handling SettleSign Message
     /// </summary>
-    public class SettleSignHandler : TransferHandler<SettleSign, VoidHandler, VoidHandler>
+    public class SettleSignHandler : TransactionHandler<SettleSign, Settle, SettleHandler, SettleSignHandler>
     {
-        private readonly TransactionFundingContent fundingTrade;
-        private readonly ChannelTableContent channelContent;
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="message"></param>
-        public SettleSignHandler(string message) : base(message)
-        {
-            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
-            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
-                this.Request.ChannelName, this.Request.MessageBody.AssetType);
-            this.fundingTrade = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
-            this.channelContent = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
-        }
+        public SettleSignHandler(string message) : base(message) { }
 
         /// <summary>
         /// 
@@ -228,25 +168,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="channel"></param>
         /// <param name="asset"></param>
         /// <param name="magic"></param>
-        public SettleSignHandler(string sender, string receiver, string channel, string asset, string magic) : base()
+        public SettleSignHandler(Settle message, string errorCode = "Ok") : base(message, 0)
         {
-            this.RoleMax = 1;
-
-            this.Request = new SettleSign
-            {
-                Sender = sender,
-                Receiver = receiver,
-                ChannelName = channel,
-                AssetType = asset,
-                NetMagic = magic,
-                
-                MessageBody = new SettleSignBody()
-            };
-
-            this.ParsePubkeyPair(sender, receiver);
-            this.SetChannelInterface(sender, receiver, channel, asset);
-            this.fundingTrade = this.GetChannelInterface().TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
-            this.channelContent = this.GetChannelInterface().TryGetChannel(channel);
+            this.Request.Error = errorCode;
         }
 
         public override bool Handle()
@@ -255,9 +179,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return base.Handle();
         }
 
-        public override bool FailStep()
+        public override bool FailStep(string errorCode)
         {
-            Log.Error(this.Request.Error);
+            Log.Error("{0}: Failed to close channel: {1}. Error: {2}", 
+                this.Request.MessageType, this.Request.ChannelName, this.Request.Error);
             return true;
         }
 
@@ -286,29 +211,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
-        public void SetErrorCode(TransactionErrorCode error)
+        public override bool MakeupMessage()
         {
-            this.Request.Error = error.ToString();
+            this.Request.MessageBody.Settlement = this.MakeupSignature(this.onGoingRequest.MessageBody.Settlement);
+            return base.MakeupMessage();
         }
 
-        public override bool VerifySignature()
-        {
-            bool verifySettleTxSign = NeoInterface.VerifySignature(this.Request.MessageBody.Settlement.originalData.txData,
-                                                                   this.Request.MessageBody.Settlement.txDataSign,
-                                                                   this.GetPeerPubKey());
-
-            if (!verifySettleTxSign)
-            {
-                Log.Error("Verification settle signature failed");
-                return false;
-            }
-            Log.Info("Verification settle signature successed");
-            return true;
-        }
-
-        public override bool Verify()
-        {
-            return this.VerifySignature();
-        }
     }
 }

@@ -44,6 +44,6 @@ namespace Trinity.Wallets.Templates.Messages
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Founder : Header<FounderBody>
+    public class Founder : TransactionPlaneGeneric<FounderBody>
     { }
 }

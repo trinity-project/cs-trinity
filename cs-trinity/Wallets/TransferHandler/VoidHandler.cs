@@ -24,31 +24,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Trinity.Wallets.TransferHandler;
+
 namespace Trinity.Wallets.TransferHandler
 {
     /// <summary>
     /// 
     /// </summary>
-    public class VoidHandler
+    public class VoidHandler : TransferHandlerBase
     {
         protected string Request;
 
         public VoidHandler(string msg)
         {
             this.Request = msg;
-        }
-
-        public bool Handle()
-        {
-            return false;
-        }
-
-        public void FailStep()
-        {
-        }
-
-        public void SucceedStep()
-        {
         }
     }
 }

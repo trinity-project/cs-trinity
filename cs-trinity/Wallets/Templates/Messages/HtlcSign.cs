@@ -48,7 +48,7 @@ namespace Trinity.Wallets.Templates.Messages
     }
 
     [MessagePackObject(keyAsPropertyName:true)]
-    public class HtlcSign : Header<HtlcSignBody>
+    public class HtlcSign : TransactionPlaneGeneric<HtlcSignBody>
     {
         public string Error { get; set; }
         public string Comments { get; set; }

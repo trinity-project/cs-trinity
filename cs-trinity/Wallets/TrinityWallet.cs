@@ -122,16 +122,15 @@ namespace Trinity
         {
             return this.walletKey?.PublicKeyHash;
         }
+
+        public string GetPublicKey()
+        {
+            return this.pubKey;
+        }
         
         public virtual string Sign(string content)
         {
             return NeoInterface.Sign(content, this.walletKey.PrivateKey);
-        }
-
-        public bool VerifySignarture(string content, string contentSign)
-        {
-            return NeoInterface.VerifySignature(content, contentSign,
-                this.pubKey.ConvertToScriptHash().ToArray());
         }
 
      #region private_method_sets
@@ -172,7 +171,7 @@ namespace Trinity
 
         public virtual void ProcessMessage(string message)
         {
-            ParsedHeader header = message.Deserialize<ParsedHeader>();
+            ReceivedHeader header = message.Deserialize<ReceivedHeader>();
 
             if (null == header)
             {

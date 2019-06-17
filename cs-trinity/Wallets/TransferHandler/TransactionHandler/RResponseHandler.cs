@@ -26,32 +26,80 @@ SOFTWARE.
 using System;
 using Trinity.BlockChain;
 using Trinity.Wallets.Templates.Messages;
+using Trinity.TrinityDB.Definitions;
 
 namespace Trinity.Wallets.TransferHandler.TransactionHandler
 {
-    ///// <summary>
-    ///// Class Handler for handling RResponse Message
-    ///// </summary>
-    //public class RResponseHandler : TrinityTransaction<RResponse, RsmcHandler, VoidHandler>
-    //{
-    //    public RResponseHandler(string msg) : base(msg)
-    //    {
-    //    }
+    /// <summary>
+    /// Class Handler for handling RResponse Message
+    /// </summary>
+    public class RResponseHandler : TransactionHandler<RResponse, RResponse, RResponseHandler, RResponseHandler>
+    {
+        public RResponseHandler(string sender, string receiver, string channel, string asset,
+            string magic, long payment, string hashcode, string rcode)
+            : base(sender, receiver, channel, asset, magic, 0, payment, 0, hashcode, rcode)
+        { }
 
-    //    public override bool Handle()
-    //    {
-    //        return false;
-    //    }
+        public RResponseHandler(string message) : base(message)
+        {
+        }
 
-    //    public override void FailStep()
-    //    {
-    //        this.FHandler = null;
+        public override bool FailStep(string errorCode)
+        {
+            return base.FailStep(errorCode);
+        }
 
-    //    }
+        public override bool SucceedStep()
+        {
+            // TODO: update the Htlc Locked pair content to level db
+            TransactionTabelHLockPair currentHlock = this.GetHtlcLockTrade();
+            currentHlock.rcode = this.Request.MessageBody.R;
+            this.GetChannelLevelDbEntry()?.UpdateTransactionHLockPair(this.Request.MessageBody.HR, currentHlock);
 
-    //    public override void SucceedStep()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
+            // Trigger Htlc to Rsmc
+            RsmcHandler rsmcHndl = new RsmcHandler(this.Request.Receiver, this.Request.Sender,
+                this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.NetMagic,
+                0, this.Request.MessageBody.Count);
+            rsmcHndl.MakeTransaction();
+
+            // Trigger RResponse to previous peer
+            if (null != this.GetHtlcLockTrade()?.incomeChannel)
+            {
+                this.MakeRequest();
+            }
+
+            return true;
+        }
+
+        #region RResponse_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeMessageBody(string asset, long payment, int role = 0, string hashcode = null, string rcode = null)
+        {
+            this.Request.MessageBody = new RResponseBody
+            {
+                AssetType = asset,
+                Count = payment,
+                HR = hashcode,
+                R = rcode
+            };
+        }
+
+        public override void InitializeMessage(string sender, string receiver, string channel, string asset, string magic, ulong nonce)
+        {
+            base.InitializeMessage(sender, receiver, channel, asset, magic, nonce);
+        }
+
+        public override void SetLocalsFromBody()
+        {
+            this.HashR = this.onGoingRequest.MessageBody.HR;
+        }
+
+        public override RResponseHandler CreateRequestHndl(int role=0)
+        {
+            ChannelTableContent incomeChannel = this.GetChannelLevelDbEntry()?.TryGetChannel(this.GetHtlcLockTrade()?.incomeChannel);
+            return new RResponseHandler(this.onGoingRequest.Receiver, incomeChannel.peer, incomeChannel.channel,
+                this.onGoingRequest.MessageBody.AssetType, this.onGoingRequest.NetMagic, this.GetHtlcLockTrade().income,
+                this.onGoingRequest.MessageBody.HR, this.onGoingRequest.MessageBody.R);
+        }
+        #endregion
+    }
 }

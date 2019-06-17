@@ -25,165 +25,67 @@ SOFTWARE.
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Neo;
+using Trinity.BlockChain;
 using Trinity.Network.TCP;
 using Trinity.Wallets.Templates.Definitions;
 using Trinity.Wallets.Templates.Messages;
-using Trinity.ChannelSet;
-using Trinity.ChannelSet.Definitions;
-using Trinity.TrinityDB.Definitions;
+using Trinity.Exceptions;
 
 
 namespace Trinity.Wallets.TransferHandler
 {
     /// <summary>
+    /// Not implementation currently.... ??? define some mandatory interface for avoiding error ???
+    /// </summary>
+    public interface ITransferInterface
+    {
+
+    }
+
+    /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TMessage"></typeparam>
-    /// <typeparam name="TSHandler"></typeparam>
-    /// <typeparam name="TFHandler"></typeparam>
-    public abstract class TransferHandler<TMessage, TSHandler, TFHandler> : IDisposable
+    public class TransferHandlerBase
     {
-        private TrinityWallet wallet;
-
-        protected TMessage Request;
-        private string MessageName => typeof(TMessage).Name;
-        protected TSHandler SHandler;
-        protected TFHandler FHandler;
-
-        private TrinityTcpClient client;
-        public Channel channelDbInterface;
-
-        //private string priKey;
+        // Private variables list
+        private readonly TrinityWallet wallet;  // current opened wallet context
         private string pubKey;
         private string peerPubKey;
-
-        // Record current Header
-        public TransactionHeader header;
-
-        // 
-        public const ulong fundingTradeNonce = 0;
-        private UInt64 latestNonce = 0;
-
-        /// <summary>
-        /// Virtual Method sets. Should be overwritten in child classes.
-        /// </summary>
-        /// <returns></returns>
-        /// Verification method sets
-        public virtual bool Verify() { return true; }
-        public virtual bool VerifyNonce() { return true; }
-        public virtual bool VerifySignature() { return true; }
-        public virtual bool VerifyBalance() { return true; }
-        public virtual bool VerifyNetMagic() { return true; }
-        public virtual bool VerifyRoleIndex() { return true; }
-
-        public virtual bool SucceedStep() { return true; }
-        public virtual bool FailStep() { return true; }
-
-        /// <summary>
-        /// Dispose method to release memory
-        /// </summary>
-        public virtual void Dispose()
-        {
-            
-        }
 
         /// <summary>
         /// Default Constructor
         /// </summary>
-        public TransferHandler()
+        public TransferHandlerBase()
         {
             this.wallet = startTrinity.trinityWallet;
         }
 
-        public TransferHandler(string message)
-        {
-            this.wallet = startTrinity.trinityWallet;
-            this.Request = message.Deserialize<TMessage>();
-        }
+        public virtual bool Handle() { return true; }
+        public virtual bool SucceedStep() { return true; }
+        public virtual bool FailStep(string errorCode) { return true; }
 
-        public virtual TValue GetHeaderValue<TValue>(string name)
+        public virtual bool MakeTransaction() { return true; }
+        public virtual bool MakeupMessage() { return true; }
+        public virtual void MakeRequest(int role) { }
+        public virtual void MakeResponse(string errorCode = "Ok") { }
+        public virtual void ExtraSucceedAction() { }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TValue"> Trinity transaction basic type </typeparam>
+        /// <param name="txContent"> Content which is used to signed </param>
+        /// <returns></returns>
+        public virtual TxContentsSignGeneric<TValue> MakeupSignature<TValue>(TValue txContent)
+            where TValue : TxContents
         {
-            return this.Request.GetAttribute<TMessage, TValue>(name);
-        }
-
-        public virtual void SetBodyAttribute<TValue>(string name, TValue value) {}
-        public virtual void GetBodyAttribute<TContext>(string name) { }
-
-        public virtual bool MakeTransaction()
-        {
-            if (this.MakeupMessage())
+            return new TxContentsSignGeneric<TValue>
             {
-                this.wallet?.GetClient()?.SendData(this.Request.Serialize());
-                return true;
-            }
-            else
-            {
-                Console.WriteLine("Void Message is found");
-            }
-            return false;
-        }
-
-        public virtual bool MakeupMessage()
-        {
-            return true;
-        }
-
-        public string ToJson()
-        {
-            return this.Request.Serialize();
-        }
-
-        public TMessage GetTMessage()
-        {
-            return this.Request;
-        }
-
-        //public virtual bool Handle(string msg)
-        //{
-        //    if (null != msg) {
-        //        this.Request = msg.Deserialize<TMessage>();
-        //        this.header = msg.Deserialize<TransactionHeader>();
-        //        this.ParsePubkeyPair(this.header.Receiver, this.header.Sender);
-        //        return true;
-        //    }
-
-        //    return false;
-        //}
-
-        public virtual bool Handle()
-        {
-            // MessageType is not Founder
-            if (!(this.Request is TMessage))
-            {
-                return false;
-            }
-
-            // lack of verification steps
-            if (!this.Verify())
-            {
-                this.FailStep();
-                return false;
-            }
-
-            this.SucceedStep();
-
-            return true;
-        }
-
-        public void SetWallet(TrinityWallet wallet)
-        {
-            this.wallet = wallet;
-        }
-
-        public void SetClient(TrinityTcpClient client)
-        {
-            this.client = client;
+                txDataSign = this.Sign(txContent.txData),
+                originalData = txContent
+            };
         }
 
         public TrinityTcpClient GetClient()
@@ -196,10 +98,14 @@ namespace Trinity.Wallets.TransferHandler
             return this.wallet?.GetNetMagic();
         }
 
-        public void ParsePubkeyPair(string uri, string peerUri)
+        public UInt160 GetPublicKeyHash()
         {
-            this.pubKey = uri?.Split('@').First();
-            this.peerPubKey = peerUri?.Split('@').First();
+            return this.wallet?.GetPublicKeyHash();
+        }
+
+        public string GetWalletPublicKey()
+        {
+            return this.wallet?.GetPublicKey();
         }
 
         public string GetPubKey()
@@ -207,217 +113,181 @@ namespace Trinity.Wallets.TransferHandler
             return this.pubKey;
         }
 
-        public UInt160 GetPublicKeyHash()
-        {
-            return this.wallet?.GetPublicKeyHash();
-        }
-
         public string GetPeerPubKey()
         {
             return this.peerPubKey;
         }
 
-        public void SetChannelInterface(string uri, string peerUri, string channel, string asset)
+        public TrinityWallet GetWallet()
         {
-            if (null == this.channelDbInterface)
-            {
-                this.channelDbInterface = new Channel(channel, asset, uri, peerUri);
-            } 
+            return this.wallet;
         }
 
-        public Channel GetChannelInterface()
+        public void ParsePubkeyPair(string uri, string peerUri)
         {
-            return this.channelDbInterface;
-        }
-
-        public virtual void UpdateChannelState(string uri, string peerUri, string channelName, EnumChannelState state)
-        {
-            ChannelTableContent channelContent = this.GetChannelInterface().TryGetChannel(channelName);
-            if (null == channelContent)
-            {
-                Log.Fatal("Could not find channel -- {0} in Database.", channelName);
-                return;
-            }
-
-            // Update the channel state
-            channelContent.state = state.ToString();
-            this.channelDbInterface?.UpdateChannel(channelName, channelContent);
-        }
-
-        public void AddTransactionSummary(UInt64 nonce, string txId, string channel, EnumTxType type)
-        {
-            TransactionTabelSummary txContent = new TransactionTabelSummary
-            {
-                nonce = nonce,
-                channel = channel,
-                txType = type.ToString()
-            };
-
-            this.channelDbInterface?.AddTransaction(txId, txContent);
-        }
-
-        public void UpdateChannelSummaryContent(string channel, UInt64 nonce, string peerUri)
-        {
-            ChannelSummaryContents txContent = new ChannelSummaryContents
-            {
-                nonce = nonce,
-                peer = peerUri,
-                type = null
-            };
-
-            this.channelDbInterface?.UpdateChannelSummary(channel, txContent);
-        }
-
-        public UInt64 CurrentNonce(string channel)
-        {
-            if (0 != this.latestNonce)
-            {
-                return this.latestNonce;
-            }
-
-            ChannelSummaryContents content = this.channelDbInterface?.TryGetChannelSummary(channel);
-            if (null == content)
-            {
-                throw new Exception( string.Format("Not found summary information for channel: {0}", channel) );
-            }
-            this.latestNonce = content.nonce;
-
-            return this.latestNonce;
-        }
-
-        public UInt64 NextNonce(string channel)
-        {
-            return this.CurrentNonce(channel) + 1;
-        }
-
-        private long[] CalculateBalanceForRsmc(long balance, long peerBalance, long payment, bool isPeer = false, bool isH2R = false)
-        {
-            if (isPeer)
-            {
-                if (isH2R)
-                {
-                    return new long[2] { balance + payment, peerBalance };
-                }
-                else
-                { 
-                    return new long[2] { balance + payment, peerBalance - payment };
-                }
-            }
-            else
-            {
-                if (isH2R)
-                {
-                    return new long[2] { balance, peerBalance + payment };
-                }
-                else
-                {
-                    return new long[2] { balance - payment, peerBalance + payment };
-                }
-            }
-        }
-
-        public long[] CalculateBalanceForRsmc(int role, long balance, long peerBalance, long payment, bool isPeer=false, bool isH2R=false)
-        {
-            if (this.IsRole0(role) || this.IsRole2(role))
-            {
-                return this.CalculateBalanceForRsmc(balance, peerBalance, payment, isPeer, isH2R);
-            }
-            else if (this.IsRole1(role) || this.IsRole3(role))
-            {
-                return this.CalculateBalanceForRsmc(balance, peerBalance, payment, !isPeer, isH2R);
-            }
-            else
-            {
-                throw new Exception(string.Format("Invalid role: {0} for RSMC transaction", role));
-            }
-        }
-
-        private long[] CalculateBalanceForHtlc(long balance, long peerBalance, long payment, bool isPeer = false)
-        {
-            if (isPeer)
-            {
-                return new long[2] { balance , peerBalance - payment };
-            }
-            else
-            {
-                return new long[2] { balance - payment, peerBalance };
-            }
-        }
-
-        public long[] CalculateBalanceForHtlc(int role, long balance, long peerBalance, long payment, bool isPeer = false)
-        {
-            if (this.IsRole0(role))
-            {
-                return this.CalculateBalanceForHtlc(balance, peerBalance, payment, isPeer);
-            }
-            else if (this.IsRole1(role))
-            {
-                return this.CalculateBalanceForHtlc(balance, peerBalance, payment, !isPeer);
-            }
-            else
-            {
-                throw new Exception(string.Format("Invalid role: {0} for RSMC transaction", role));
-            }
+            this.pubKey = uri?.Split('@').First();
+            this.peerPubKey = peerUri?.Split('@').First();
         }
 
         /// <summary>
-        /// Trinity Transaction Role define here.
+        /// Sign the transaction body.
         /// </summary>
-        private readonly int Role0 = 0;
-        private readonly int Role1 = 1;
-        private readonly int Role2 = 2;
-        private readonly int Role3 = 3;
-        protected int RoleMax = 3;
-
-        public bool IsIllegalRole(int role)
-        {
-            return Role0 > role || RoleMax < role;
-        }
-
-        public bool IsRole0(int role)
-        {
-            return role.Equals(Role0);
-        }
-
-        public bool IsRole1(int role)
-        {
-            return role.Equals(Role1);
-        }
-
-        public bool IsRole2(int role)
-        {
-            return role.Equals(Role2);
-        }
-
-        public bool IsRole3(int role)
-        {
-            return role.Equals(Role3);
-        }
-
-        public bool IsTerminatedRole(int role, out int newRole)
-        {
-            newRole = role + 1;
-            return this.IsIllegalRole(newRole);
-        }
-
+        /// <param name="content"></param>
+        /// <returns></returns>
         public string Sign(string content)
         {
             return this.wallet?.Sign(content);
         }
 
-        public virtual TxContentsSignGeneric<TValue> MakeupSignature<TValue>(TValue txContent)
-            where TValue : TxContents
-        {
-            return new TxContentsSignGeneric<TValue>
-            {
-                txDataSign = this.Sign(txContent.txData),
-                originalData = txContent
-            };
-        }
-
+        // Verification method sets
+        public virtual bool Verify() { return true; }
         public bool VerifySignarture(string content, string contentSign)
         {
-            return (null == this.wallet) ? false : this.wallet.VerifySignarture(content, contentSign);
+            return NeoInterface.VerifySignature(content, contentSign, this.peerPubKey);
+        }
+    }
+
+    /// <summary>
+    /// Generic class for transfer messages
+    /// </summary>
+    /// <typeparam name="TMessage"> Messages which is used to sent to peer </typeparam>
+    /// <typeparam name="TRMessage"> Messages which is received from peer and trigger next step </typeparam>
+    /// <typeparam name="TRQHandler"> Transfer Handler which is used to handle the request message </typeparam>
+    /// <typeparam name="TRSPHandler"> Transfer Handler withc is used to handle the response message </typeparam>
+    public abstract class TransferHandler<TMessage, TRMessage, TRQHandler, TRSPHandler> : TransferHandlerBase, IDisposable
+        where TMessage : HeaderBase, new()
+        where TRMessage : HeaderBase
+        where TRQHandler : TransferHandlerBase
+        where TRSPHandler : TransferHandlerBase
+    {
+        protected TMessage Request;
+        protected TRMessage onGoingRequest; // Record the Received TRMessage if needed
+        protected TRQHandler RQHandler;
+        protected TRSPHandler RSPHandler;
+
+        /// <summary>
+        /// Default Constructor
+        /// </summary>
+        public TransferHandler() : base()
+        {
+        }
+
+        public TransferHandler(string message) : base()
+        {
+            this.Request = message.Deserialize<TMessage>();
+        }
+
+        public TransferHandler(TRMessage requestMessage) : base()
+        {
+        }
+
+        /// <summary>
+        /// Dispose method to release memory
+        /// </summary>
+        public virtual void Dispose()
+        {
+        }
+
+        /// <summary>
+        /// Handle the messages from the peer.
+        /// </summary>
+        /// <returns></returns>
+        public override bool Handle()
+        {
+            // MessageType is incompatible with the Transfer Handler
+            if (!(this.Request is TMessage))
+            {
+                return false;
+            }
+
+            try
+            {
+                // Verify the messages
+                if (!this.Verify())
+                {
+                    this.SucceedStep();
+                    return true;
+                }
+            }
+            catch (TrinityException ExpInfo)
+            {
+                Log.Fatal("{0}: failed since trinity internal error. System error: {1}.",
+                    this.Request.MessageType, ExpInfo.Message);
+                this.FailStep(ExpInfo.GetErrorString());
+                throw ExpInfo;
+            }
+            catch (Exception ExpInfo)
+            {
+                Log.Fatal("{0}: failed since error found by system. System error: {1}.", 
+                    this.Request.MessageType, ExpInfo.Message);
+                this.FailStep(ExpInfo.Message);
+                throw ExpInfo;
+            }
+            
+            return false;
+        }
+
+        public override bool FailStep(string errorCode)
+        {
+            this.MakeResponse(errorCode);
+            return true;
+        }
+
+        /// <summary>
+        /// Send the Request to peer
+        /// </summary>
+        /// <returns></returns>
+        public override bool MakeTransaction()
+        {
+            if (this.MakeupMessage())
+            {
+                this.GetClient()?.SendData(this.Request.Serialize());
+                return true;
+            }
+            else
+            {
+                Log.Error("{0}: Void Message is found.", this.Request.MessageType);
+            }
+            return false;
+        }
+
+        public override void MakeResponse(string errorCode = "Ok")
+        {
+            this.RSPHandler = this.CreateResponseHndl(errorCode);
+            this.RSPHandler?.MakeTransaction();
+        }
+
+        public override void MakeRequest(int role=0)
+        {
+            this.RQHandler = this.CreateRequestHndl(role);
+            this.RQHandler?.MakeTransaction();
+        }
+
+        /// <summary>
+        /// Trigger next message by new instances
+        /// </summary>
+        /// <returns></returns>
+        public virtual TRQHandler CreateRequestHndl(int role) { return null; }
+        public virtual TRSPHandler CreateResponseHndl(string errorCode="Ok") { return null; }
+
+        public string ToJson()
+        {
+            return this.Request.Serialize();
+        }
+
+        /// <summary>
+        /// Virtual Method sets. Should be overwritten in child classes.
+        /// </summary>
+        /// <returns></returns>
+        /// Verification method sets
+        public virtual bool VerifyNetMagic(string magic)
+        {
+            return null != magic && magic.Equals(this.Request.NetMagic);
+        }
+
+        public virtual bool VerifyUri()
+        {
+            return this.Request.Receiver.Contains(this.GetWalletPublicKey());
         }
     }
 }

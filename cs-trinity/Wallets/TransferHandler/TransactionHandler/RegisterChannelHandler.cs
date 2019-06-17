@@ -24,11 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Security.Cryptography;
-
 using Trinity.ChannelSet;
 using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
@@ -40,11 +35,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// <summary>
     /// This handler will process the message -- RegisterChannel
     /// </summary>
-    public class RegisterChannelHandler : TransferHandler<RegisterChannel, FounderHandler, RegisterChannelFailHandler>
+    public class RegisterChannelHandler 
+        : TransactionHandler<RegisterChannel, VoidTransactionMessage, RegisterChannelHandler, RegisterChannelFailHandler>
     {
-        private readonly long Deposit;
-        private readonly string NetMagic;
-
         // Default Constructor
         public RegisterChannelHandler(): base()
         {
@@ -61,42 +54,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="nonce"></param>
         /// <param name="deposit"></param>
         public RegisterChannelHandler(string sender, string receiver, string channel, string asset, string magic, 
-            long deposit) : base()
+            long deposit) : base(sender, receiver, channel, asset, magic, 0, deposit)
         {
-            this.Deposit = deposit;
-            this.NetMagic = magic ?? this.GetNetMagic();
-
-            if (null == channel)
-            {
-                channel = Channel.NewChannel(sender, receiver);
-            }
-
-            this.Request = new RegisterChannel
-            {
-                Sender = sender,
-                Receiver = receiver,
-                ChannelName = channel,
-                AssetType = asset,
-                NetMagic = this.NetMagic,
-                MessageBody = new RegisterChannelBody
-                {
-                    AssetType = asset,
-                    Deposit = deposit,
-                }
-            };
-
-            this.ParsePubkeyPair(sender, receiver);
-            this.SetChannelInterface(sender, receiver, channel, asset);
-
-            // Add channel to database
-            this.AddChannel(this.Request.Sender, this.Request.Receiver);
         }
 
         public RegisterChannelHandler(string message) : base(message)
         {
-            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
-            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
-                this.Request.ChannelName, this.Request.MessageBody.AssetType);
         }
 
         /// <summary>
@@ -112,32 +75,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return base.Handle();
         }
 
-        public override bool FailStep()
+        public override bool FailStep(string errorCode)
         {
-            this.FHandler = new RegisterChannelFailHandler(
-                this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.MessageBody);
-            this.FHandler.MakeTransaction();
-
-            ChannelTableContent content = new ChannelTableContent
-            {
-                uri = this.Request.Receiver,
-                peer = this.Request.Sender,
-                asset = this.Request.MessageBody.AssetType,
-                channel = this.Request.ChannelName,
-                state = EnumChannelState.ERROR.ToString(),
-            };
-            this.GetChannelInterface().AddChannel(this.Request.ChannelName, content);
-
-            return true;
+            return base.FailStep(errorCode);
         }
 
         public override bool SucceedStep()
         {
-            this.SHandler = new FounderHandler(
+            new FounderHandler(
                 this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                this.Request.MessageBody.AssetType, this.Request.NetMagic, 0, this.Request.MessageBody.Deposit, 0);
-            this.SHandler.MakeTransaction();
+                this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.MessageBody.Deposit)
+                .MakeTransaction();
 
             // Add channel to database
             this.AddChannel(this.Request.Receiver, this.Request.Sender, EnumRole.PARTNER);
@@ -149,11 +97,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             bool ret = base.MakeTransaction();
 
-            Log.Debug("{0} to send Message {1}. Asset Type: {2}, Deposit: {3}.",
+            Log.Info("{0}: failed to send Message {1}. Asset Type: {2}, Deposit: {3}.",
                 ret?"Succeed":"Fail",
-                this.Request.MessageType,
-                this.Request.MessageBody.AssetType,
-                this.Request.MessageBody.Deposit);
+                this.Request?.MessageType,
+                this.Request?.MessageBody.AssetType,
+                this.Request?.MessageBody.Deposit);
+
+            if (ret)
+            {
+                // Add channel to database
+                this.AddChannel(this.Request.Sender, this.Request.Receiver);
+            }
             return ret;
         }
 
@@ -176,81 +130,83 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 balance = this.Request.MessageBody.Deposit,
                 peerBalance = this.Request.MessageBody.Deposit
             };
-            this.GetChannelInterface().AddChannel(this.Request.ChannelName, content);
+            this.GetChannelLevelDbEntry().AddChannel(this.Request.ChannelName, content);
         }
+
+        #region RegisterChannel_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeMessage(string sender, string receiver, string channel, string asset, string magic, ulong nonce)
+        {
+            base.InitializeMessage(sender, receiver, channel, asset, magic, nonce);
+
+            // create a new channel
+            if (null == channel)
+            {
+                this.Request.ChannelName = Channel.NewChannel(sender, receiver);
+            }
+        }
+        public override void InitializeMessageBody(string asset, long payment, int role = 0, string hashcode = null, string rcode = null)
+        {
+            this.Request.MessageBody = new RegisterChannelBody
+            {
+                AssetType = asset,
+                Deposit = payment,
+            };
+        }
+        // Not need BlockChain API for this RegisterChannel
+        public override void InitializeBlockChainApi() { }
+
+        public override RegisterChannelFailHandler CreateResponseHndl(string errorCode = "Ok")
+        {
+            return new RegisterChannelFailHandler(this.Request);
+        }
+
+        #endregion //RegisterChannel_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
     }
 
-    public class RegisterChannelFailHandler : TransferHandler<RegisterChannelFail, VoidHandler, VoidHandler>
+    public class RegisterChannelFailHandler 
+        : TransactionHandler<RegisterChannelFail, RegisterChannel, RegisterChannelHandler, RegisterChannelFailHandler>
     {
         // Default Constructor
         public RegisterChannelFailHandler() : base()
         {
         }
 
-        public RegisterChannelFailHandler(string sender, string receiver, string channel, string asset,
-            string magic, RegisterChannelBody original) : base()
+        public RegisterChannelFailHandler(RegisterChannel request) : base(request)
         {
-            this.Request = new RegisterChannelFail
+            this.Request.MessageBody = new RegisterChannelFailBody
             {
-                Sender = sender,
-                Receiver = receiver,
-                ChannelName = channel,
-                AssetType = asset,
-                NetMagic = magic,
-                MessageBody = new RegisterChannelFailBody
-                {
-                    OriginalMessage = original
-                }
+                OriginalMessage = request.MessageBody
             };
-
-            this.ParsePubkeyPair(sender, receiver);
-            this.SetChannelInterface(sender, receiver, channel, asset);
         }
 
         public RegisterChannelFailHandler(string message) : base(message)
         {
-            this.ParsePubkeyPair(this.Request.Receiver, this.Request.Sender);
-            this.SetChannelInterface(this.Request.Receiver, this.Request.Sender,
-                this.Request.ChannelName, this.Request.MessageBody.OriginalMessage.AssetType);
         }
 
-        public override bool Handle()
+        public void DeleteChannel()
         {
-            if (!base.Handle())
-            {
-                return false;
-            }
-
-            if (!(this.Request is RegisterChannelFail))
-            {
-                return false;
-            }
-            else
-            {
-                this.UpdateChannel();
-                Console.WriteLine("Failed to register channel {0}", this.Request.ChannelName);
-            }
-            return false;
-        }
-
-        public void UpdateChannel()
-        {
-            ChannelTableContent content = this.GetChannelInterface().TryGetChannel(this.Request.ChannelName);
+            ChannelTableContent content = this.GetChannelLevelDbEntry().TryGetChannel(this.Request.ChannelName);
             if (null != content)
             {
-                content.state = EnumChannelState.ERROR.ToString();
-                this.GetChannelInterface().UpdateChannel(this.Request.ChannelName, content);
+                // Delete this channel from LevelDB
+                this.GetChannelLevelDbEntry().DeleteChannel(this.Request.ChannelName);
             }
         }
 
-        public override bool FailStep()
+        public override bool FailStep(string errorCode)
         {
-            return false;
+            return true;
         }
 
         public override bool SucceedStep()
         {
+            this.DeleteChannel();
             return true;
         }
+
+        #region RegisterChannelFail_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        // Not need BlockChain API for this RegisterChannel
+        public override void InitializeBlockChainApi() { }
+        #endregion //RegisterChannelFail_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
     }
 }

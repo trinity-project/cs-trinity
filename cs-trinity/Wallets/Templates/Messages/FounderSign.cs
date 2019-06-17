@@ -41,7 +41,9 @@ namespace Trinity.Wallets.Templates.Messages
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class FounderSign : Header<FounderSignBody>
+    public class FounderSign : TransactionPlaneGeneric<FounderSignBody>
     {
+        public string Error { get; set; }
+        public string Comments { get; set; }
     }
 }

@@ -44,7 +44,7 @@ namespace Trinity.Wallets.Templates.Messages
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class SettleSign : Header<SettleSignBody>
+    public class SettleSign : TransactionPlaneGeneric<SettleSignBody>
     {
         public string Error;
     }

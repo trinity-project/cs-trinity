@@ -32,74 +32,72 @@ namespace Trinity.Wallets.Templates.Messages
     /// <summary>
     /// This file define the prototype of the message header.
     /// </summary>
+    ///
+    /// HeaderBase is provided to both control and transaction plane
     [MessagePackObject(keyAsPropertyName: true)]
-    public class TransactionHeader
+    public class HeaderBase
     {
         /// <summary>
         /// Mandatory contents in the message header
         /// </summary>
         public string MessageType => this.GetType().Name;
-
         public string Sender { get; set; }
         public string Receiver { get; set; }
+        public string NetMagic { get; set; }
+    }
+
+    /// <summary>
+    /// ControlHeader for Control plane messages
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class ControlHeader : HeaderBase
+    {
+    }
+
+    /// <summary>
+    /// ContolPlaneGeneric: generic for Control plane messages.
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class ContolPlaneGeneric<TBody> : ControlHeader
+    {
+        public TBody MessageBody { get; set; }
+    }
+
+    /// <summary>
+    /// TransactionHeader for Transaction plane messages
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class TransactionHeader : HeaderBase
+    {
+        /// <summary>
+        /// Mandatory contents in the message header
+        /// </summary>
         public string ChannelName { get; set; }
         public string AssetType { get; set; }
-
-        public string NetMagic { get; set; }
         public UInt64 TxNonce { get; set; }
     }
 
+    /// <summary>
+    /// TransactionGeneric: generic for transaction plane messages.
+    /// </summary>
     [MessagePackObject(keyAsPropertyName: true)]
-    public class ParsedHeader
+    public class TransactionPlaneGeneric<TBody> : TransactionHeader
+    {
+        public TBody MessageBody { get; set; }
+    }
+
+    /// <summary>
+    /// For parsing the messages received from Gateway
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class ReceivedHeader
     {
         /// <summary>
         /// Mandatory contents in the message header
         /// </summary>
         public string MessageType { get; set; }
-
-        public string Sender { get; set; }
         public string Receiver { get; set; }
-        public string ChannelName { get; set; }
         public string AssetType { get; set; }
-
         public string NetMagic { get; set; }
-        public UInt64 TxNonce { get; set; }
     }
-
-    /// <summary>
-    /// This file define the prototype of the message header.
-    /// </summary>
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class Header<TBody> : TransactionHeader
-    {
-        public TBody MessageBody { get; set; }
-    }
-
-    //[MessagePackObject(keyAsPropertyName: true)]
-    //public abstract class ResponseHeader<TBody> : Header<TBody>
-    //{
-    //    /// <summary>
-    //    /// Optional contents in the message header
-    //    /// </summary>
-    //    public string Error { get; set; }
-    //    public string Comments { get; set; }
-    //}
-
-    //[MessagePackObject(keyAsPropertyName: true)]
-    //public abstract class HtlcHeader<TBody> : Header<TBody>
-    //{
-    //    // Just exists only for HTLC message
-    //    public string Router { get; set; }
-    //    public string Next { get; set; }
-    //}
-
-    //[MessagePackObject(keyAsPropertyName: true)]
-    //public abstract class HtlcResponseHeader<TBody> : HtlcHeader<TBody>
-    //{
-    //    /// <summary>
-    //    /// Optional contents in the message header
-    //    /// </summary>
-    //    public string Error { get; set; }
-    //    public string Comments { get; set; }
-    //}
 }

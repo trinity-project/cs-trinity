@@ -42,6 +42,6 @@ namespace Trinity.Wallets.Templates.Messages
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class RResponse : Header<RResponseBody>
+    public class RResponse : TransactionPlaneGeneric<RResponseBody>
     { }
 }

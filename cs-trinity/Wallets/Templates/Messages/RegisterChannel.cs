@@ -40,7 +40,7 @@ namespace Trinity.Wallets.Templates.Messages
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class RegisterChannel : Header<RegisterChannelBody>
+    public class RegisterChannel : TransactionPlaneGeneric<RegisterChannelBody>
     {
     }
 }

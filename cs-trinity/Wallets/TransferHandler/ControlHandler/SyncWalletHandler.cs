@@ -34,8 +34,9 @@ using Trinity.Wallets.TransferHandler;
 
 namespace Trinity.Wallets.TransferHandler.ControlHandler
 {
-    public class SyncWalletHandler : TransferHandler<SyncWalletData, VoidHandler, VoidHandler>
+    public class SyncWalletHandler : ControlHandler<SyncWalletData, VoidControlMessage, SyncWalletHandler, VoidHandler>
     {
+        private string localAddress = null;
         public SyncWalletHandler() : base()
         {
             this.Request = new SyncWalletData
@@ -44,7 +45,7 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
             };
         }
 
-        public SyncWalletHandler(string sender, string magic)
+        public SyncWalletHandler(string sender, string magic, string localIp="localhost", string port="21556")
         {
             this.Request = new SyncWalletData
             {
@@ -56,7 +57,24 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
                     Channel = new Dictionary<string, Dictionary<string, double>>(),
                 }
             };
+
+            this.localAddress = string.Format("{0}:{1}", localIp, port);
         }
+
+        //public override bool MakeupMessage()
+        //{
+        //    this.SetPublicKey(this.GetPubKey());
+        //    this.SetAlias("NoAlias");
+        //    this.SetAutoCreate("0");
+        //    this.SetNetAddress(string.Format("{0}:{1}", this.localAddress));
+        //    this.SetMaxChannel(10);
+        //    this.SetChannelInfo();
+
+        //    // Start to send RegisterKeepAlive to gateway
+        //    Console.WriteLine("Send SyncWalletData: {0}", this.ToJson());
+
+        //    return base.MakeupMessage();
+        //}
 
         public void SetPublicKey(string key)
         {

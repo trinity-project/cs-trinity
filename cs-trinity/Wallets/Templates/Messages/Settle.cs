@@ -43,7 +43,7 @@ namespace Trinity.Wallets.Templates.Messages
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Settle : Header<SettleBody>
+    public class Settle : TransactionPlaneGeneric<SettleBody>
     {
     }
 }
