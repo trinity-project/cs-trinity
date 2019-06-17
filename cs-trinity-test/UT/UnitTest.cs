@@ -145,5 +145,18 @@ namespace TestTrinity
             Console.WriteLine(signSelf3);
             Console.WriteLine(signOther3);
         }
+
+        //public static void Main()
+        //{
+        //    string assetType = "TNC";
+        //    string uri = "023c72090418f5d4511e4a47f78db7e8d2483378dc644201e9ce597a2cfbf4a937@10.0.0.5:8089";
+        //    string peerUri = "0285593d596c6619694430d6b5e6ac18acecff83043329aae4fe408d3573d77317@localhost:8089";
+        //    string channelName = Channel.NewChannel(uri, peerUri);
+
+        //    Channel channelEntry = new Channel(channelName, assetType, uri, peerUri);
+        //    channelEntry.AddBlockHeight(uri, 2754334);
+        //    uint height = channelEntry.TryGetBlockHeight(uri);
+        //    Console.WriteLine(height);
+        //}
     }
 }

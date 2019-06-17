@@ -46,7 +46,7 @@ namespace Trinity.TrinityDB
 
         public SliceBuilder keyword => SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
         public SliceBuilder bothKeyword => SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
-        public SliceBuilder summary => SliceBuilder.Begin(ModelPrefix.MPSummary);
+        public SliceBuilder summary => SliceBuilder.Begin(ModelPrefix.MPChannelSummary);
 
         /// <summary>
         /// Default Constructor

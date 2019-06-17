@@ -38,6 +38,7 @@ using Neo.IO.Data.LevelDB;
 using Trinity.TrinityDB;
 using Trinity.TrinityDB.Definitions;
 using Trinity.Wallets;
+using Trinity.Exceptions.DBError;
 
 namespace Trinity.ChannelSet
 {
@@ -199,7 +200,11 @@ namespace Trinity.ChannelSet
                 return txContent.ToString().Deserialize<TItemContent>();
             }
 
-            return default;
+            throw new TrinityLevelDBException(
+                    EnumLevelDBErrorCode.Transaction_Contents_Not_Found,
+                    string.Format("Transaction information with nonce-{0} not found!", nonce),
+                    EnumLevelDBErrorBase.TRANSACTION_TABLE_DETAIL.ToString()
+                );
         }
 
         public TransactionTabelSummary TryGetTransaction(string txid)

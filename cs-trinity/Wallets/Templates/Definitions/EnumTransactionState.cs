@@ -30,17 +30,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Trinity.TrinityDB.Definitions
+namespace Trinity.Wallets.Templates.Definitions
 {
-    internal static class ModelPrefix
+    public enum EnumTransactionState : byte
     {
-        public const byte MPChannelSummary = 0x1;
-        public const byte MPChannel = 0x10;
+        initial = 0x1, // the transaction could be deleted or overwrite.
 
-        public const byte MPTransaction = 0x20;
-        public const byte MPTransactionTxId = 0x21;
-        public const byte MPTransactionHtlcLockPair = 0x22;
-
-        public const byte MPBlockGroup = 0x40;
+        confirming = 0x10,
+        confirmed = 0x11
     }
 }

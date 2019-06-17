@@ -24,23 +24,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Trinity.TrinityDB.Definitions
+namespace Trinity.Wallets.Templates.Messages
 {
-    internal static class ModelPrefix
-    {
-        public const byte MPChannelSummary = 0x1;
-        public const byte MPChannel = 0x10;
-
-        public const byte MPTransaction = 0x20;
-        public const byte MPTransactionTxId = 0x21;
-        public const byte MPTransactionHtlcLockPair = 0x22;
-
-        public const byte MPBlockGroup = 0x40;
-    }
+    public class VoidControlMessage : ControlHeader { }
+    public class VoidTransactionMessage : TransactionHeader { }
 }
