@@ -34,6 +34,7 @@ using Neo;
 using Neo.IO.Json;
 
 using Trinity.BlockChain;
+using Trinity.Wallets;
 using Trinity.Wallets.Templates.Definitions;
 
 using TestTrinity.UT.Tests;
@@ -73,8 +74,8 @@ namespace TestTrinity
 
             //FundingTx
             Console.WriteLine("----------FundingTx------------");
-            JObject fundingTx = FundingOrigin.createFundingTx(PublicKeySelf, BalanceSelf, PublicKeyOther, BalanceOther, AssetId);
-            Console.WriteLine(fundingTx);
+            neoTransaction.CreateFundingTx(out FundingTx fundingTx);
+            Console.WriteLine(fundingTx?.Serialize());
 
             neoTransaction.CreateFundingTx(out FundingTx fundTx);
 
@@ -82,50 +83,51 @@ namespace TestTrinity
             byte[] prikeyByteSelf = PrikeySelf.HexToBytes();
             byte[] prikeyByteOther = PrikeyOther.HexToBytes();
 
-            string txData = fundingTx["txData"].ToString();
+            string txData = fundingTx?.txData;
             txData = NeoInterface.FormatJObject(txData);
             string signSelf = NeoInterface.Sign(txData, prikeyByteSelf);
             string signOther = NeoInterface.Sign(txData, prikeyByteOther);
             Console.WriteLine(signSelf);
             Console.WriteLine(signOther);
 
+            // Set the funding address information to this innstance
+            neoTransaction.SetAddressFunding(fundingTx?.addressFunding);
+            neoTransaction.SetScripFunding(fundingTx?.scriptFunding);
+
             //CTX
             Console.WriteLine("----------CTX------------");
-            string addressFunding = fundingTx["addressFunding"].ToString();
-            addressFunding = NeoInterface.FormatJObject(addressFunding);
-            string fundingScript = fundingTx["scriptFunding"].ToString();
-            fundingScript = NeoInterface.FormatJObject(fundingScript);
+            string addressFunding = fundingTx?.addressFunding;
+            string fundingScript = fundingTx?.scriptFunding;
 
-            JObject CTX = FundingOrigin.createCTX(addressFunding, BalanceSelf, BalanceOther, PublicKeySelf, PublicKeyOther, fundingScript, AssetId);
-            Console.WriteLine(CTX);
-
-            neoTransaction.CreateCTX(out CommitmentTx comTx);
+            // Commitment
+            
+            neoTransaction.CreateCTX(out CommitmentTx CTX);
+            Console.WriteLine(CTX?.Serialize());
 
             Console.WriteLine("----------CTXÇ©Ãû---------");
-            string txData1 = CTX["txData"].ToString();
-            txData1 = NeoInterface.FormatJObject(txData1);
+            string txData1 = CTX?.txData;
             string signSelf1 = NeoInterface.Sign(txData1, prikeyByteSelf);
             string signOther1 = NeoInterface.Sign(txData1, prikeyByteOther);
             Console.WriteLine(signSelf1);
             Console.WriteLine(signOther1);
 
+            // Set rsmc multi-signature address to this neoTransaction instance
+            neoTransaction.SetAddressRSMC(CTX?.addressRSMC);
+            neoTransaction.SetScripRSMC(CTX?.scriptRSMC);
+
             //RDTX
             Console.WriteLine("----------RDTX------------");
             UInt160 ScriptHashSelf1 = NeoInterface.PublicKeyToScriptHash(PublicKeySelf);
             string AddressSelf = NeoInterface.ToAddress1(ScriptHashSelf1);
-            string addressRSMC = CTX["addressRSMC"].ToString();
-            addressRSMC = NeoInterface.FormatJObject(addressRSMC);
-            string CTxId = CTX["txId"].ToString();
-            CTxId = NeoInterface.FormatJObject(CTxId);
-            string RSMCScript = CTX["scriptRSMC"].ToString();
-            RSMCScript = NeoInterface.FormatJObject(RSMCScript);
+            string addressRSMC = CTX?.addressRSMC;
+            string CTxId = CTX?.txId;
+            string RSMCScript = CTX?.scriptRSMC;
 
-            JObject RDTX = FundingOrigin.createRDTX(addressRSMC, AddressSelf, BalanceSelf, CTxId, RSMCScript, AssetId);
-            Console.WriteLine(RDTX);
+            neoTransaction.createRDTX(out RevocableDeliveryTx RDTX, CTX?.txId);
+            Console.WriteLine(RDTX?.Serialize());
 
             Console.WriteLine("----------RDTXÇ©Ãû------------");
-            string txData2 = RDTX["txData"].ToString();
-            txData2 = NeoInterface.FormatJObject(txData2);
+            string txData2 = RDTX?.txData;
             string signSelf2 = NeoInterface.Sign(txData2, prikeyByteSelf);
             string signOther2 = NeoInterface.Sign(txData2, prikeyByteOther);
             Console.WriteLine(signSelf2);
@@ -133,12 +135,11 @@ namespace TestTrinity
 
             //CTX
             Console.WriteLine("----------Settle------------");
-            JObject Settle = FundingOrigin.createSettle(addressFunding, BalanceSelf, BalanceOther, PublicKeySelf, PublicKeyOther, fundingScript, AssetId);
-            Console.WriteLine(Settle);
+            neoTransaction.CreateSettle(out TxContents Settle);
+            Console.WriteLine(Settle?.Serialize());
 
             Console.WriteLine("----------SettleÇ©Ãû---------");
-            string txData3 = Settle["txData"].ToString();
-            txData3 = NeoInterface.FormatJObject(txData3);
+            string txData3 = Settle?.txData;
             string signSelf3 = NeoInterface.Sign(txData3, prikeyByteSelf);
             string signOther3 = NeoInterface.Sign(txData3, prikeyByteOther);
             Console.WriteLine(signSelf3);

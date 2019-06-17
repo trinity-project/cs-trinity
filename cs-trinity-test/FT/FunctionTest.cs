@@ -293,7 +293,7 @@ namespace TestTrinity
             signedData = NeoInterface.Sign(originData, privateByte);
             Console.WriteLine(signedData);
 
-            bool verifyResult = NeoInterface.VerifySignature(originData, signedData, publicByte);
+            bool verifyResult = NeoInterface.VerifySignature(originData, signedData, publicKey);
             Console.WriteLine(verifyResult.ToString());
             
 
@@ -304,7 +304,7 @@ namespace TestTrinity
             string publicKey1 = "022949376faacb0c6783da8ab63548926cb3a2e8d786063a449833f927fa8853f0";
 
             byte[] publicByte1 = NeoInterface.HexString2Bytes(publicKey1);
-            bool verifyResult1 = NeoInterface.VerifySignature(originData1, signedData1, publicByte1);
+            bool verifyResult1 = NeoInterface.VerifySignature(originData1, signedData1, publicKey1);
             Console.WriteLine(verifyResult1.ToString());
         }
     }

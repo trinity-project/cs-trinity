@@ -271,9 +271,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="Trinity, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\cs-trinity-built\Trinity\bin\Debug\Trinity.dll</HintPath>
+    <Reference Include="Trinity">
+      <HintPath>..\..\..\cs-trinity-built\Trinity\bin\Debug\Trinity.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

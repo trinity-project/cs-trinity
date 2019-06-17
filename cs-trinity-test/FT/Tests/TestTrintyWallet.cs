@@ -77,7 +77,7 @@ namespace TestTrinity.FT.Tests
 
         public override void ProcessMessage(string message)
         {
-            ParsedHeader header = message.Deserialize<ParsedHeader>();
+            ReceivedHeader header = message.Deserialize<ReceivedHeader>();
 
             if (null == header)
             {

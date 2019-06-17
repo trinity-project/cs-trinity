@@ -27,6 +27,7 @@ SOFTWARE.
 
 using Trinity;
 using Trinity.Network.TCP;
+using Trinity.Wallets.Templates.Messages;
 using Trinity.Wallets.TransferHandler.TransactionHandler;
 
 
@@ -38,16 +39,12 @@ namespace TestTrinity.FT.Tests
         public TestSettleHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string message) : base(message)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public TestSettleHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string sender, string receiver, string channel, string asset, string magic)
             : base(sender, receiver, channel, asset, magic)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public void SendMessage()
@@ -62,16 +59,11 @@ namespace TestTrinity.FT.Tests
         public TestSettleSignHandler(TrinityWallet wallet, TrinityTcpClient client,
             string message) : base(message)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
-        public TestSettleSignHandler(TrinityWallet wallet, TrinityTcpClient client,
-            string sender, string receiver, string channel, string asset, string magic)
-            : base(sender, receiver, channel, asset, magic)
+        public TestSettleSignHandler(TrinityWallet wallet, TrinityTcpClient client, Settle message)
+            : base(message)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public void SendMessage()

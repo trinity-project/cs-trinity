@@ -37,12 +37,9 @@ namespace TestTrinity.FT.Tests
     internal class TestRegisterWallet : RegisterWallet
     {
 
-        public TestRegisterWallet() : base() { }
         public TestRegisterWallet(TrinityWallet wallet, TrinityTcpClient client,
             string ip, string port, string protocol) : base(ip, port, protocol)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public void SendMessage()
@@ -60,8 +57,6 @@ namespace TestTrinity.FT.Tests
         public TestSyncWalletHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string sender, string magic) : base(sender, magic)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public void SendMessage()
@@ -93,15 +88,11 @@ namespace TestTrinity.FT.Tests
             string sender, string receiver, string channel, string asset, string magic,long deposit) 
             : base(sender, receiver, channel, asset, magic, deposit)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public TestRegisterChannelHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string message) : base(message)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public void SendMessage()
@@ -116,20 +107,14 @@ namespace TestTrinity.FT.Tests
         {
         }
 
-        public TestRegisterChannelFailHandler(TrinityWallet wallet, TrinityTcpClient client, 
-            string sender, string receiver, string channel, string asset,
-            string magic, RegisterChannelBody original) 
-            : base(sender, receiver, channel, asset, magic, original)
+        public TestRegisterChannelFailHandler(TrinityWallet wallet, TrinityTcpClient client, RegisterChannel message) 
+            : base(message)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public TestRegisterChannelFailHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string message) : base(message)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public void SendMessage()
@@ -140,25 +125,16 @@ namespace TestTrinity.FT.Tests
 
     internal class TestFounderHandler : FounderHandler
     {
-        public TestFounderHandler(TrinityWallet wallet, TrinityTcpClient client) : base()
-        {
-            this.SetClient(client);
-            this.SetWallet(wallet);
-        }
-
         public TestFounderHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string sender, string receiver, string channel, string asset,
-            string magic, UInt64 nonce, long deposit, int role = 0) : base()
+            string magic, UInt64 nonce, long deposit, int role = 0)
+            : base(sender, receiver, channel, asset, magic, deposit)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public TestFounderHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string message) : base(message)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public void SendMessage()
@@ -169,20 +145,14 @@ namespace TestTrinity.FT.Tests
 
     internal class TestFounderSignHandler : FounderSignHandler
     {
-        public TestFounderSignHandler(TrinityWallet wallet, TrinityTcpClient client, 
-            string sender, string receiver, string channel, string asset,
-            string magic, UInt64 nonce, long deposit, int role = 0) 
-            : base(sender, receiver, channel, asset, magic, nonce, deposit, role)
+        public TestFounderSignHandler(TrinityWallet wallet, TrinityTcpClient client, Founder message) 
+            : base(message)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public TestFounderSignHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string message) : base(message)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public void SendMessage()
@@ -194,19 +164,8 @@ namespace TestTrinity.FT.Tests
     internal class TestFounderFailHandler : FounderFailHandler
     {
         public TestFounderFailHandler(TrinityWallet wallet, TrinityTcpClient client, 
-            string sender, string receiver, string channel, string asset,
-            string magic, UInt64 nonce, long deposit, int role = 0) 
-            : base(sender, receiver, channel, asset, magic, nonce, deposit, role)
-        {
-            this.SetClient(client);
-            this.SetWallet(wallet);
-        }
-
-        public TestFounderFailHandler(TrinityWallet wallet, TrinityTcpClient client, 
             string message) : base(message)
         {
-            this.SetClient(client);
-            this.SetWallet(wallet);
         }
 
         public void SendMessage()
