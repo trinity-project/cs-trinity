@@ -123,7 +123,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Verify()
         {
-            return this.VerifyRoleIndex();
+            this.VerifyNonce(fundingNonce);
+            this.VerifyDeposit(this.Request.MessageBody.Deposit);
+            this.VerifyRoleIndex();
+
+            return true;
         }
 
         public override bool MakeupMessage()
@@ -373,7 +377,18 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Verify()
         {
-            return this.VerifyRoleIndex();
+            this.VerifyNonce(fundingNonce);
+            this.VerifyDeposit(this.Request.MessageBody.Deposit);
+            this.VerifyRoleIndex();
+
+            this.VerifySignarture(this.currentTransaction.founder.originalData.txData, 
+                this.Request.MessageBody.Founder.txDataSign);
+            this.VerifySignarture(this.currentTransaction.commitment.originalData.txData, 
+                this.Request.MessageBody.Commitment.txDataSign);
+            this.VerifySignarture(this.currentTransaction.revocableDelivery.originalData.txData,
+                this.Request.MessageBody.RevocableDelivery.txDataSign);
+
+            return true;
         }
 
         #region FounderSign_Override_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER

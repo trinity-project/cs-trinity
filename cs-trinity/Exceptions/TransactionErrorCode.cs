@@ -91,15 +91,15 @@ namespace Trinity.Exceptions.WalletError
         ///     0a -- HtlcSign
         ///     0b -- RResponse
         ///     0d ~ FF -- Reserved.
-        REGISTER_CHANNEL = 0xE2201000,
+        REGISTERCHANNEL = 0xE2201000,
         FOUNDER = 0xE2203000,
-        FOUNDER_SIGN = 0xE2204000,
+        FOUNDERSIGN = 0xE2204000,
         SETTLE = 0xE2205000,
-        SETTLE_SIGN = 0xE2206000,
+        SETTLESIGN = 0xE2206000,
         RSMC = 0xE2207000,
-        RSMC_SIGN = 0xE2208000,
+        RSMCSIGN = 0xE2208000,
         HTLC = 0xE2209000,
-        HTLC_SIGN = 0xE220A000,
+        HTLCSIGN = 0xE220A000,
         RRESPONSE = 0xE220B000,
     }
 
@@ -113,6 +113,7 @@ namespace Trinity.Exceptions.WalletError
         // Error code
         Unknown_Error = 0x1,
         Invalid_Url = 0x2,
+        Transaction_With_Wrong_Signature = 0x3,
 
         // Asset Type related error
         NullReferrence_Asset_Type_Or_ID = 0x40,

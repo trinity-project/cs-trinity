@@ -141,10 +141,6 @@ namespace Trinity.Wallets.TransferHandler
 
         // Verification method sets
         public virtual bool Verify() { return true; }
-        public bool VerifySignarture(string content, string contentSign)
-        {
-            return NeoInterface.VerifySignature(content, contentSign, this.peerPubKey);
-        }
     }
 
     /// <summary>

@@ -165,7 +165,35 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// </summary>
         /// <returns></returns>
         /// Verification method sets
-        public virtual bool VerifyNonce() { return true; }
+        public virtual bool VerifyNonce(UInt64 expectedNonce)
+        {
+            if (this.Request.TxNonce == expectedNonce)
+            {
+                return true;
+            }
+
+            throw new TransactionException(
+                    EnumTransactionErrorCode.Incompatible_Nonce,
+                    string.Format("{0} : Nonce of peers are incompatible. Nonce: {1}, PeerNonce: {2}.",
+                            this.Request.MessageType, expectedNonce, this.Request.TxNonce),
+                    this.Request.MessageType);
+        }
+
+        public virtual bool VerifyDeposit(long deposit)
+        {
+            // TODO: add max limitation
+            if (0 < deposit)
+            {
+                return true;
+            }
+
+            throw new TransactionException(
+                    EnumTransactionErrorCode.Incompatible_Nonce,
+                    string.Format("{0} : Deposit exceeds the limitition. Channel: {1}, Deposit: {2}.",
+                            this.Request.MessageType, this.Request.ChannelName, deposit),
+                    this.Request.MessageType);
+        }
+
         public virtual bool VerifyBalance() { return true; }
         public virtual bool VerifyRoleIndex()
         { 
@@ -175,6 +203,20 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     EnumTransactionErrorCode.Role_Index_Out_Of_Range,
                     string.Format("{0} : current RoleIndex<{0}> is out of range.", this.Request.MessageType, this.currentRole),
                     this.Request.MessageType) ;
+            }
+
+            return true;
+        }
+
+        public virtual bool VerifySignarture(string content, string contentSign)
+        {
+            if (!NeoInterface.VerifySignature(content, contentSign, this.GetPeerPubKey()))
+            {
+                throw new TransactionException(
+                    EnumTransactionErrorCode.Transaction_With_Wrong_Signature,
+                    string.Format("{0} : Transaction signature is error. Channel: {1}, nonce: {2}", 
+                        this.Request.MessageType, this.Request.ChannelName, this.Request.TxNonce),
+                    this.Request.MessageType);
             }
 
             return true;
