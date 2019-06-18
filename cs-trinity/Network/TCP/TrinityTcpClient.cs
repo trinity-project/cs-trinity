@@ -111,7 +111,7 @@ namespace Trinity.Network.TCP
             return this.tcpClient.Client;
         }
 
-        public void SendData(string msg)
+        public bool SendData(string msg)
         {
             try
             {
@@ -138,7 +138,10 @@ namespace Trinity.Network.TCP
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
+                return false;
             }
+
+            return true;
         }
 
         private void UnWrapMessageFromGateway(byte[] buffer, int recvLength)

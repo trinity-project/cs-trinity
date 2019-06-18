@@ -214,7 +214,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
-        private void AddTransaction(bool isPeer = false)
+        public override void AddTransaction(bool isFounder = false)
         {
             // TODO: add transaction to dabase
         }

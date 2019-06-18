@@ -37,6 +37,7 @@ SOFTWARE.
 
 using System;
 
+using Neo.IO.Json;
 using Trinity.BlockChain;
 using Trinity.Wallets.Templates.Definitions;
 using Trinity.Wallets.Templates.Messages;
@@ -67,6 +68,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private TransactionFundingContent fundingTrade = null;
         private TransactionTabelHLockPair hlockTrade = null;
         private Channel channelDBEntry = null;
+        private ChannelSummaryContents currentChannelSummary = null;
         protected ChannelTableContent currentChannel = null;
 
         // BlockChain transaction api
@@ -74,9 +76,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         // nonce for transaction
         // funding transaction nonce should be always zero.
-        public const ulong fundingTradeNonce = 0;
-        // Record the last nonce value
-        private UInt64 latestNonce = 0;
+        public const ulong fundingNonce = 0;
 
         // Local variables members for initialization steps
         private string selfUri = null;
@@ -140,8 +140,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             #endregion New_TRSPHandler_If_Needed
 
             // Add or update the data to the database
-            this.AddOrUpdateTransaction(true);
-            this.AddOrUpdateTransactionSummary();
+            this.AddTransaction();
+            this.UpdateTransaction();
 
             // Terminate Transaction when current role index exceeds ths RoleMax
             if (this.IsTerminatedRole(this.currentRole, out int newRole))
@@ -179,17 +179,22 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
-        public virtual void UpdateChannelState(string uri, string peerUri, string channelName, EnumChannelState state)
+        public void UpdateChannelState(EnumChannelState state)
         {
-            ChannelTableContent channelContent = this.GetChannelLevelDbEntry().TryGetChannel(channelName);
-            if (null == channelContent)
-            {
-                Log.Fatal("Could not find channel -- {0} in Database.", channelName);
-                return;
-            }
+            ChannelTableContent channelContent = this.GetCurrentChannel();
 
             // Update the channel state
             channelContent.state = state.ToString();
+            this.channelDBEntry?.UpdateChannel(channelName, channelContent);
+        }
+
+        public void UpdateChannelBalance(long balance, long peerBalance)
+        {
+            ChannelTableContent channelContent = this.GetCurrentChannel();
+
+            // Update the channel balance of peers
+            channelContent.balance = balance;
+            channelContent.peerBalance = peerBalance;
             this.channelDBEntry?.UpdateChannel(channelName, channelContent);
         }
 
@@ -205,7 +210,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.channelDBEntry?.AddTransaction(txId, txContent);
         }
 
-        public void UpdateChannelSummaryContent(string channel, UInt64 nonce, string peerUri)
+        public void UpdateChannelSummary(string channel, UInt64 nonce, string peerUri)
         {
             ChannelSummaryContents txContent = new ChannelSummaryContents
             {
@@ -219,24 +224,22 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public UInt64 CurrentNonce(string channel)
         {
-            if (0 != this.latestNonce)
-            {
-                return this.latestNonce;
-            }
-
-            ChannelSummaryContents content = this.channelDBEntry?.TryGetChannelSummary(channel);
-            if (null == content)
-            {
-                throw new Exception(string.Format("Not found summary information for channel: {0}", channel));
-            }
-            this.latestNonce = content.nonce;
-
-            return this.latestNonce;
+            this.currentChannelSummary = this.currentChannelSummary ?? this.channelDBEntry?.TryGetChannelSummary(channel);
+            return this.currentChannelSummary.nonce;
         }
 
         public UInt64 NextNonce(string channel)
         {
             return this.CurrentNonce(channel) + 1;
+        }
+
+        protected JObject BroadcastTransaction(string txData, string peerTxDataSignarture, string witness)
+        {
+            string txDataSignarture = this.Sign(txData);
+            witness = witness.Replace("{signOther}", peerTxDataSignarture).Replace("{signSelf}", txDataSignarture);
+
+            // Broadcast the transaction by calling rpc interface
+            return NeoInterface.SendRawTransaction(txData + witness);
         }
 
         /// <summary>
@@ -245,12 +248,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="balance"></param>
         /// <param name="peerBalance"></param>
         /// <param name="payment"></param>
-        /// <param name="isPeer"></param>
+        /// <param name="isFounder"></param>
         /// <param name="isH2R"></param>
         /// <returns></returns>
-        private long[] CalculateBalance(long balance, long peerBalance, long payment, bool isPeer = false, bool isH2R = false)
+        private long[] CalculateBalance(long balance, long peerBalance, long payment, bool isFounder = false, bool isH2R = false)
         {
-            if (isPeer)
+            if (isFounder)
             {
                 if (isH2R)
                 {
@@ -274,15 +277,15 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
         }
 
-        public long[] CalculateBalance(int role, long balance, long peerBalance, long payment, bool isPeer = false, bool isH2R = false)
+        public long[] CalculateBalance(int role, long balance, long peerBalance, long payment, bool isFounder = false, bool isH2R = false)
         {
             if (this.IsRole0(role) || this.IsRole2(role))
             {
-                return this.CalculateBalance(balance, peerBalance, payment, isPeer, isH2R);
+                return this.CalculateBalance(balance, peerBalance, payment, isFounder, isH2R);
             }
             else if (this.IsRole1(role) || this.IsRole3(role))
             {
-                return this.CalculateBalance(balance, peerBalance, payment, !isPeer, isH2R);
+                return this.CalculateBalance(balance, peerBalance, payment, !isFounder, isH2R);
             }
             else
             {
@@ -290,9 +293,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
         }
 
-        private long[] CalculateBalance(long balance, long peerBalance, long payment, bool isPeer = false)
+        private long[] CalculateBalance(long balance, long peerBalance, long payment, bool isFounder = false)
         {
-            if (isPeer)
+            if (isFounder)
             {
                 return new long[2] { balance, peerBalance - payment };
             }
@@ -302,15 +305,15 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
         }
 
-        public long[] CalculateBalance(int role, long balance, long peerBalance, long payment, bool isPeer = false)
+        public long[] CalculateBalance(int role, long balance, long peerBalance, long payment, bool isFounder = false)
         {
             if (this.IsRole0(role))
             {
-                return this.CalculateBalance(balance, peerBalance, payment, isPeer);
+                return this.CalculateBalance(balance, peerBalance, payment, isFounder);
             }
             else if (this.IsRole1(role))
             {
-                return this.CalculateBalance(balance, peerBalance, payment, !isPeer);
+                return this.CalculateBalance(balance, peerBalance, payment, !isFounder);
             }
             else
             {
@@ -424,9 +427,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public virtual void InitializeBlockChainApi()
         {
             // if is creating channel
-            if (fundingTradeNonce == this.Request.TxNonce)
+            if (fundingNonce == this.Request.TxNonce)
             {
-                this.GetBlockChainAdaptorApi();
+                this.GetBlockChainAdaptorApi(this.currentChannel.balance, this.currentChannel.peerBalance);
             }
             else
             {
@@ -480,9 +483,20 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return this.currentChannel;
         }
 
+        public virtual TTransactionContent GetCurrentTransaction<TTransactionContent>() 
+            where TTransactionContent : TransactionTabelContent
+        {
+            if (IsRole0(currentRole))
+            {
+                return null;
+            }
+
+            return this.GetChannelLevelDbEntry().TryGetTransaction<TTransactionContent>(this.Request.TxNonce);
+        }
+
         public virtual TransactionFundingContent GetFundingTrade()
         {
-            this.fundingTrade = this.fundingTrade ?? this.channelDBEntry?.TryGetTransaction<TransactionFundingContent>(fundingTradeNonce);
+            this.fundingTrade = this.fundingTrade ?? this.channelDBEntry?.TryGetTransaction<TransactionFundingContent>(fundingNonce);
             return this.fundingTrade;
         }
 
@@ -510,13 +524,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return this.neoTransaction;
         }
 
-        public virtual NeoTransaction GetBlockChainAdaptorApi()
-        {
-            return this.neoTransaction;
-        }
-
-        public virtual void AddOrUpdateTransaction(bool isPeer = false) { }
-        public virtual void AddOrUpdateTransactionSummary(bool isPeer = false) { }
+        public virtual void AddOrUpdateTransaction(bool isFounder = false) { }
+        public virtual void AddOrUpdateTransactionSummary(bool isFounder = false) { }
+        public virtual void AddTransaction(bool isFounder = false) { }
+        public virtual void UpdateTransaction() { }
+        public virtual void AddTransactionSummary() { }
 
         ////////////////////////////////////////////////////////////////////////////
         #endregion // VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER

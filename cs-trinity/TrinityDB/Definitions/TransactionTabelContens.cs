@@ -59,11 +59,13 @@ namespace Trinity.TrinityDB.Definitions
     public class TransactionTabelContent
     {
         public UInt64 nonce;
-        public string monitorTxId;
-        public string state;    // mapping to 
         public long balance;
         public long peerBalance;
-        public bool isPayer;
+        public int role;        // record current role index
+        public bool isFounder;  // indicates who leads the transaction
+        public string monitorTxId;
+        public string state;    // mapping to 
+        
     }
 
     [MessagePackObject(keyAsPropertyName: true)]

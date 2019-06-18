@@ -157,7 +157,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 if (this.IsRole1(this.Request.MessageBody.RoleIndex))
                 {
                     // Add channel summary information
-                    this.UpdateChannelSummaryContent(this.Request.ChannelName, this.Request.TxNonce, this.Request.Receiver);
+                    this.UpdateChannelSummary(this.Request.ChannelName, this.Request.TxNonce, this.Request.Receiver);
                 }
             }
             else if (IsRole2(this.Request.MessageBody.RoleIndex) || IsRole3(this.Request.MessageBody.RoleIndex))
@@ -178,7 +178,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
-        public override void AddOrUpdateTransactionSummary(bool isPeer = false)
+        public override void AddOrUpdateTransactionSummary(bool isFounder = false)
         {
             TransactionRsmcContent txContent = this.GetChannelLevelDbEntry().TryGetTransaction<TransactionRsmcContent>(this.Request.TxNonce);
             bool isAdd = false;
@@ -197,7 +197,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
             
             // add peer information from the message
-            if (isPeer)
+            if (isFounder)
             {
                 // Add commitment Tx id for monitoring
                 if (this.IsRole0(this.Request.MessageBody.RoleIndex) || this.IsRole1(this.Request.MessageBody.RoleIndex))
@@ -376,7 +376,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 if (this.IsRole1(this.Request.MessageBody.RoleIndex))
                 {
                     // Add channel summary information
-                    this.UpdateChannelSummaryContent(this.Request.ChannelName, this.Request.TxNonce, this.Request.Sender);
+                    this.UpdateChannelSummary(this.Request.ChannelName, this.Request.TxNonce, this.Request.Sender);
                 }
             }
             return base.SucceedStep();

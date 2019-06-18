@@ -246,9 +246,9 @@ namespace TestTrinity
             TestSWD.MakeupSyncWalletData();
         }
 
-        private static void MFTestCreateChannel(bool isPeer = false)
+        private static void MFTestCreateChannel(bool isFounder = false)
         {
-            TestCreateChannel TCCHHandler = new TestCreateChannel(isPeer);
+            TestCreateChannel TCCHHandler = new TestCreateChannel(isFounder);
 
             TCCHHandler.WCCTestRegisterKeepAlive();
 

@@ -44,11 +44,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// </summary>
     public class FounderHandler : TransactionHandler<Founder, Founder, FounderHandler, FounderSignHandler>
     {
-        private const UInt64 fundingNonce = 0;
         // Transaction body for Founder message
-        private FundingTx fundingTx;
-        private CommitmentTx commTx;
-        private RevocableDeliveryTx rdTx;
+        private FundingTx fundingTx = null;
+        private CommitmentTx commTx = null;
+        private RevocableDeliveryTx rdTx = null;
+        private TransactionFundingContent currentTransaction = null;
 
         public FounderHandler(string sender, string receiver, string channel, string asset,
             string magic, long deposit) : base(sender, receiver, channel, asset, magic, fundingNonce, deposit)
@@ -56,45 +56,35 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.Request.TxNonce = fundingNonce; // To avoid rewrite outside.
         }
 
-        public FounderHandler(string message) : base(message) { }
+        public FounderHandler(string message) : base(message)
+        {
+            this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
+        }
 
-        public FounderHandler(Founder request, int role = 0) : base(request, role) { }
+        public FounderHandler(Founder request, int role = 0) : base(request, role)
+        {
+            this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
+        }
 
         public override bool Handle()
         {
-            if (!base.Handle())
-            {
-                return false;
-            }
-
-            // Add txid for monitor
-            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Founder.txId,
-                this.Request.ChannelName, EnumTransactionType.FUNDING);
-
-            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Commitment.txId,
-                this.Request.ChannelName, EnumTransactionType.COMMITMENT);
-
-            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.RevocableDelivery.txId,
-                this.Request.ChannelName, EnumTransactionType.REVOCABLE);
-
-            return true;
-        }
-
-        public override bool SucceedStep()
-        {
-            return base.SucceedStep();
+            Log.Info("Handle Founder message. Channel: {0}, AssetType: {1}, Deposit: {2}, txId(funding): {3}.",
+                this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.MessageBody.Deposit,
+                this.Request.MessageBody.Founder.txId);
+            return base.Handle();
         }
 
         public override bool MakeTransaction()
         {
-            bool ret = base.MakeTransaction();
-            Log.Info("{0} to send {1}. Channel name {2}, Asset Type: {3}, Deposit: {4}.",
-                ret ? "Succeed" : "Fail",
-                this.Request.MessageType,
-                this.Request.ChannelName,
-                this.Request.MessageBody.AssetType,
-                this.Request.MessageBody.Deposit);
-            return ret;
+            if (base.MakeTransaction())
+            {
+                Log.Info("Succed to send Founder message. Channel: {0}, AssetType: {1}, Deposit: {2}, RoleIndex: {3}.",
+                    this.Request.ChannelName, this.Request.MessageBody.AssetType,
+                    this.Request.MessageBody.Deposit, this.Request.MessageBody.RoleIndex);
+                return true;
+            }
+
+            return false;
         }
 
         private bool SignFundingTx()
@@ -108,30 +98,20 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
             else if (this.IsRole1(this.Request.MessageBody.RoleIndex))
             {
-                // TODO: Read from the database
-                TransactionFundingContent transactionContent = this.GetChannelLevelDbEntry().GetTransaction<TransactionFundingContent>(this.Request.TxNonce);
-                if (null != transactionContent)
+                // Read from the database
+                this.fundingTx = new FundingTx
                 {
-                    this.fundingTx = new FundingTx
-                    {
-                        txData = transactionContent.founder.originalData.txData,
-                        txId = transactionContent.founder.originalData.txId,
-                        addressFunding = transactionContent.founder.originalData.addressFunding,
-                        scriptFunding = transactionContent.founder.originalData.scriptFunding,
-                        witness = transactionContent.founder.originalData.witness
-                    };
+                    txData = this.currentTransaction.founder.originalData.txData,
+                    txId = this.currentTransaction.founder.originalData.txId,
+                    addressFunding = this.currentTransaction.founder.originalData.addressFunding,
+                    scriptFunding = this.currentTransaction.founder.originalData.scriptFunding,
+                    witness = this.currentTransaction.founder.originalData.witness
+                };
 
-                    // set the neo transaction handler attribute
-                    this.neoTransaction.SetAddressFunding(this.fundingTx.addressFunding);
-                    this.neoTransaction.SetScripFunding(this.fundingTx.scriptFunding);
-                    return true;
-                }
-                else
-                {
-                    this.fundingTx = null;
-                    Log.Error("Founder: Should never go here. Channel: {0}, RoleIndex: {1}.",
-                        this.Request.ChannelName, this.Request.MessageBody.RoleIndex);
-                }
+                // set the neo transaction handler attribute
+                this.neoTransaction.SetAddressFunding(this.fundingTx.addressFunding);
+                this.neoTransaction.SetScripFunding(this.fundingTx.scriptFunding);
+                return true;
             }
             else
             {
@@ -169,66 +149,77 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.Request.MessageBody.RevocableDelivery = this.rdTx;
 
             // record the item to database
-            if (IsRole0(this.Request.MessageBody.RoleIndex) || IsRole1(this.Request.MessageBody.RoleIndex))
+            if (IsRole0(this.Request.MessageBody.RoleIndex))
             {
-                this.AddOrUpdateTransaction();
+                this.AddTransaction(true);
+                return true;
+            }
+            else if (IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                this.UpdateTransaction();
                 return true;
             }
 
             return false;
         }
 
-        public override void AddOrUpdateTransaction(bool isPeer = false)
+        public override void AddTransaction(bool isFounder = false)
         {
-            TransactionFundingContent txContent = null;
-            bool isNeedAdd = false;
-
-            // Get the transaction firstly
-            try
+            // Just add the transaction when role index is zero
+            if (IsRole0(this.currentRole))
             {
-                txContent = this.GetChannelLevelDbEntry().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
-            }
-            catch(TrinityLevelDBException)
-            {
-                txContent = new TransactionFundingContent
+                TransactionFundingContent txContent = new TransactionFundingContent
                 {
                     nonce = this.Request.TxNonce,
+                    balance = this.Request.MessageBody.Deposit,
+                    peerBalance = this.Request.MessageBody.Deposit,
+                    role = this.currentRole,
+                    isFounder = isFounder,
+                    state = EnumTransactionState.initial.ToString(),
+
+                    // transaction body
                     founder = new TxContentsSignGeneric<FundingTx>(),
                     commitment = new TxContentsSignGeneric<CommitmentTx>(),
-                    revocableDelivery = new TxContentsSignGeneric<RevocableDeliveryTx>(),
-
-                    state = EnumTransactionState.initial.ToString()
+                    revocableDelivery = new TxContentsSignGeneric<RevocableDeliveryTx>()
                 };
 
-                // need add the transaction item to leveldb
-                isNeedAdd = true;
-            }
+                // Add related information according to the value of isFounder
+                if (isFounder)
+                {
+                    // add commitment and revocable delivery transaction info.
+                    txContent.commitment.originalData = this.Request.MessageBody.Commitment;
+                    txContent.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
+                }
+                else
+                {
+                    // add monitor tx id
+                    txContent.monitorTxId = this.Request.MessageBody.Commitment?.txId;
+                }
 
-            // Same founder info exists in both sides
-            txContent.founder.originalData = this.Request.MessageBody.Founder;
+                // record the transaction to levelDB
+                this.GetChannelLevelDbEntry()?.AddTransaction(this.Request.TxNonce, txContent);
+            }
+        }
 
-            // add peer information from the message
-            if (isPeer)
+        public override void UpdateTransaction()
+        {
+            // update the transaction just when RoleIndex equal to 1
+            if (IsRole1(this.Request.MessageBody.RoleIndex))
             {
-                // add monitor tx id
-                txContent.monitorTxId = this.Request.MessageBody.Commitment.txId;
-            }
-            else
-            {
-                // add commitment and revocable delivery transaction info.
-                txContent.commitment.originalData = this.Request.MessageBody.Commitment;
-                txContent.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
-            }
+                // update current transaction
+                if (this.currentTransaction.isFounder)
+                {
+                    this.currentTransaction.monitorTxId = this.Request.MessageBody.Commitment?.txId;
+                }
+                else
+                {
+                    this.currentTransaction.commitment.originalData = this.Request.MessageBody.Commitment;
+                    this.currentTransaction.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
+                }
 
-            if (isNeedAdd)
-            {
-                this.GetChannelLevelDbEntry().AddTransaction(this.Request.TxNonce, txContent);
+                // update the transaction
+                this.GetChannelLevelDbEntry()?.UpdateTransaction(this.Request.TxNonce, this.currentTransaction);
             }
-            else
-            {
-                this.GetChannelLevelDbEntry().UpdateTransaction(this.Request.TxNonce, txContent);
-            }
-            
         }
 
         #region Founder_Override_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
@@ -261,15 +252,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.AssetType = this.Request.MessageBody.AssetType;
         }
 
-        public override NeoTransaction GetBlockChainAdaptorApi()
-        {
-            this.neoTransaction = new NeoTransaction(
-                this.Request.MessageBody.AssetType.ToAssetId(),
-                this.GetPubKey(), this.Request.MessageBody.Deposit.ToString(),
-                this.GetPeerPubKey(), this.Request.MessageBody.Deposit.ToString());
-            return base.GetBlockChainAdaptorApi();
-        }
-
         public override FounderHandler CreateRequestHndl(int role)
         {
             return new FounderHandler(this.onGoingRequest, role);
@@ -290,56 +272,52 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// </summary>
     public class FounderSignHandler : TransactionHandler<FounderSign, Founder, FounderHandler, FounderSignHandler>
     {
-        //private FundingSignTx fstContent;
-        //private CommitmentSignTx cstContent;
-        //private RevocableDeliverySignTx rdstContent;
+        private TransactionFundingContent currentTransaction = null;
         /// <summary>
-        /// 
+        /// Handle received FounderSign message
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="receiver"></param>
-        /// <param name="channel"></param>
-        /// <param name="asset"></param>
-        /// <param name="magic"></param>
-        /// <param name="nonce"></param>
-        /// <param name="deposit"></param>
-        /// <param name="role"></param>
-
+        /// <param name="message"></param>
         public FounderSignHandler(string message) : base(message)
         {
+            this.currentTransaction =
+                this.GetChannelLevelDbEntry().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
         }
 
+        /// <summary>
+        /// Create new FounderSign message after received Founder.
+        /// </summary>
+        /// <param name="message">Received Founder message</param>
+        /// <param name="errorCode"></param>
         public FounderSignHandler(Founder message, string errorCode = "Ok") : base(message)
         {
             this.Request.AssetType = message.MessageBody.AssetType;
             this.Request.Error = errorCode;
+
+            // Get current transaction
+            this.currentTransaction =
+                this.GetChannelLevelDbEntry().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
         }
 
         public override bool Handle()
         {
-            Log.Debug("Handle Message {0}. Channel name {1}, Asset Type: {2}, Deposit: {3}.",
-                this.Request.MessageType,
-                this.Request.ChannelName,
-                this.Request.MessageBody.AssetType,
-                this.Request.MessageBody.Deposit);
+            Log.Info("Handle FounderSign message. Channel: {0}, AssetType: {1}, Deposit: {2}.",
+                this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.MessageBody.Deposit);
             return base.Handle();
         }
 
         public override bool MakeTransaction()
         {
-            bool ret = base.MakeTransaction();
-            Log.Debug("{0} to send {1}. Channel name {2}, Asset Type: {3}, Deposit: {4}.",
-                ret ? "Succeed" : "Fail",
-                this.Request.MessageType,
-                this.Request.ChannelName,
-                this.Request.MessageBody.AssetType,
-                this.Request.MessageBody.Deposit);
-
-            if (ret)
+            if (base.MakeTransaction())
             {
+                Log.Info("Succeed to send FounderSign message. Channel: {0}, AssetType: {1}, Deposit: {2}, RoleIndex: {3}.",
+                    this.Request.ChannelName, this.Request.MessageBody.AssetType,
+                    this.Request.MessageBody.Deposit, this.Request.MessageBody.RoleIndex);
+
                 this.ExtraSucceedAction();
+                return true;
             }
-            return ret;
+
+            return false;
         }
 
         public override bool SucceedStep()
@@ -362,36 +340,30 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.Request.MessageBody.Founder = this.MakeupSignature(this.onGoingRequest.MessageBody.Founder);
             this.Request.MessageBody.Commitment = this.MakeupSignature(this.onGoingRequest.MessageBody.Commitment);
             this.Request.MessageBody.RevocableDelivery = this.MakeupSignature(this.onGoingRequest.MessageBody.RevocableDelivery);
+
+            // Add txid for monitor
+            this.AddTransactionSummary();
             return true;
         }
 
         private void BroadcastTransaction()
         {
-            string peerFundSign = this.Request.MessageBody.Founder.txDataSign;
-            string fundSign = this.Sign(this.Request.MessageBody.Founder.originalData.txData);
-            string witness = this.Request.MessageBody.Founder.originalData.witness
-                .Replace("{signOther}", peerFundSign)
-                .Replace("{signSelf}", fundSign);
-
-            JObject ret = NeoInterface.SendRawTransaction(this.Request.MessageBody.Founder.originalData.txData + witness);
-            Log.Debug("Broadcast Founder transaction result is {0}. txId: {1}", ret, this.Request.MessageBody.Founder.originalData.txId);
+            JObject ret = this.BroadcastTransaction(
+                this.Request.MessageBody.Founder.originalData.txData,
+                this.Request.MessageBody.Founder.txDataSign,
+                this.Request.MessageBody.Founder.originalData.witness);
+            Log.Debug("Broadcast Founder transaction result: {0}. txId: {1}", 
+                ret, this.Request.MessageBody.Founder.originalData.txId);
         }
-
-        private void UpdateTransaction()
+        
+        public override void UpdateTransaction()
         {
-            TransactionFundingContent content = this.GetChannelLevelDbEntry().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
-
-            if (null == content)
-            {
-                return;
-            }
-
             // start update the transaction
-            content.founder.txDataSign = this.Request.MessageBody.Founder.txDataSign;
-            content.commitment.txDataSign = this.Request.MessageBody.Commitment.txDataSign;
-            content.revocableDelivery.txDataSign = this.Request.MessageBody.RevocableDelivery.txDataSign;
+            this.currentTransaction.founder.txDataSign = this.Request.MessageBody.Founder.txDataSign;
+            this.currentTransaction.commitment.txDataSign = this.Request.MessageBody.Commitment.txDataSign;
+            this.currentTransaction.revocableDelivery.txDataSign = this.Request.MessageBody.RevocableDelivery.txDataSign;
 
-            this.GetChannelLevelDbEntry().UpdateTransaction(this.Request.TxNonce, content);
+            this.GetChannelLevelDbEntry().UpdateTransaction(this.Request.TxNonce, this.currentTransaction);
         }
 
         public override bool Verify()
@@ -422,24 +394,27 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override void ExtraSucceedAction()
         {
-            if (IsRole1(this.Request.MessageBody.RoleIndex))
+            if (IsRole1(this.currentRole))
             {
                 // Update the channel to opening state
-                this.UpdateChannelState(this.GetUri(), this.GetPeerUri(),
-                    this.Request.ChannelName, EnumChannelState.OPENING);
+                this.UpdateChannelState(EnumChannelState.OPENING);
 
                 // Add channel summary information
-                this.UpdateChannelSummaryContent(this.Request.ChannelName, this.Request.TxNonce, this.GetPeerUri());
+                this.UpdateChannelSummary(this.Request.ChannelName, this.Request.TxNonce, this.GetPeerUri());
             }
         }
 
-        public override NeoTransaction GetBlockChainAdaptorApi()
+        public override void AddTransactionSummary()
         {
-            this.neoTransaction = new NeoTransaction(
-                this.Request.MessageBody.AssetType.ToAssetId(),
-                this.GetPubKey(), this.Request.MessageBody.Deposit.ToString(),
-                this.GetPeerPubKey(), this.Request.MessageBody.Deposit.ToString());
-            return base.GetBlockChainAdaptorApi();
+            // Add txid for monitor
+            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Founder.originalData.txId,
+                this.Request.ChannelName, EnumTransactionType.FUNDING);
+
+            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Commitment.originalData.txId,
+                this.Request.ChannelName, EnumTransactionType.COMMITMENT);
+
+            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.RevocableDelivery.originalData.txId,
+                this.Request.ChannelName, EnumTransactionType.REVOCABLE);
         }
         #endregion //FounderSign_Override_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
     }
@@ -457,10 +432,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Handle()
         {
-            Log.Debug("{0}: Failed to create channel {1}. AssetType: {2}, Deposit {3}",
-                this.Request.MessageType, this.Request.ChannelName,
-                this.Request.MessageBody.AssetType, this.Request.MessageBody.Deposit
-                );
+            Log.Info("Handle FounderFail message. Failed to create channel {0}. AssetType: {1}, Deposit {2}",
+                this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.MessageBody.Deposit);
 
             return true;
         }

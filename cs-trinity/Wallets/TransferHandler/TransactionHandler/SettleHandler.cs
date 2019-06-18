@@ -49,9 +49,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="message"></param>
         public SettleHandler(string message) : base(message)
         {
-            // Whatever happens, we set the channel settling when call this class
-            this.UpdateChannelState(this.GetUri(), this.GetPeerUri(),
-                this.Request.ChannelName, EnumChannelState.SETTLING);
+            // Whatever happens, we set the channel settling when the Settle message was received
+            this.UpdateChannelState(EnumChannelState.SETTLING);
         }
 
         /// <summary>
@@ -65,30 +64,33 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public SettleHandler(string sender, string receiver, string channel, string asset, string magic)
             : base(sender, receiver, channel, asset, magic, 0, 0)
         {
-            // Whatever happens, we set the channel settling when call this class
-            this.UpdateChannelState(this.Request.Receiver, this.Request.Sender,
-                this.Request.ChannelName, EnumChannelState.SETTLING);
+            // Whatever happens, we set the channel settling when Settle message is being to send
+            this.UpdateChannelState(EnumChannelState.SETTLING);
         }
 
         public override bool Handle()
         {
-            Log.Debug("Handle Settle Message. Channel name: {0}, Balance {1}",
-                this.Request.ChannelName, this.Request.MessageBody.Balance);
-            if (!base.Handle())
-            {
-                return false;
-            }
-
-            // Add txid for monitor
-            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Settlement.txId,
-                this.Request.ChannelName, EnumTransactionType.SETTLE);
-
-            return true;
+            Log.Debug("Handle Settle Message. Channel name: {0}, Balance: {1}, txId: {2}",
+                this.Request.ChannelName, this.Request.MessageBody.Balance, this.Request.MessageBody.Settlement.txId);
+            return base.Handle();
         }
 
         public override bool SucceedStep()
         {
+            // TODO: remove the transaction ID in future... IMPROVE the efficiency ???
             return new SettleSignHandler(this.Request).MakeTransaction();
+        }
+
+        public override bool MakeTransaction()
+        {
+            if (base.MakeTransaction())
+            {
+                Log.Info("Succeed to send Settle Message. Channel: {0}, AssetType: {1}, Balance: {2}.",
+                    this.Request.ChannelName, this.Request.MessageBody.AssetType, this. Request.MessageBody.Balance);
+                return true;
+            }
+
+            return false;
         }
 
         public override bool MakeupMessage()
@@ -101,7 +103,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // Start to create refund trade
             if (!this.neoTransaction.CreateSettle(out TxContents refundTx))
             {
-                Log.Error("Failed to create refunding trade for channel: {0}", this.Request.ChannelName);
+                Log.Error("Failed to create refunding trade for Channel: {0}", this.Request.ChannelName);
                 return false;
             }
 
@@ -111,10 +113,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 { this.Request.Sender, this.GetCurrentChannel().balance}, { this.Request.Receiver, this.GetCurrentChannel().peerBalance }
             };
             this.Request.MessageBody.AssetType = this.GetCurrentChannel().asset;
-
-            // Add txid for monitor
-            this.AddTransactionSummary(this.Request.TxNonce, refundTx.txId,
-                this.Request.ChannelName, EnumTransactionType.SETTLE);
 
             return true;
         }
@@ -190,19 +188,19 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             // Broadcast this transaction
             this.BroadcastTransaction();
+
+            // add monitor txid
+            this.AddTransactionSummary();
             return true;
         }
 
         private void BroadcastTransaction()
         {
-            string peerSettleSignarture = this.Request.MessageBody.Settlement.txDataSign;
-            string settleSignarture = this.Sign(this.Request.MessageBody.Settlement.originalData.txData);
-            string witness = this.Request.MessageBody.Settlement.originalData.witness
-                .Replace("{signOther}", peerSettleSignarture)
-                .Replace("{signSelf}", settleSignarture);
-
-            JObject ret = NeoInterface.SendRawTransaction(this.Request.MessageBody.Settlement.originalData.txData + witness);
-            Log.Debug("Broadcast Settle transaction result is {0}. txId: {1}", ret, this.Request.MessageBody.Settlement.originalData.txId);
+            JObject ret = this.BroadcastTransaction(
+                this.Request.MessageBody.Settlement.originalData.txData,
+                this.Request.MessageBody.Settlement.txDataSign,
+                this.Request.MessageBody.Settlement.originalData.witness );
+            Log.Debug("Broadcast Settle transaction result: {0}. txId: {1}", ret, this.Request.MessageBody.Settlement.originalData.txId);
         }
 
         public bool MakeupRefundTxSign(TxContents contents)
@@ -211,11 +209,32 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
+        public override bool MakeTransaction()
+        {
+            if (base.MakeTransaction())
+            {
+                Log.Info("Succeed to send SettleSign message. Channel: {0}, AssetType: {1}, Balance: {2}.",
+                    this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.MessageBody.Balance);
+                this.AddTransactionSummary();
+                return true;
+            }
+
+            return false;
+        }
+
         public override bool MakeupMessage()
         {
             this.Request.MessageBody.Settlement = this.MakeupSignature(this.onGoingRequest.MessageBody.Settlement);
             return base.MakeupMessage();
         }
 
+        #region SettleSign_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void AddTransactionSummary()
+        {
+            // Add txid for monitor
+            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Settlement.originalData.txId,
+                this.Request.ChannelName, EnumTransactionType.SETTLE);
+        }
+        #endregion
     }
 }

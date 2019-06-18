@@ -179,7 +179,7 @@ namespace TestTrinity.FT.Tests
         private readonly TrinityTcpClient client;
         private readonly TrinityWallet wallet;
 
-        private readonly bool isPeer;
+        private readonly bool isFounder;
 
         private readonly string ip;
         private readonly string port;
@@ -201,15 +201,15 @@ namespace TestTrinity.FT.Tests
         private TestFounderSignHandler founderSignHndl;
         private TestFounderFailHandler foudnerFailHndl;
 
-        public TestCreateChannel(bool isPeer=false)
+        public TestCreateChannel(bool isFounder=false)
         {
-            this.isPeer = isPeer;
+            this.isFounder = isFounder;
 
             this.netMagic = TestConfiguration.magic;
             this.assetType = TestConfiguration.AssetType ;
             this.deposit = TestConfiguration.deposit;
 
-            if (!isPeer)
+            if (!isFounder)
             {
                 this.ip = TestConfiguration.ip;
                 this.port = TestConfiguration.port;
@@ -269,7 +269,7 @@ namespace TestTrinity.FT.Tests
 
         public void WCCTestTriggerCreateChannel()
         {
-            if (!this.isPeer)
+            if (!this.isFounder)
             {
                 this.registerChannelHndl = new TestRegisterChannelHandler(
                 this.wallet, this.client, this.uri, this.peerUri, null, this.assetType, this.netMagic, this.deposit

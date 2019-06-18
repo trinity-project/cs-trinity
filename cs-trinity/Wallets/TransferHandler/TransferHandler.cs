@@ -239,14 +239,13 @@ namespace Trinity.Wallets.TransferHandler
         /// <returns></returns>
         public override bool MakeTransaction()
         {
-            if (this.MakeupMessage())
+            if (this.MakeupMessage() && this.GetClient().SendData(this.Request.Serialize()))
             {
-                this.GetClient()?.SendData(this.Request.Serialize());
                 return true;
             }
             else
             {
-                Log.Error("{0}: Void Message is found.", this.Request.MessageType);
+                Log.Error("Fail to send {0} message.", this.Request.MessageType);
             }
             return false;
         }
