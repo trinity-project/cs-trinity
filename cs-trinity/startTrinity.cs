@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Neo;
 using Neo.Wallets;
 using Trinity.BlockChain;
+using Trinity.Properties;
 
 namespace Trinity
 {
@@ -23,6 +24,9 @@ namespace Trinity
             NeoSystem = neoSystem;
             currentWallet = wallet;
             currentAccountPublicKey = publicKey;
+
+            ip = ip is null ? Settings.Default.gatewayIP : ip;
+            port = port is null ? Settings.Default.gatewayPort : port;
 
             trinityWallet = new TrinityWallet(neoSystem, wallet, publicKey, magic, ip, port);
 

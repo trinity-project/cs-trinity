@@ -290,6 +290,16 @@
     <Compile Include="ChannelSet\Definitions\EnumRole.cs" />
     <Compile Include="Exceptions\LevelDBErrorCode.cs" />
     <Compile Include="Exceptions\LevelDBException.cs" />
+    <Compile Include="Properties\Settings.cs">
+      <DependentUpon>Settings.settings</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <DependentUpon>Settings.settings</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
     <Compile Include="Wallets\Templates\Definitions\EnumTransactionState.cs" />
     <Compile Include="Exceptions\TransactionException.cs" />
     <Compile Include="Exceptions\Utils.cs" />
@@ -317,8 +327,6 @@
     <Compile Include="Wallets\TransferHandler\TransactionHandler\TransactionHandler.cs" />
     <Compile Include="Exceptions\TrinityException.cs" />
     <Compile Include="Wallets\TrinityWallet.cs" />
-    <Compile Include="Properties\Settings1.cs" />
-    <Compile Include="Properties\Settings1.Designer.cs" />
     <Compile Include="TrinityDB\BaseModel.cs" />
     <Compile Include="TrinityDB\ChannelModel.cs" />
     <Compile Include="TrinityDB\DBManager.cs" />
@@ -374,8 +382,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
-    <None Include="Properties\Settings1.settings" />
-    <None Include="Trinity.json" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7">

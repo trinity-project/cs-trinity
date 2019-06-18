@@ -30,16 +30,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Trinity.Wallets.Templates.Messages;
+using Trinity.Properties;
 
 namespace Trinity.Wallets.TransferHandler.ControlHandler
 {
     public class RegisterWallet : ControlHandler<RegisterKeepAlive, VoidControlMessage, RegisterWallet, VoidHandler>
     {
-        public RegisterWallet(string ip, string port, string protocol = "TCP")
+        public RegisterWallet(string protocol = "TCP")
         {
             this.Request = new RegisterKeepAlive
             {
-                Ip = String.Format("{0}:{1}", ip, port),
+                Ip = String.Format("{0}:{1}", Settings.Default.localIp, Settings.Default.localPort),
                 Protocol = protocol
             };
         }
