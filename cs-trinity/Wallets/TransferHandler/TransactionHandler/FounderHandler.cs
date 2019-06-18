@@ -178,7 +178,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     state = EnumTransactionState.initial.ToString(),
 
                     // transaction body
-                    founder = new TxContentsSignGeneric<FundingTx>(),
+                    founder = new TxContentsSignGeneric<FundingTx>
+                    {
+                        originalData = this.Request.MessageBody.Founder
+                    },
                     commitment = new TxContentsSignGeneric<CommitmentTx>(),
                     revocableDelivery = new TxContentsSignGeneric<RevocableDeliveryTx>()
                 };
@@ -254,7 +257,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override FounderHandler CreateRequestHndl(int role)
         {
-            return new FounderHandler(this.onGoingRequest, role);
+            return new FounderHandler(this.Request, role);
         }
 
         public override FounderSignHandler CreateResponseHndl(string errorCode = "Ok")

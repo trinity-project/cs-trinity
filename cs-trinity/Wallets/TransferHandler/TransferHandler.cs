@@ -220,7 +220,7 @@ namespace Trinity.Wallets.TransferHandler
             {
                 Log.Fatal("{0}: failed since error found by system. System error: {1}.", 
                     this.Request.MessageType, ExpInfo.Message);
-                this.FailStep(ExpInfo.Message);
+                this.FailStep(ExpInfo.ToString());
                 throw ExpInfo;
             }
             
