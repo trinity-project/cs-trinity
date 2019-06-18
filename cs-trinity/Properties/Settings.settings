@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Trinity.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="MagicMainNet" Type="System.UInt32" Scope="User">
+      <Value Profile="(Default)">20030515</Value>
+    </Setting>
+    <Setting Name="MagicTestNet" Type="System.UInt32" Scope="User">
+      <Value Profile="(Default)">19990331</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
