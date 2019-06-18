@@ -95,20 +95,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool MakeTransaction()
         {
-            bool ret = base.MakeTransaction();
-
-            Log.Info("{0}: failed to send Message {1}. Asset Type: {2}, Deposit: {3}.",
-                ret?"Succeed":"Fail",
-                this.Request?.MessageType,
-                this.Request?.MessageBody.AssetType,
-                this.Request?.MessageBody.Deposit);
-
-            if (ret)
+            if (base.MakeTransaction())
             {
+                Log.Info("Succeed to send RegisterChannel message. Channel: {0}, AssetType: {1}, Deposit: {2}.",
+                    this.Request?.ChannelName, this.Request?.MessageBody.AssetType, this.Request?.MessageBody.Deposit);
+
                 // Add channel to database
                 this.AddChannel(this.Request.Sender, this.Request.Receiver);
+                return true;
             }
-            return ret;
+
+            return false;
         }
 
         public void AddChannel(string uri, string peerUri, EnumRole role= EnumRole.FOUNDER)

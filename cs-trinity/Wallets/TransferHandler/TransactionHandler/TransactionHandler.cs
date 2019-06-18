@@ -236,7 +236,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         protected JObject BroadcastTransaction(string txData, string peerTxDataSignarture, string witness)
         {
             string txDataSignarture = this.Sign(txData);
-            witness = witness.Replace("{signOther}", peerTxDataSignarture).Replace("{signSelf}", txDataSignarture);
+            witness = witness.Replace("{signOther}", txDataSignarture).Replace("{signSelf}", peerTxDataSignarture);
 
             // Broadcast the transaction by calling rpc interface
             return NeoInterface.SendRawTransaction(txData + witness);

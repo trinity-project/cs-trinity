@@ -78,7 +78,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             if (base.MakeTransaction())
             {
-                Log.Info("Succed to send Founder message. Channel: {0}, AssetType: {1}, Deposit: {2}, RoleIndex: {3}.",
+                Log.Info("Succeed to send Founder message. Channel: {0}, AssetType: {1}, Deposit: {2}, RoleIndex: {3}.",
                     this.Request.ChannelName, this.Request.MessageBody.AssetType,
                     this.Request.MessageBody.Deposit, this.Request.MessageBody.RoleIndex);
                 return true;
@@ -302,8 +302,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Handle()
         {
-            Log.Info("Handle FounderSign message. Channel: {0}, AssetType: {1}, Deposit: {2}.",
-                this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.MessageBody.Deposit);
+            Log.Info("Handle FounderSign message. Channel: {0}, AssetType: {1}, Deposit: {2}, RoleIndex: {3}.",
+                this.Request.ChannelName, this.Request.MessageBody.AssetType,
+                this.Request.MessageBody.Deposit, this.Request.MessageBody.RoleIndex);
             return base.Handle();
         }
 
@@ -380,7 +381,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 AssetType = this.onGoingRequest.MessageBody.AssetType,
                 Deposit = this.onGoingRequest.MessageBody.Deposit,
-                RoleIndex = role,
+                RoleIndex = this.onGoingRequest.MessageBody.RoleIndex,
             };
         }
 
@@ -396,7 +397,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override void ExtraSucceedAction()
         {
-            if (IsRole1(this.currentRole))
+            if (IsRole1(this.Request.MessageBody.RoleIndex))
             {
                 // Update the channel to opening state
                 this.UpdateChannelState(EnumChannelState.OPENING);
