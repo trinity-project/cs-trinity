@@ -235,6 +235,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         #region Htlc_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(false); }
+
         public override void InitializeMessageBody(string asset, long payment, int role = 0, string hashcode = null, string rcode = null)
         {
             this.Request.MessageBody = new HtlcBody
@@ -352,7 +354,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return base.MakeupMessage();
         }
 
-        #region Htlc_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        #region HtlcSign_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(false); }
         public override void InitializeMessageBody(int role = 0)
         {
             this.Request.MessageBody = new HtlcSignBody

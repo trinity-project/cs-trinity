@@ -64,6 +64,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public SettleHandler(string sender, string receiver, string channel, string asset, string magic)
             : base(sender, receiver, channel, asset, magic, 0, 0)
         {
+            this.Request.TxNonce = this.NextNonce(channel);
+
             // Whatever happens, we set the channel settling when Settle message is being to send
             this.UpdateChannelState(EnumChannelState.SETTLING);
         }
@@ -118,6 +120,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         #region Settle_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(true); }
+
         public override void InitializeMessageBody(string asset, long payment, int role = 0, string hashcode = null, string rcode = null)
         {
             this.Request.MessageBody = new SettleBody
@@ -133,7 +137,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.currentRole = 0; // record current role Index
 
             // Asset type from message body for adaptor old version trinity
-            this.AssetType = this.onGoingRequest.MessageBody.AssetType;
+            this.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override SettleSignHandler CreateResponseHndl(string errorCode = "Ok")
@@ -203,12 +207,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             Log.Debug("Broadcast Settle transaction result: {0}. txId: {1}", ret, this.Request.MessageBody.Settlement.originalData.txId);
         }
 
-        public bool MakeupRefundTxSign(TxContents contents)
-        {
-            this.Request.MessageBody.Settlement = this.MakeupSignature(contents);
-            return true;
-        }
-
         public override bool MakeTransaction()
         {
             if (base.MakeTransaction())
@@ -224,11 +222,34 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool MakeupMessage()
         {
+            this.Request.MessageBody.Balance = new Dictionary<string, long> {
+                { this.Request.Sender, this.GetCurrentChannel().balance}, { this.Request.Receiver, this.GetCurrentChannel().peerBalance } };
             this.Request.MessageBody.Settlement = this.MakeupSignature(this.onGoingRequest.MessageBody.Settlement);
+
             return base.MakeupMessage();
         }
 
         #region SettleSign_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(true); }
+
+        public override void InitializeMessageBody(int role = 0)
+        {
+            this.Request.MessageBody = new SettleSignBody
+            {
+                AssetType = this.onGoingRequest.MessageBody.AssetType
+            };
+        }
+
+        public override void SetLocalsFromBody()
+        {
+            // RoleIndex Related
+            this.RoleMax = 0;
+            this.currentRole = 0; // record current role Index
+
+            // Asset type from message body for adaptor old version trinity
+            this.AssetType = this.Request.MessageBody.AssetType;
+        }
+
         public override void AddTransactionSummary()
         {
             // Add txid for monitor

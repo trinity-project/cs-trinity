@@ -201,6 +201,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
                 // record the transaction to levelDB
                 this.GetChannelLevelDbEntry()?.AddTransaction(this.Request.TxNonce, txContent);
+                this.UpdateChannelSummary(); // add channel summary
             }
         }
 
@@ -226,6 +227,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         #region Founder_Override_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+
         public override void InitializeMessageBody(string asset, long payment, int role = 0, string hashcode = null, string rcode = null)
         {
             this.Request.MessageBody = new FounderBody
@@ -401,9 +403,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 // Update the channel to opening state
                 this.UpdateChannelState(EnumChannelState.OPENING);
-
-                // Add channel summary information
-                this.UpdateChannelSummary(this.Request.ChannelName, this.Request.TxNonce, this.GetPeerUri());
             }
         }
 

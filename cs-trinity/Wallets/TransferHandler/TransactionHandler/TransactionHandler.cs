@@ -81,6 +81,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         // Local variables members for initialization steps
         private string selfUri = null;
         private string peerUri = null;
+        private UInt64 latestNonce = 0;
         protected string channelName = null;
 
         protected string AssetType = null;
@@ -210,21 +211,21 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.channelDBEntry?.AddTransaction(txId, txContent);
         }
 
-        public void UpdateChannelSummary(string channel, UInt64 nonce, string peerUri)
+        public void UpdateChannelSummary()
         {
             ChannelSummaryContents txContent = new ChannelSummaryContents
             {
-                nonce = nonce,
-                peer = peerUri,
+                nonce = this.Request.TxNonce,
+                peer = this.peerUri,
                 type = null
             };
 
-            this.channelDBEntry?.UpdateChannelSummary(channel, txContent);
+            this.channelDBEntry?.UpdateChannelSummary(this.Request.ChannelName, txContent);
         }
 
         public UInt64 CurrentNonce(string channel)
         {
-            this.currentChannelSummary = this.currentChannelSummary ?? this.channelDBEntry?.TryGetChannelSummary(channel);
+            this.currentChannelSummary = this.currentChannelSummary ?? this.GetChannelLevelDbEntry()?.TryGetChannelSummary(channel);
             return this.currentChannelSummary.nonce;
         }
 
@@ -378,6 +379,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// One set of methods are used to be overwritten for initialize transaction handler
         /// instances with different actions.
         //////////////////////////////////////////////////////////////////////////////////
+
         public virtual void InitializeMessage(string sender, string receiver, string channel, string asset,
             string magic, ulong nonce)
         {
@@ -388,7 +390,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 ChannelName = channel,
                 AssetType = asset,
                 NetMagic = magic ?? this.GetNetMagic(),
-                TxNonce = nonce
+                TxNonce = this.latestNonce
             };
         }
 
@@ -426,27 +428,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// </summary>
         public virtual void InitializeBlockChainApi()
         {
-            // if is creating channel
-            if (fundingNonce == this.Request.TxNonce)
-            {
-                this.GetBlockChainAdaptorApi(this.currentChannel.balance, this.currentChannel.peerBalance);
-            }
-            else
-            {
-                // Get funding trade
-                this.GetFundingTrade();
-
-                // initialize the BlockChain Api
-                if (null != this.currentChannel
-                    && null != this.fundingTrade
-                    && null != this.fundingTrade.founder.originalData.scriptFunding
-                    && null != this.fundingTrade.founder.originalData.addressFunding)
-                {
-                    long[] balanceOfPeers = this.CalculateBalance(this.currentChannel.balance, this.currentChannel.peerBalance);
-                    this.GetBlockChainAdaptorApi(balanceOfPeers[0], balanceOfPeers[1]);
-                    this.SetTransactionValid();
-                }
-            }
+            // default is for Founder
+            this.GetBlockChainAdaptorApi();
 
             return;
         }
@@ -509,14 +492,29 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return this.hlockTrade;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="balance"> deposit vaule for creating channel or self balance after payment </param>
-        /// <param name="peerBalance"> deposit vaule for creating channel or peer balance after payment </param>
-        /// <returns></returns>
-        public virtual NeoTransaction GetBlockChainAdaptorApi(long balance, long peerBalance)
+        public NeoTransaction GetBlockChainAdaptorApi()
         {
+            this.neoTransaction = new NeoTransaction(this.AssetType.ToAssetId(),
+                this.GetPubKey(), this.currentChannel.balance.ToString(),
+                this.GetPeerPubKey(), this.currentChannel.peerBalance.ToString());
+            return this.neoTransaction;
+        }
+
+        public NeoTransaction GetBlockChainAdaptorApi(bool isSettle)
+        {
+            long balance = this.currentChannel.balance;
+            long peerBalance = this.currentChannel.peerBalance;
+
+            // get funding trade
+            this.GetFundingTrade();
+            if (!isSettle)
+            {
+                long[] balanceOfPeers = this.CalculateBalance(balance, peerBalance);
+                balance = balanceOfPeers[0];
+                peerBalance = balanceOfPeers[1];
+            }
+
+            // generate the neotransaction
             this.neoTransaction = new NeoTransaction(this.AssetType.ToAssetId(), this.GetPubKey(), balance.ToString(),
                                 this.GetPeerPubKey(), peerBalance.ToString(),
                                 this.fundingTrade?.founder.originalData.addressFunding,

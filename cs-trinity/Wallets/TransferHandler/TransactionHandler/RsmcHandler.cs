@@ -157,7 +157,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 if (this.IsRole1(this.Request.MessageBody.RoleIndex))
                 {
                     // Add channel summary information
-                    this.UpdateChannelSummary(this.Request.ChannelName, this.Request.TxNonce, this.Request.Receiver);
+                    this.UpdateChannelSummary();
                 }
             }
             else if (IsRole2(this.Request.MessageBody.RoleIndex) || IsRole3(this.Request.MessageBody.RoleIndex))
@@ -263,6 +263,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         #region RsmcHandler_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(false); }
+
         public override void InitializeMessageBody(string asset, long payment, int role = 0, string hashcode = null, string rcode = null)
         {
             this.Request.MessageBody = new RsmcBody
@@ -376,7 +378,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 if (this.IsRole1(this.Request.MessageBody.RoleIndex))
                 {
                     // Add channel summary information
-                    this.UpdateChannelSummary(this.Request.ChannelName, this.Request.TxNonce, this.Request.Sender);
+                    this.UpdateChannelSummary();
                 }
             }
             return base.SucceedStep();
@@ -417,6 +419,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         #region RsmcHandler_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(false); }
+
         public override void InitializeMessageBody(int role = 0)
         {
             this.Request.MessageBody = new RsmcSignBody

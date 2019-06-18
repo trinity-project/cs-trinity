@@ -131,6 +131,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         #region RegisterChannel_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+
         public override void InitializeMessage(string sender, string receiver, string channel, string asset, string magic, ulong nonce)
         {
             base.InitializeMessage(sender, receiver, channel, asset, magic, nonce);
