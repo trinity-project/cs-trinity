@@ -82,15 +82,15 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool SucceedStep()
         {
-            new FounderHandler(
-                this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.MessageBody.Deposit)
-                .MakeTransaction();
-
             // Add channel to database
             this.AddChannel(this.Request.Receiver, this.Request.Sender, EnumRole.PARTNER);
 
-            return true;
+            // trigger new Founder message
+            FounderHandler founderHndl = new FounderHandler(
+                this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
+                this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.MessageBody.Deposit);
+
+            return founderHndl.MakeTransaction();
         }
 
         public override bool MakeTransaction()

@@ -294,8 +294,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.Request.Error = errorCode;
 
             // Get current transaction
-            this.currentTransaction =
-                this.GetChannelLevelDbEntry().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
+            this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
         }
 
         public override bool Handle()
