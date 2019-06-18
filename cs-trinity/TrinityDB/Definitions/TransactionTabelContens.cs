@@ -64,8 +64,9 @@ namespace Trinity.TrinityDB.Definitions
         public int role;        // record current role index
         public bool isFounder;  // indicates who leads the transaction
         public string monitorTxId;
-        public string state;    // mapping to 
-        
+        public string state;    // mapping to EnumTransactionState
+        // TODO : might be used in the future.
+        // public string type;     // mapping to EnumTransactionType
     }
 
     [MessagePackObject(keyAsPropertyName: true)]

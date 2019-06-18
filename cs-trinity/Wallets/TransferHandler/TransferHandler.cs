@@ -203,7 +203,7 @@ namespace Trinity.Wallets.TransferHandler
             try
             {
                 // Verify the messages
-                if (!this.Verify())
+                if (this.Verify())
                 {
                     this.SucceedStep();
                     return true;
