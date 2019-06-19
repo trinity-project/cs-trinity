@@ -172,27 +172,18 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // Just add the transaction when role index is zero
             if (IsRole0(this.currentRole))
             {
-                TransactionFundingContent txContent = new TransactionFundingContent
+                TransactionFundingContent txContent = this.NewTransactionContent<TransactionFundingContent>(isFounder);
+                txContent.founder = new TxContentsSignGeneric<FundingTx>
                 {
-                    nonce = this.Request.TxNonce,
-                    balance = this.Request.MessageBody.Deposit,
-                    peerBalance = this.Request.MessageBody.Deposit,
-                    role = this.currentRole,
-                    isFounder = isFounder,
-                    state = EnumTransactionState.initial.ToString(),
-
-                    // transaction body
-                    founder = new TxContentsSignGeneric<FundingTx>
-                    {
-                        originalData = this.Request.MessageBody.Founder
-                    },
-                    commitment = new TxContentsSignGeneric<CommitmentTx>(),
-                    revocableDelivery = new TxContentsSignGeneric<RevocableDeliveryTx>()
+                    originalData = this.Request.MessageBody.Founder
                 };
 
                 // Add related information according to the value of isFounder
                 if (isFounder)
                 {
+                    txContent.commitment = new TxContentsSignGeneric<CommitmentTx>();
+                    txContent.revocableDelivery = new TxContentsSignGeneric<RevocableDeliveryTx>();
+
                     // add commitment and revocable delivery transaction info.
                     txContent.commitment.originalData = this.Request.MessageBody.Commitment;
                     txContent.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
@@ -282,6 +273,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     public class FounderSignHandler : TransactionHandler<FounderSign, Founder, FounderHandler, FounderSignHandler>
     {
         private TransactionFundingContent currentTransaction = null;
+
         /// <summary>
         /// Handle received FounderSign message
         /// </summary>

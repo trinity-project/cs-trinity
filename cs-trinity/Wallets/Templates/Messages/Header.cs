@@ -44,6 +44,7 @@ namespace Trinity.Wallets.Templates.Messages
         public string Sender { get; set; }
         public string Receiver { get; set; }
         public string NetMagic { get; set; }
+        public string AssetType { get; set; }
     }
 
     /// <summary>
@@ -73,7 +74,6 @@ namespace Trinity.Wallets.Templates.Messages
         /// Mandatory contents in the message header
         /// </summary>
         public string ChannelName { get; set; }
-        public string AssetType { get; set; }
         public UInt64 TxNonce { get; set; }
     }
 

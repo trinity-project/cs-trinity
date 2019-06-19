@@ -83,11 +83,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             };
         }
 
-        public override void InitializeMessage(string sender, string receiver, string channel, string asset, string magic, ulong nonce)
-        {
-            base.InitializeMessage(sender, receiver, channel, asset, magic, nonce);
-        }
-
         public override void SetLocalsFromBody()
         {
             this.HashR = this.onGoingRequest.MessageBody.HR;

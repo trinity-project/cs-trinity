@@ -78,6 +78,12 @@ namespace Trinity.TrinityDB.Definitions
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
+    public class TransactionSettleContent : TransactionTabelContent
+    {
+        public TxContentsSignGeneric<TxContents> settle;
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionRsmcContent : TransactionTabelContent
     {
         public TxContentsSignGeneric<CommitmentTx> commitment;

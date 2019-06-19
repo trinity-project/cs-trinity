@@ -38,11 +38,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     public class RegisterChannelHandler 
         : TransactionHandler<RegisterChannel, VoidTransactionMessage, RegisterChannelHandler, RegisterChannelFailHandler>
     {
-        // Default Constructor
-        public RegisterChannelHandler(): base()
-        {
-        }
-
         /// <summary>
         /// 
         /// </summary>
@@ -54,7 +49,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="nonce"></param>
         /// <param name="deposit"></param>
         public RegisterChannelHandler(string sender, string receiver, string channel, string asset, string magic, 
-            long deposit) : base(sender, receiver, channel, asset, magic, 0, deposit)
+            long deposit) : base(sender, receiver, null, asset, magic, 0, deposit)
         {
         }
 
@@ -108,6 +103,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return false;
         }
 
+        public override bool Verify()
+        {
+            this.VerifyDeposit(this.Request.MessageBody.Deposit);
+
+            return true;
+        }
+
         public void AddChannel(string uri, string peerUri, EnumRole role= EnumRole.FOUNDER)
         {
             ChannelTableContent content = new ChannelTableContent
@@ -134,13 +136,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override void InitializeMessage(string sender, string receiver, string channel, string asset, string magic, ulong nonce)
         {
-            base.InitializeMessage(sender, receiver, channel, asset, magic, nonce);
-
             // create a new channel
             if (null == channel)
             {
-                this.Request.ChannelName = Channel.NewChannel(sender, receiver);
+                channel = Channel.NewChannel(sender, receiver);
             }
+
+            base.InitializeMessage(sender, receiver, channel, asset, magic, nonce);
         }
         public override void InitializeMessageBody(string asset, long payment, int role = 0, string hashcode = null, string rcode = null)
         {

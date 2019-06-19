@@ -44,16 +44,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     public class SettleHandler : TransactionHandler<Settle, SettleSign, SettleHandler, SettleSignHandler>
     {
         /// <summary>
-        /// Constructors
-        /// </summary>
-        /// <param name="message"></param>
-        public SettleHandler(string message) : base(message)
-        {
-            // Whatever happens, we set the channel settling when the Settle message was received
-            this.UpdateChannelState(EnumChannelState.SETTLING);
-        }
-
-        /// <summary>
         /// Default Constructor
         /// </summary>
         /// <param name="sender"></param>
@@ -67,6 +57,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.Request.TxNonce = this.NextNonce(channel);
 
             // Whatever happens, we set the channel settling when Settle message is being to send
+            this.UpdateChannelState(EnumChannelState.SETTLING);
+        }
+
+        /// <summary>
+        /// Constructors
+        /// </summary>
+        /// <param name="message"></param>
+        public SettleHandler(string message) : base(message)
+        {
+            // Whatever happens, we set the channel settling when the Settle message was received
             this.UpdateChannelState(EnumChannelState.SETTLING);
         }
 
@@ -204,7 +204,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.Request.MessageBody.Settlement.originalData.txData,
                 this.Request.MessageBody.Settlement.txDataSign,
                 this.Request.MessageBody.Settlement.originalData.witness );
-            Log.Debug("Broadcast Settle transaction result: {0}. txId: {1}", ret, this.Request.MessageBody.Settlement.originalData.txId);
+            Log.Info("Broadcast Settle transaction result: {0}. txId: {1}", ret, this.Request.MessageBody.Settlement.originalData.txId);
+        }
+
+        public bool MakeupRefundTxSign(TxContents contents)
+        {
+            this.Request.MessageBody.Settlement = this.MakeupSignature(contents);
+            this.Request.MessageBody.Balance = new Dictionary<string, long> {
+                { this.Request.Sender, this.GetCurrentChannel().balance}, { this.Request.Receiver, this.GetCurrentChannel().peerBalance } };
+
+            return true;
         }
 
         public override bool MakeTransaction()
@@ -227,6 +236,14 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.Request.MessageBody.Settlement = this.MakeupSignature(this.onGoingRequest.MessageBody.Settlement);
 
             return base.MakeupMessage();
+        }
+
+        public override bool Verify()
+        {
+            this.VerifySignarture(this.Request.MessageBody.Settlement.originalData.txData,
+                this.Request.MessageBody.Settlement.txDataSign);
+
+            return true;
         }
 
         #region SettleSign_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER

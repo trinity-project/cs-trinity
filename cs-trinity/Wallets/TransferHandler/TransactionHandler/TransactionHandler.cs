@@ -81,6 +81,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         // Local variables members for initialization steps
         private string selfUri = null;
         private string peerUri = null;
+        private long balance = 0;
+        private long peerBalance = 0;
         private UInt64 latestNonce = 0;
         protected string channelName = null;
 
@@ -414,6 +416,20 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return this.peerUri;
         }
 
+        public TTransactionContent NewTransactionContent<TTransactionContent>(bool isFounder = false)
+            where TTransactionContent : TransactionTabelContent, new()
+        {
+            return new TTransactionContent
+            {
+                nonce = this.Request.TxNonce,
+                balance = this.balance,
+                peerBalance = this.peerBalance,
+                role = this.currentRole,
+                isFounder = isFounder,
+                state = EnumTransactionState.initial.ToString(),
+            };
+        }
+
         #region VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
         //////////////////////////////////////////////////////////////////////////////////
         /// Start of virtual methods for different actions:
@@ -466,7 +482,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         /// <summary>
-        /// Initialize the blockchain API for makeup the transaction body
+        /// Initialize the blockchain API for makeup the transaction body. It 
         /// </summary>
         public virtual void InitializeBlockChainApi()
         {
@@ -536,31 +552,34 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public NeoTransaction GetBlockChainAdaptorApi()
         {
+            // Use the current channel balance to initialize some locals here
+            this.balance = this.GetCurrentChannel().balance;
+            this.peerBalance = this.GetCurrentChannel().peerBalance;
+
             this.neoTransaction = new NeoTransaction(this.AssetType.ToAssetId(),
-                this.GetPubKey(), this.currentChannel.balance.ToString(),
-                this.GetPeerPubKey(), this.currentChannel.peerBalance.ToString());
+                this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString());
             return this.neoTransaction;
         }
 
         public NeoTransaction GetBlockChainAdaptorApi(bool isSettle)
         {
-            long balance = this.currentChannel.balance;
-            long peerBalance = this.currentChannel.peerBalance;
+            // Use the current channel balance to initialize some locals here
+            this.balance = this.GetCurrentChannel().balance;
+            this.peerBalance = this.GetCurrentChannel().peerBalance;
 
             // get funding trade
             this.GetFundingTrade();
             if (!isSettle)
             {
-                long[] balanceOfPeers = this.CalculateBalance(balance, peerBalance);
-                balance = balanceOfPeers[0];
-                peerBalance = balanceOfPeers[1];
+                long[] balanceOfPeers = this.CalculateBalance(this.balance, this.peerBalance);
+                this.balance = balanceOfPeers[0];
+                this.peerBalance = balanceOfPeers[1];
             }
 
             // generate the neotransaction
-            this.neoTransaction = new NeoTransaction(this.AssetType.ToAssetId(), this.GetPubKey(), balance.ToString(),
-                                this.GetPeerPubKey(), peerBalance.ToString(),
-                                this.fundingTrade?.founder.originalData.addressFunding,
-                                this.fundingTrade?.founder.originalData.scriptFunding);
+            this.neoTransaction = new NeoTransaction(this.AssetType.ToAssetId(), 
+                this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString(),
+                this.fundingTrade?.founder.originalData.addressFunding, this.fundingTrade?.founder.originalData.scriptFunding);
             return this.neoTransaction;
         }
 

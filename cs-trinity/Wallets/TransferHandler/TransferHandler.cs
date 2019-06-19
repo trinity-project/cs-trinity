@@ -284,5 +284,10 @@ namespace Trinity.Wallets.TransferHandler
         {
             return this.Request.Receiver.Contains(this.GetWalletPublicKey());
         }
+
+        public virtual bool VerifyAssetType(string assetType)
+        {
+            return true;
+        }
     }
 }
