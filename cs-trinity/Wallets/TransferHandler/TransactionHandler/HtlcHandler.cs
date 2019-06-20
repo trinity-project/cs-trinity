@@ -595,8 +595,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override void UpdateTransaction()
         {
-            if ((this.IsRole0(this.Request.MessageBody.RoleIndex) && this.currentTransaction.isFounder) ||
-                (this.IsRole1(this.Request.MessageBody.RoleIndex) && !this.currentTransaction.isFounder))
+            if ((this.IsRole0(this.Request.MessageBody.RoleIndex) && this.isFounder) ||
+                (this.IsRole1(this.Request.MessageBody.RoleIndex) && !this.isFounder))
             {
                 this.currentTransaction.HCTX.txDataSign = this.Request.MessageBody.HCTX.txDataSign;
                 this.currentTransaction.RDTX.txDataSign = this.Request.MessageBody.RDTX.txDataSign;

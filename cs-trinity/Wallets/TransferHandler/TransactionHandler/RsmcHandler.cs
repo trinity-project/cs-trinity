@@ -483,8 +483,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override void UpdateTransaction()
         {
-            if ((this.IsRole0(this.Request.MessageBody.RoleIndex) && this.currentTransaction.isFounder) ||
-                (this.IsRole1(this.Request.MessageBody.RoleIndex) && !this.currentTransaction.isFounder))
+            if ((this.IsRole0(this.Request.MessageBody.RoleIndex) && this.isFounder) ||
+                (this.IsRole1(this.Request.MessageBody.RoleIndex) && !this.isFounder))
             {
                 this.currentTransaction.commitment.txDataSign = this.Request.MessageBody.Commitment.txDataSign;
                 this.currentTransaction.revocableDelivery.txDataSign = this.Request.MessageBody.RevocableDelivery.txDataSign;

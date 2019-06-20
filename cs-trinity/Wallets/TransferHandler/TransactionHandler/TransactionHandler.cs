@@ -165,8 +165,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool MakeTransaction()
         {
-            this.AddOrUpdateTransaction(true);
-            return base.MakeTransaction();
+            if (base.MakeTransaction())
+            {
+                this.AddOrUpdateTransaction(true);
+                return true;
+            }
+
+            return false;
         }
 
         //

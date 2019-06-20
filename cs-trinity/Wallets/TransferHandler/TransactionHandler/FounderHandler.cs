@@ -44,6 +44,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// </summary>
     public class FounderHandler : TransactionHandler<Founder, Founder, FounderHandler, FounderSignHandler>
     {
+        private bool isFounder = false;
+
         // Transaction body for Founder message
         private FundingTx fundingTx = null;
         private CommitmentTx commTx = null;
@@ -54,16 +56,20 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             string magic, long deposit) : base(sender, receiver, channel, asset, magic, fundingNonce, deposit)
         {
             this.Request.TxNonce = fundingNonce; // To avoid rewrite outside.
+
+            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
         }
 
         public FounderHandler(string message) : base(message)
         {
             this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
+            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
         }
 
         public FounderHandler(Founder request, int role = 0) : base(request, role)
         {
             this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
+            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
         }
 
         public override bool SucceedStep()
@@ -166,7 +172,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.Request.MessageBody.Commitment = this.commTx;
             this.Request.MessageBody.RevocableDelivery = this.rdTx;
 
-            return false;
+            return true;
         }
 
         #region Founder_Override_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
@@ -207,20 +213,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 TransactionFundingContent txContent = this.NewTransactionContent<TransactionFundingContent>(isFounder);
 
+                txContent.founder = new TxContentsSignGeneric<FundingTx>();
+                txContent.commitment = new TxContentsSignGeneric<CommitmentTx>();
+                txContent.revocableDelivery = new TxContentsSignGeneric<RevocableDeliveryTx>();
+
                 txContent.type = EnumTransactionType.FUNDING.ToString();
                 txContent.payment = this.Request.MessageBody.Deposit;
-
-                txContent.founder = new TxContentsSignGeneric<FundingTx>
-                {
-                    originalData = this.Request.MessageBody.Founder
-                };
+                txContent.founder.originalData = this.Request.MessageBody.Founder;
 
                 // Add related information according to the value of isFounder
                 if (isFounder)
                 {
-                    txContent.commitment = new TxContentsSignGeneric<CommitmentTx>();
-                    txContent.revocableDelivery = new TxContentsSignGeneric<RevocableDeliveryTx>();
-
                     // add commitment and revocable delivery transaction info.
                     txContent.commitment.originalData = this.Request.MessageBody.Commitment;
                     txContent.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
@@ -277,6 +280,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// </summary>
     public class FounderSignHandler : TransactionHandler<FounderSign, Founder, FounderHandler, FounderSignHandler>
     {
+        private bool isFounder = false;
         private TransactionFundingContent currentTransaction = null;
 
         /// <summary>
@@ -287,6 +291,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.currentTransaction =
                 this.GetChannelLevelDbEntry().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
+            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
         }
 
         /// <summary>
@@ -301,6 +306,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             // Get current transaction
             this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
+            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
         }
 
         public override bool FailStep(string errorCode)
@@ -416,8 +422,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override void UpdateTransaction()
         {
-            if ((this.IsRole0(this.Request.MessageBody.RoleIndex) && this.currentTransaction.isFounder) ||
-                (this.IsRole1(this.Request.MessageBody.RoleIndex) && !this.currentTransaction.isFounder))
+            if ((this.IsRole0(this.Request.MessageBody.RoleIndex) && this.isFounder) ||
+                (this.IsRole1(this.Request.MessageBody.RoleIndex) && !this.isFounder))
             {
                 // start update the transaction
                 this.currentTransaction.founder.txDataSign = this.Request.MessageBody.Founder.txDataSign;
