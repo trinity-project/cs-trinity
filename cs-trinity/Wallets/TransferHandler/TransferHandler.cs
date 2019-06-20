@@ -241,7 +241,7 @@ namespace Trinity.Wallets.TransferHandler
             }
             else
             {
-                Log.Error("Fail to send {0} message.", this.Request.MessageType);
+                Log.Error("Fail to send {0}.", this.Request.MessageType);
             }
             return false;
         }

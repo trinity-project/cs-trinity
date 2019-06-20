@@ -44,12 +44,13 @@ namespace Trinity.Wallets.Templates.Messages
         public TxContentsSignGeneric<RevocableDeliveryTx> RevocableDelivery { get; set; }
         public TxContentsSignGeneric<BreachRemedyTx> BreachRemedy { get; set; }
         public int RoleIndex { get; set; }
+        public string Comments { get; set; }
+        public string HashR { get; set; }
     }
 
     [MessagePackObject(keyAsPropertyName:true)]
     public class RsmcSign : TransactionPlaneGeneric<RsmcSignBody>
     {
         public string Error { get; set; }
-        public string Comments { get; set; }
     }
 }

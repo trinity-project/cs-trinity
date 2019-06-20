@@ -43,6 +43,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     {
         // Locals for Htlc trade
         private bool isHtlcValid = false;
+        private bool isFounder = false;
+
+        // current transaction by nonce
+        private TransactionHtlcContent currentTransaction = null;
 
         private HtlcCommitTx hcTx;
         private HtlcRevocableDeliveryTx rdTx;
@@ -59,79 +63,84 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.Request.Router = router;
             this.Request.Next = router?[router.IndexOf(receiver) + 1];
+
+            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
         }
 
-        public HtlcHandler(string message) : base(message) { }
+        public HtlcHandler(string message) : base(message)
+        {
+            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
+
+            if (this.IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
+            }
+        }
 
         public HtlcHandler(Htlc message, int role=0) : base(message, role)
         {
             this.Request.Router = this.onGoingRequest.Router;
             this.Request.Next = this.onGoingRequest.Next;
-        }
+            this.isFounder = this.IsRole0(role);
 
-        public override bool Handle()
-        {
-            Log.Debug("Handle Message {0}. Channel name {1}, Asset Type: {2}, Payment: {3}. Balance: {4}. PeerBalance: {5}",
-                this.Request.MessageType,
-                this.Request.ChannelName,
-                this.Request.MessageBody.AssetType,
-                this.Request.MessageBody.Count,
-                this.GetCurrentChannel().balance, this.GetCurrentChannel().peerBalance);
-
-            if (!base.Handle())
+            if (this.IsRole1(role))
             {
-                return false;
+                this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
             }
-
-            // Add txid for monitor
-            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.HCTX.txId,
-                this.Request.ChannelName, EnumTransactionType.FUNDING);
-
-            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.RDTX.txId,
-                this.Request.ChannelName, EnumTransactionType.COMMITMENT);
-
-            return true;
         }
-
+        
         public override bool SucceedStep()
         {
-            bool ret = base.SucceedStep();
-            if (ret && this.IsRole1(this.Request.MessageBody.RoleIndex))
+            if (base.SucceedStep())
             {
-                // update 
-                this.AddTransaction(true);
-            };
+                Log.Info("Succeed handling Htlc. Channel: {0}, AssetType: {1}, Payment: {2}. Balance: {3}. PeerBalance: {4}, RoleIndex: {5}.",
+                    this.Request.ChannelName, this.Request.AssetType, this.Request.MessageBody.Count,
+                    this.SelfBalance(), this.PeerBalance(), this.Request.MessageBody.RoleIndex);
 
-            return ret;
+                return true;
+            }
+
+            return false;
+        }
+
+        public override bool FailStep(string errorCode)
+        {
+            Log.Error("Failed handling Htlc. Channel: {0}, AssetType: {1}, Payment: {2}. Balance: {3}. PeerBalance: {4}, RoleIndex: {5}. Error: {6}",
+                    this.Request.ChannelName, this.Request.AssetType, this.Request.MessageBody.Count,
+                    this.SelfBalance(), this.PeerBalance(), this.Request.MessageBody.RoleIndex, errorCode);
+            return base.FailStep(errorCode);
         }
 
         public override bool MakeTransaction()
         {
-            bool ret = base.MakeTransaction();
-            Log.Debug("{0} to send {1}. Channel name {2}, Asset Type: {3}, Payment: {4}.",
-                ret ? "Succeed" : "Fail",
-                this.Request.MessageType,
-                this.Request.ChannelName,
-                this.Request.MessageBody.AssetType,
-                this.Request.MessageBody.Count);
-            return ret;
-        }
-
-        // Todo: impmentation this method in the base class in future
-        public override bool VerifyRoleIndex()
-        {
-            if (this.IsIllegalRole(this.Request.MessageBody.RoleIndex))
+            if (base.MakeTransaction())
             {
-                Console.WriteLine("Invalid nonce for Htlc. Nonce: {0}", this.Request.TxNonce);
-                return false;
+                Log.Info("Send Htlc. Channel: {0}, AssetType: {1}, Payment: {2}. Balance: {3}. PeerBalance: {4}, RoleIndex: {5}.",
+                    this.Request.ChannelName, this.Request.AssetType, this.Request.MessageBody.Count,
+                    this.SelfBalance(), this.PeerBalance(), this.Request.MessageBody.RoleIndex);
+
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         public override bool Verify()
         {
-            return this.VerifyRoleIndex();
+            this.VerifyUri();
+            this.VerifyRoleIndex();
+            this.VerifyAssetType(this.Request.MessageBody.AssetType);
+
+            if (this.IsRole0(this.Request.MessageBody.RoleIndex))
+            {
+                this.VerifyNonce(this.NextNonce(this.Request.ChannelName));
+            }
+            else
+            {
+                this.VerifyNonce(this.CurrentNonce(this.Request.ChannelName));
+            }
+
+            return true;
         }
 
         public override bool MakeupMessage()
@@ -203,8 +212,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.Request.MessageBody.HETX = this.MakeupSignature(this.heTx);
                 this.Request.MessageBody.HERDTX = this.MakeupSignature(this.heRdTx);
                 this.Request.MessageBody.HTDTX = this.htdTx;
-
-                // TODO: record to db ???
             }
             else
             {
@@ -214,24 +221,28 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
-        public override void AddTransaction(bool isFounder = false)
+        private void AddHLockPair(bool isFounder)
         {
-            // TODO: add transaction to dabase
-        }
-
-        private string ChooseChannel(string peer, long payment)
-        {
-            foreach (ChannelTableContent channel in this.GetChannelLevelDbEntry()?.GetChannelListOfThisWallet())
+            // add new hlock pair for this transaction
+            TransactionTabelHLockPair hLockPair = new TransactionTabelHLockPair
             {
-                if (channel.peer.Equals(peer)
-                    && channel.state.Equals(EnumChannelState.OPENED.ToString())
-                    && payment <= channel.balance)
-                {
-                    return channel.channel;
-                }
-            }
+                transactionType = EnumTransactionType.HTLC.ToString(),
+                state = EnumTransactionState.initial.ToString(),
+                htlcNonce = this.Request.TxNonce,
+                router = this.Request.Router
+            };
 
-            return null;
+            // record the below information according to the transaction play role
+            if (isFounder)
+            {
+                hLockPair.paymentChannel = this.Request.ChannelName;
+                hLockPair.payment = this.Request.MessageBody.Count;
+            }
+            else
+            {
+                hLockPair.incomeChannel = this.Request.ChannelName;
+                hLockPair.income = this.Request.MessageBody.Count;
+            }
         }
 
         #region Htlc_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
@@ -266,7 +277,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.currentRole = this.Request.MessageBody.RoleIndex; // record current role Index
 
             // Asset type from message body for adaptor old version trinity
-            this.AssetType = this.Request.MessageBody.AssetType;
+            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override void SetTransactionValid()
@@ -274,10 +285,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.isHtlcValid = true;
         }
 
-        public override long[] CalculateBalance(long balance, long peerBalance)
+        public override void CalculateBalance()
         {
-            return this.CalculateBalance(this.Request.MessageBody.RoleIndex, balance, peerBalance, 
-                this.Request.MessageBody.Count, false, false);
+            base.CalculateBalance(this.Request.MessageBody.Count, this.isFounder, true);
         }
 
         public override HtlcHandler CreateRequestHndl(int role)
@@ -289,46 +299,176 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             return new HtlcSignHandler(this.onGoingRequest, errorCode);
         }
+
+        public override void AddTransaction(bool isFounder = false)
+        {
+            // Just add the transaction when role index is zero
+            if (!IsRole0(this.Request.MessageBody.RoleIndex))
+            {
+                return;
+            }
+
+            // Add transaction to leveldb
+            TransactionHtlcContent txContent = this.NewTransactionContent<TransactionHtlcContent>(isFounder);
+            // HCTX = self.hctx, HEDTX=self.hedtx, HTTX= self.httx
+            txContent.type = EnumTransactionType.HTLC.ToString();
+            txContent.payment = this.Request.MessageBody.Count;
+            txContent.hashcode = this.Request.MessageBody.HashR;
+            txContent.HEDTX = this.Request.MessageBody.HEDTX;
+            txContent.HCTX = new TxContentsSignGeneric<HtlcCommitTx>();
+            txContent.RDTX = new TxContentsSignGeneric<HtlcRevocableDeliveryTx>();
+
+            // record self transaction contents, wait for signature.
+            if (isFounder)
+            {
+                txContent.HCTX.originalData = this.Request.MessageBody.HCTX;
+                txContent.RDTX.originalData = this.Request.MessageBody.RDTX;
+
+                txContent.HTTX = new TxContentsSignGeneric<HtlcTimoutTx>
+                {
+                    originalData = this.Request.MessageBody.HTTX
+                };
+
+                txContent.HTRDTX = new TxContentsSignGeneric<HtlcTimeoutRevocableDelivertyTx>
+                {
+                    originalData = this.Request.MessageBody.HTRDTX
+                };
+            }
+
+            // record the transaction to levelDB
+            this.GetChannelLevelDbEntry()?.AddTransaction(this.Request.TxNonce, txContent);
+
+            // reord the htlc lock pair
+            this.AddHLockPair(isFounder);
+        }
+
+        public override void UpdateTransaction()
+        {
+            // when role 0, just add the transaction
+            if (IsRole0(this.Request.MessageBody.RoleIndex))
+            {
+                return;
+            }
+
+            this.currentTransaction.state = EnumTransactionState.confirming.ToString();
+            this.currentTransaction.HETX = this.Request.MessageBody.HETX;
+            this.currentTransaction.HERDTX = this.Request.MessageBody.HERDTX;
+
+            // update the transaction
+            if (!this.currentTransaction.isFounder)
+            {
+                this.currentTransaction.HCTX.originalData = this.Request.MessageBody.HCTX;
+                this.currentTransaction.RDTX.originalData = this.Request.MessageBody.RDTX;
+
+                this.currentTransaction.HTDTX = new TxContentsSignGeneric<HtlcTimeoutDeliveryTx>
+                {
+                    originalData = this.Request.MessageBody.HTDTX,
+                };
+            }
+
+            // update the transaction
+            this.GetChannelLevelDbEntry()?.UpdateTransaction(this.Request.TxNonce, this.currentTransaction);
+        }
         #endregion //Htlc_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    /// HtlcSignHandler start
+    /// ///////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// Class Handler for handling HtlcSign Message
     /// </summary>
     public class HtlcSignHandler : TransactionHandler<HtlcSign, Htlc, HtlcHandler, HtlcFailHandler>
     {
-        public HtlcSignHandler(string message) : base(message) { }
+        private bool isFounder = false;
+
+        private TransactionHtlcContent currentTransaction = null;
+        private TransactionTabelHLockPair currentHLockTransaction = null;
+
+        public HtlcSignHandler(string message) : base(message)
+        {
+            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
+
+            // Get the current transaction
+            this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
+            this.currentHLockTransaction = this.GetHLockPair();
+        }
 
         public HtlcSignHandler(Htlc message, string errorCode="Ok"):base(message)
         {
+            this.Request.Router = this.onGoingRequest.Router;
+            this.Request.Next = this.onGoingRequest.Next;
             this.Request.Error = errorCode;
+            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
+
+            if (this.IsRole1(this.Request.MessageBody.RoleIndex))
+            {   
+                // Get the current transaction
+                this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
+                this.currentHLockTransaction = this.GetHLockPair();
+            }
         }
 
         public override bool Handle()
         {
-            Log.Debug("Handle Message {0}. Channel name {1}, Asset Type: {2}, Value: {3}.",
-                this.Request.MessageType,
-                this.Request.ChannelName,
-                this.Request.MessageBody.AssetType,
-                this.Request.MessageBody.Count);
-            return base.Handle();
-        }
-
-        public override bool SucceedStep()
-        {
-            if (this.IsRole0(this.Request.MessageBody.RoleIndex))
-            {
-                // Todo: update level db
-            }
-            else if (this.IsRole1(this.Request.MessageBody.RoleIndex))
-            {
-                // Todo: update level db
-            }
-            else
+            if (!base.Handle())
             {
                 return false;
             }
-            return base.SucceedStep();
+
+            // Trigger htlc to next peer
+            if (this.IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                this.TriggerHtlcToNextPeer();
+            }
+
+            return true;
+        }
+        
+        public override bool SucceedStep()
+        {
+            if (base.SucceedStep())
+            {
+                Log.Info("Succeed handling HtlcSign. Channel: {0}, AssetType: {1}, Payment: {2}. Balance: {3}. PeerBalance: {4}, RoleIndex: {5}.",
+                    this.Request.ChannelName, this.Request.AssetType, this.Request.MessageBody.Count,
+                    this.SelfBalance(), this.PeerBalance(), this.Request.MessageBody.RoleIndex);
+                return true;
+            }
+
+            return false;
+        }
+
+        public override bool FailStep(string errorCode)
+        {
+            Log.Error("Succeed handling HtlcSign. Channel: {0}, AssetType: {1}, Payment: {2}. Balance: {3}. PeerBalance: {4}, RoleIndex: {5}. Error: {6}.",
+                    this.Request.ChannelName, this.Request.AssetType, this.Request.MessageBody.Count,
+                    this.SelfBalance(), this.PeerBalance(), this.Request.MessageBody.RoleIndex, errorCode);
+            return base.FailStep(errorCode);
+        }
+
+        public override bool MakeTransaction()
+        {
+            if (base.MakeTransaction())
+            {
+                Log.Info("Send HtlcSign. Channel: {0}, AssetType: {1}, Payment: {2}. Balance: {3}. PeerBalance: {4}, RoleIndex: {5}.",
+                    this.Request.ChannelName, this.Request.AssetType, this.Request.MessageBody.Count,
+                    this.SelfBalance(), this.PeerBalance(), this.Request.MessageBody.RoleIndex);
+            }
+            
+            return false;
+        }
+
+        public override bool Verify()
+        {
+            this.VerifyUri();
+            this.VerifyRoleIndex();
+            this.VerifyAssetType(this.Request.MessageBody.AssetType);
+            this.VerifyNonce(this.CurrentNonce(this.Request.ChannelName));
+
+            return true;
         }
 
         public override bool MakeupMessage()
@@ -354,6 +494,77 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return base.MakeupMessage();
         }
 
+        // ToDo: used in future
+        private string ChooseChannel(string peer, long payment)
+        {
+            foreach (ChannelTableContent channel in this.GetChannelLevelDbEntry()?.GetChannelListOfThisWallet())
+            {
+                if (channel.peer.Equals(peer)
+                    && channel.state.Equals(EnumChannelState.OPENED.ToString())
+                    && payment <= channel.balance)
+                {
+                    return channel.channel;
+                }
+            }
+
+            return null;
+        }
+
+        private void TriggerHtlcToNextPeer()
+        {
+            if (!this.IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                return;
+            }
+
+            // trigger htlc to next peer
+            if (this.IsPayee(out int currentUriIndex))
+            {
+                Log.Info("Htlc with HashR<{0}> has been finished since the payee has received the payment: {1}.",
+                    this.Request.MessageBody.HashR, this.Request.MessageBody.Count);
+                return;
+            }
+
+            string nextPeerUri = this.Request.Router[currentUriIndex + 1];
+            long payment = this.CalculatePayment();
+
+            // Get the channel for next htlc
+            string channelName = this.ChooseChannel(nextPeerUri, payment);
+            if (null != channelName)
+            {
+                // trigger new htlc
+                HtlcHandler htlcHndl = new HtlcHandler(
+                    this.GetUri(), nextPeerUri, channelName, this.Request.MessageBody.AssetType,
+                    this.Request.NetMagic, 0, payment, this.Request.MessageBody.HashR, this.Request.Router);
+            }
+            else
+            {
+                Log.Error("Could not find the channel for HTLC with HashR: {0}", this.Request.MessageBody.HashR);
+            }
+
+            return;
+        }
+
+        private bool IsPayee(out int currentUriIndex)
+        {
+            // for adapting the old trinity, here we have to use complicated logics
+            currentUriIndex = this.Request.Router.IndexOf(this.GetUri());
+            if (2 >= this.Request.Router.Count - currentUriIndex)
+            {
+                Log.Info("HTLC with HashR<{0}> finished since the payee has received the payment");
+                return true;
+            }
+
+            return false;
+        }
+        
+        private long CalculatePayment()
+        {
+            // use Hardcode Fee this time
+            long fee = 100000; // 0.01
+            return this.Request.MessageBody.Count - fee;
+        }
+
         #region HtlcSign_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
         public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(false); }
         public override void InitializeMessageBody(int role = 0)
@@ -374,13 +585,62 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.currentRole = this.Request.MessageBody.RoleIndex; // record current role Index
 
             // Asset type from message body for adaptor old version trinity
-            this.AssetType = this.Request.MessageBody.AssetType;
+            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
-        public override long[] CalculateBalance(long balance, long peerBalance)
+        public override void CalculateBalance()
         {
-            return this.CalculateBalance(this.Request.MessageBody.RoleIndex, balance, peerBalance,
-                this.Request.MessageBody.Count, false, false);
+            base.CalculateBalance(this.Request.MessageBody.Count, this.isFounder, true);
+        }
+
+        public override void UpdateTransaction()
+        {
+            if ((this.IsRole0(this.Request.MessageBody.RoleIndex) && this.currentTransaction.isFounder) ||
+                (this.IsRole1(this.Request.MessageBody.RoleIndex) && !this.currentTransaction.isFounder))
+            {
+                this.currentTransaction.HCTX.txDataSign = this.Request.MessageBody.HCTX.txDataSign;
+                this.currentTransaction.RDTX.txDataSign = this.Request.MessageBody.RDTX.txDataSign;
+                this.currentTransaction.state = EnumTransactionState.confirmed.ToString();
+
+                if (IsRole0(this.Request.MessageBody.RoleIndex))
+                {
+                    this.currentTransaction.HTTX.txDataSign = this.Request.MessageBody.HTTX.txDataSign;
+                    this.currentTransaction.HTRDTX.txDataSign = this.Request.MessageBody.HTRDTX.txDataSign;
+                }
+                else if (IsRole1(this.Request.MessageBody.RoleIndex))
+                {
+                    this.currentTransaction.HTDTX.txDataSign = this.Request.MessageBody.HTDTX.txDataSign;
+                }
+
+                // update the HLockPair if needed
+                if (null != this.currentHLockTransaction)
+                {
+                    this.UpdateHLockPair(EnumTransactionState.confirming);
+                }
+
+                this.GetChannelLevelDbEntry().UpdateTransaction(this.Request.TxNonce, this.currentTransaction);
+
+                // update the channel balance
+                this.UpdateChannelBalance();
+            }
+        }
+
+        public override void UpdateChannelSummary()
+        {
+            this.RecordChannelSummary();
+        }
+
+        public override void AddTransactionSummary()
+        {
+            if (this.IsRole0(this.Request.MessageBody.RoleIndex) || this.IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                // Add transaction summary for monitoring
+                this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.HCTX.originalData.txId,
+                    this.Request.ChannelName, EnumTransactionType.COMMITMENT);
+
+                this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.RDTX.originalData.txId,
+                    this.Request.ChannelName, EnumTransactionType.REVOCABLE);
+            }
         }
         #endregion //HtlcSign_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
     }

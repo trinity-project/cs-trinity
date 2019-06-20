@@ -38,6 +38,7 @@ SOFTWARE.
 using System;
 
 using Neo.IO.Json;
+using Trinity;
 using Trinity.BlockChain;
 using Trinity.Wallets.Templates.Definitions;
 using Trinity.Wallets.Templates.Messages;
@@ -69,7 +70,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private TransactionTabelHLockPair hlockTrade = null;
         private Channel channelDBEntry = null;
         private ChannelSummaryContents currentChannelSummary = null;
+        private TransactionTabelHLockPair currentHLockTransaction = null;
         protected ChannelTableContent currentChannel = null;
+
 
         // BlockChain transaction api
         protected NeoTransaction neoTransaction = null;
@@ -86,7 +89,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private UInt64 latestNonce = 0;
         protected string channelName = null;
 
-        protected string AssetType = null;
         // record current role
         protected int currentRole = -1;
         protected string HashR = null;
@@ -142,9 +144,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
             #endregion New_TRSPHandler_If_Needed
 
-            // Add or update the data to the database
-            this.AddTransaction();
-            this.UpdateTransaction();
+            // Add transaction to database only when role is 0
+            this.AddOrUpdateTransaction(false);
 
             // Terminate Transaction when current role index exceeds ths RoleMax
             if (this.IsTerminatedRole(this.currentRole, out int newRole))
@@ -160,6 +161,25 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             #endregion // Trigger_Request_New_Step
 
             return true;
+        }
+
+        public override bool MakeTransaction()
+        {
+            this.AddOrUpdateTransaction(true);
+            return base.MakeTransaction();
+        }
+
+        //
+        private void AddOrUpdateTransaction(bool isFounder)
+        {
+            if (this.IsRole0(this.currentRole))
+            {
+                this.AddTransaction(isFounder);
+                // update channel to latest nonce
+                this.UpdateChannelSummary();
+            }
+            
+            this.UpdateTransaction();
         }
 
         /// <summary>
@@ -224,6 +244,18 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
+        public override bool VerifyUri()
+        {
+            if (!this.selfUri.Equals(this.currentChannel.uri))
+            {
+                throw new TransactionException(EnumTransactionErrorCode.Invalid_Url,
+                    String.Format("{0}: the receiver is not me! uri: {1}", this.Request.ChannelName, this.selfUri),
+                    EnumTransactionErrorBase.COMMON.ToString());
+            }
+
+            return true;
+        }
+
         public void UpdateChannelState(EnumChannelState state)
         {
             ChannelTableContent channelContent = this.GetCurrentChannel();
@@ -233,14 +265,27 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.channelDBEntry?.UpdateChannel(channelName, channelContent);
         }
 
-        public void UpdateChannelBalance(long balance, long peerBalance)
+        public void UpdateChannelBalance()
         {
+            // Update just only when the current transaction is confirmed state
             ChannelTableContent channelContent = this.GetCurrentChannel();
 
             // Update the channel balance of peers
-            channelContent.balance = balance;
-            channelContent.peerBalance = peerBalance;
+            channelContent.balance = this.balance;
+            channelContent.peerBalance = this.peerBalance;
             this.channelDBEntry?.UpdateChannel(channelName, channelContent);
+        }
+
+        public void RecordChannelSummary()
+        {
+            ChannelSummaryContents txContent = new ChannelSummaryContents
+            {
+                nonce = this.Request.TxNonce,
+                peer = this.peerUri,
+                type = null
+            };
+
+            this.channelDBEntry?.UpdateChannelSummary(this.Request.ChannelName, txContent);
         }
 
         public void AddTransactionSummary(UInt64 nonce, string txId, string channel, EnumTransactionType type)
@@ -253,18 +298,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             };
 
             this.channelDBEntry?.AddTransaction(txId, txContent);
-        }
-
-        public void UpdateChannelSummary()
-        {
-            ChannelSummaryContents txContent = new ChannelSummaryContents
-            {
-                nonce = this.Request.TxNonce,
-                peer = this.peerUri,
-                type = null
-            };
-
-            this.channelDBEntry?.UpdateChannelSummary(this.Request.ChannelName, txContent);
         }
 
         public UInt64 CurrentNonce(string channel)
@@ -287,83 +320,55 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return NeoInterface.SendRawTransaction(txData + witness);
         }
 
+        public long SelfBalance() { return this.balance; }
+        public long PeerBalance() { return this.peerBalance; }
+
+        
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="balance"></param>
-        /// <param name="peerBalance"></param>
         /// <param name="payment"></param>
         /// <param name="isFounder"></param>
-        /// <param name="isH2R"></param>
-        /// <returns></returns>
-        private long[] CalculateBalance(long balance, long peerBalance, long payment, bool isFounder = false, bool isH2R = false)
+        /// <param name="isHtlc"></param>
+        protected void CalculateBalance(long payment, bool isFounder, bool isHtlc=false)
         {
             if (isFounder)
             {
-                if (isH2R)
+                if (isHtlc)
                 {
-                    return new long[2] { balance + payment, peerBalance };
+                    this.balance -= payment;
+                }
+                else if (this.IsHtlcToRsmc())
+                {
+                    this.peerBalance += payment;
                 }
                 else
                 {
-                    return new long[2] { balance + payment, peerBalance - payment };
+                    this.balance -= payment;
+                    this.peerBalance += payment;
                 }
             }
             else
             {
-                if (isH2R)
+                if (isHtlc)
                 {
-                    return new long[2] { balance, peerBalance + payment };
+                    this.peerBalance -= payment;
+                }
+                else if (this.IsHtlcToRsmc())
+                {
+                    this.balance += payment;
                 }
                 else
                 {
-                    return new long[2] { balance - payment, peerBalance + payment };
+                    this.peerBalance -= payment;
+                    this.balance += payment;
                 }
             }
         }
 
-        public long[] CalculateBalance(int role, long balance, long peerBalance, long payment, bool isFounder = false, bool isH2R = false)
+        private bool IsHtlcToRsmc()
         {
-            if (this.IsRole0(role) || this.IsRole2(role))
-            {
-                return this.CalculateBalance(balance, peerBalance, payment, isFounder, isH2R);
-            }
-            else if (this.IsRole1(role) || this.IsRole3(role))
-            {
-                return this.CalculateBalance(balance, peerBalance, payment, !isFounder, isH2R);
-            }
-            else
-            {
-                throw new Exception(string.Format("Invalid role: {0} for RSMC transaction", role));
-            }
-        }
-
-        private long[] CalculateBalance(long balance, long peerBalance, long payment, bool isFounder = false)
-        {
-            if (isFounder)
-            {
-                return new long[2] { balance, peerBalance - payment };
-            }
-            else
-            {
-                return new long[2] { balance - payment, peerBalance };
-            }
-        }
-
-        public long[] CalculateBalance(int role, long balance, long peerBalance, long payment, bool isFounder = false)
-        {
-            if (this.IsRole0(role))
-            {
-                return this.CalculateBalance(balance, peerBalance, payment, isFounder);
-            }
-            else if (this.IsRole1(role))
-            {
-                return this.CalculateBalance(balance, peerBalance, payment, !isFounder);
-            }
-            else
-            {
-                throw new Exception(string.Format("Invalid role: {0} for RSMC transaction", role));
-            }
+            return EnumTransactionType.HTLC.ToString().Equals(this.currentHLockTransaction?.transactionType);
         }
 
         /// <summary>
@@ -428,6 +433,30 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 isFounder = isFounder,
                 state = EnumTransactionState.initial.ToString(),
             };
+        }
+
+        public TransactionTabelHLockPair GetHLockPair()
+        {
+            if (null != this.HashR)
+            {
+                this.currentHLockTransaction = this.currentHLockTransaction ??
+                    this.GetChannelLevelDbEntry()?.TryGetTransactionHLockPair(this.HashR);
+            }
+            return this.currentHLockTransaction;
+        }
+
+        public void UpdateHLockPair(EnumTransactionState state, UInt64 nonce=0)
+        {
+            if (null == this.currentHLockTransaction)
+            {
+                return;
+            }
+
+            // update the rsmc nonce and state
+            this.currentHLockTransaction.rsmcNonce = nonce;
+            this.currentHLockTransaction.state = state.ToString();
+            this.GetChannelLevelDbEntry()?.AddTransactionHLockPair(this.HashR, this.currentHLockTransaction);
+
         }
 
         #region VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
@@ -510,11 +539,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public virtual void SetLocalsFromBody() { }
 
         public virtual void SetTransactionValid() { }
-        public virtual long[] CalculateBalance(long balance, long peerBalance) { return null; }
+        public virtual void CalculateBalance() { }
 
         public virtual Channel GetChannelLevelDbEntry()
         {
-            this.channelDBEntry = this.channelDBEntry ?? new Channel(this.channelName, this.AssetType, this.selfUri, this.peerUri);
+            this.channelDBEntry = this.channelDBEntry ?? new Channel(this.channelName, this.Request.AssetType, this.selfUri, this.peerUri);
             return this.channelDBEntry;
         }
 
@@ -556,7 +585,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.balance = this.GetCurrentChannel().balance;
             this.peerBalance = this.GetCurrentChannel().peerBalance;
 
-            this.neoTransaction = new NeoTransaction(this.AssetType.ToAssetId(),
+            this.neoTransaction = new NeoTransaction(this.Request.AssetType.ToAssetId(),
                 this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString());
             return this.neoTransaction;
         }
@@ -571,23 +600,20 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.GetFundingTrade();
             if (!isSettle)
             {
-                long[] balanceOfPeers = this.CalculateBalance(this.balance, this.peerBalance);
-                this.balance = balanceOfPeers[0];
-                this.peerBalance = balanceOfPeers[1];
+                this.CalculateBalance();
             }
 
             // generate the neotransaction
-            this.neoTransaction = new NeoTransaction(this.AssetType.ToAssetId(), 
+            this.neoTransaction = new NeoTransaction(this.Request.AssetType.ToAssetId(), 
                 this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString(),
                 this.fundingTrade?.founder.originalData.addressFunding, this.fundingTrade?.founder.originalData.scriptFunding);
             return this.neoTransaction;
         }
 
-        public virtual void AddOrUpdateTransaction(bool isFounder = false) { }
-        public virtual void AddOrUpdateTransactionSummary(bool isFounder = false) { }
         public virtual void AddTransaction(bool isFounder = false) { }
         public virtual void UpdateTransaction() { }
         public virtual void AddTransactionSummary() { }
+        public virtual void UpdateChannelSummary() { }
 
         ////////////////////////////////////////////////////////////////////////////
         #endregion // VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER

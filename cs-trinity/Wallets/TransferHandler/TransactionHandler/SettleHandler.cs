@@ -137,7 +137,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.currentRole = 0; // record current role Index
 
             // Asset type from message body for adaptor old version trinity
-            this.AssetType = this.Request.MessageBody.AssetType;
+            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override SettleSignHandler CreateResponseHndl(string errorCode = "Ok")
@@ -264,7 +264,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.currentRole = 0; // record current role Index
 
             // Asset type from message body for adaptor old version trinity
-            this.AssetType = this.Request.MessageBody.AssetType;
+            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override void AddTransactionSummary()

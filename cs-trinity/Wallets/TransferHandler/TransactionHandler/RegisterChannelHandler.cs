@@ -72,6 +72,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool FailStep(string errorCode)
         {
+            Log.Info("Failed handling RegisterChannel. Channel: {0}, AssetType: {1}, Deposit: {2}. Error: {3}",
+                this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.MessageBody.Deposit, errorCode);
             return base.FailStep(errorCode);
         }
 
@@ -79,6 +81,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             // Add channel to database
             this.AddChannel(this.Request.Receiver, this.Request.Sender, EnumRole.PARTNER);
+            Log.Info("Succeed handling RegisterChannel. Channel: {0}, AssetType: {1}, Deposit: {2}.",
+                    this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.MessageBody.Deposit);
 
             // trigger new Founder message
             FounderHandler founderHndl = new FounderHandler(
@@ -92,7 +96,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             if (base.MakeTransaction())
             {
-                Log.Info("Succeed to send RegisterChannel message. Channel: {0}, AssetType: {1}, Deposit: {2}.",
+                Log.Info("Succeed to send RegisterChannel. Channel: {0}, AssetType: {1}, Deposit: {2}.",
                     this.Request?.ChannelName, this.Request?.MessageBody.AssetType, this.Request?.MessageBody.Deposit);
 
                 // Add channel to database

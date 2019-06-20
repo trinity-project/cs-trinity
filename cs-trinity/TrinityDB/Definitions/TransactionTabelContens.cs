@@ -46,13 +46,16 @@ namespace Trinity.TrinityDB.Definitions
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionTabelHLockPair
     {
+        public string transactionType;
         public string rcode;
-        public UInt64 nonce;            // rsmc nonce
-        public UInt64 htlcNonce;        // htlcNonce
+        public string state;            // mapping to EnumTransactionState
         public string incomeChannel;    // { get; set; }
         public string paymentChannel;   // { get; set; }
+        public UInt64 rsmcNonce;        // rsmc nonce
+        public UInt64 htlcNonce;        // htlcNonce
         public long income;     // How much gains
         public long payment;    // How much is paid
+        public List<string> router; // for adapting the old trinity
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
@@ -61,12 +64,13 @@ namespace Trinity.TrinityDB.Definitions
         public UInt64 nonce;
         public long balance;
         public long peerBalance;
+        public long payment;
         public int role;        // record current role index
         public bool isFounder;  // indicates who leads the transaction
         public string monitorTxId;
         public string state;    // mapping to EnumTransactionState
         // TODO : might be used in the future.
-        // public string type;     // mapping to EnumTransactionType
+        public string type;     // mapping to EnumTransactionType
     }
 
     [MessagePackObject(keyAsPropertyName: true)]
@@ -94,8 +98,9 @@ namespace Trinity.TrinityDB.Definitions
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionHtlcContent : TransactionTabelContent
     {
-        public TxContentsSignGeneric<HtlcCommitTx> commitment;
-        public TxContentsSignGeneric<HtlcRevocableDeliveryTx> revocableDelivery;
+        public string hashcode;
+        public TxContentsSignGeneric<HtlcCommitTx> HCTX;
+        public TxContentsSignGeneric<HtlcRevocableDeliveryTx> RDTX;
         public TxContentsSignGeneric<HtlcExecutionTx> HETX;
         public TxContentsSignGeneric<HtlcExecutionDeliveryTx> HEDTX;
         public TxContentsSignGeneric<HtlcExecutionRevocableDeliveryTx> HERDTX;

@@ -24,6 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System.Collections.Generic;
+
 using MessagePack;
 using Trinity.Wallets.Templates.Definitions;
 
@@ -50,6 +52,8 @@ namespace Trinity.Wallets.Templates.Messages
     [MessagePackObject(keyAsPropertyName:true)]
     public class HtlcSign : TransactionPlaneGeneric<HtlcSignBody>
     {
+        public List<string> Router { get; set; }
+        public string Next { get; set; }
         public string Error { get; set; }
         public string Comments { get; set; }
     }
