@@ -367,9 +367,53 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HCTX"> output the HCTX body </param>
         /// <returns></returns>
-        public bool CreateSenderHCTX()
+        public bool CreateSenderHCTX(out HtlcCommitTx HCTX, string HtlcValue, string HashR)
         {
-            //TODO 
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.scriptHash, this.pubKey, this.peerScriptHash, this.peerPubkey, this.timestampString);
+            Log.Debug("timestamp: {0}", this.timestampString);
+            Log.Debug("RSMCContract: {0}", RSMCContract);
+#if DEBUG_LOCAL
+            JObject HTLCContract = NeoInterface.CreateHTLCContract((this.timestampLong + 600).ToString(), this.pubKey, this.peerPubkey, HashR);
+#else
+            JObject HTLCContract = NeoInterface.CreateHTLCContract(timestampString, this.pubKey, this.peerPubkey, HashR);
+#endif
+            Log.Debug("HTLCContract: {0}", HTLCContract);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+            this.SetAddressHTLC(HTLCContract["address"].ToString());
+            this.SetScripHTLC(HTLCContract["script"].ToString());
+
+            //TODO: can't get vouts of funding address                                     !!!
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(this.fundingTxId, 0);             //TODO
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputToRMSC = createOutput(assetId, this.balance, this.addressRsmc, true);
+            TransactionOutput[] outputToReceiver = createOutput(assetId, this.peerBalance, peerAddress, true);
+            TransactionOutput[] outputToHtlc = createOutput(assetId, HtlcValue, this.addressHtlc, true);
+            TransactionOutput[] outputsData = outputToRMSC.Concat(outputToReceiver).Concat(outputToHtlc).ToArray();
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            HCTX = new HtlcCommitTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                addressRSMC = this.addressRsmc,
+                addressHTLC = this.addressHtlc,
+                scriptRSMC = this.scriptRsmc,
+                scriptHTLC = this.scriptHtlc,
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "018240{signSelf}40{signOther}da" + this.scriptFunding
+            };
 
             return true;
         }
@@ -379,9 +423,32 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="RDTX"> output the RDTX body </param>
         /// <returns></returns>
-        public bool CreateSenderRDTX()
+        public bool CreateSenderRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId)
         {
-            //TODO
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId  ???
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = createOutput(assetId, this.balance, this.address);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            revocableDeliveryTx = new HtlcRevocableDeliveryTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
 
             return true;
         }
@@ -391,9 +458,32 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HEDTX"> output the HEDTX body </param>
         /// <returns></returns>
-        public bool CreateHEDTX()
+        public bool CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, string txId, string HtlcValue)
         {
-            //TODO
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.peerAddress, HtlcValue, this.assetId);
+            Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(txId, 2);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = createOutput(assetId, HtlcValue, this.peerAddress);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            HEDTX = new HtlcExecutionDeliveryTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc)
+            };
 
             return true;
         }
@@ -403,9 +493,36 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HTTX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHTTX()
+        public bool CreateHTTX(out HtlcTimoutTx HTTX, string txId, string HtlcValue)
         {
-            //TODO
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.scriptHash, this.pubKey, this.peerScriptHash, this.peerPubkey, this.timestampString);
+            Log.Debug("RSMCContract: {0}", RSMCContract);
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(txId, 2);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = createOutput(assetId, HtlcValue, this.addressRsmc);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            HTTX = new HtlcTimoutTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                addressRSMC = this.addressRsmc,
+                scriptRSMC = this.scriptRsmc,
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc)
+            };
 
             return true;
         }
@@ -415,9 +532,35 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HTRDTX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHTRDTX()
+        public bool CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx revocableDeliveryTx, string txId, string HtlcValue)
         {
-            //TODO
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId ???
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.address, HtlcValue, this.assetId);
+            Log.Debug("CreateHTRDTX opdata: {0}", opdata);
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = createOutput(assetId, HtlcValue, this.address);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            revocableDeliveryTx = new HtlcTimeoutRevocableDelivertyTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
 
             return true;
         }
@@ -428,9 +571,53 @@ namespace Trinity.BlockChain
         /// <param name="HCTX"> output the HCTX body </param>
         /// <returns></returns>
         /// attention: balance is Receiver balance, peerBalance is Sender balance
-        public bool CreateReceiverHCTX()
+        public bool CreateReceiverHCTX(out HtlcCommitTx HCTX, string HtlcValue, string HashR)
         {
-            //TODO
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
+            Log.Debug("timestamp: {0}", this.timestampString);
+            Log.Debug("RSMCContract: {0}", RSMCContract);
+#if DEBUG_LOCAL
+            JObject HTLCContract = NeoInterface.CreateHTLCContract((this.timestampLong + 600).ToString(), this.peerPubkey, this.pubKey, HashR);
+#else
+            JObject HTLCContract = NeoInterface.CreateHTLCContract(this.timestampString, this.peerPubkey, this.pubKey, HashR);
+#endif
+            Log.Debug("HTLCContract: {0}", HTLCContract);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+            this.SetAddressHTLC(HTLCContract["address"].ToString());
+            this.SetScripHTLC(HTLCContract["script"].ToString());
+
+            //TODO: can't get vouts of funding address                                     !!!
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(this.fundingTxId, 0);             //TODO
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputToRMSC = createOutput(assetId, this.balance, this.addressRsmc, true);
+            TransactionOutput[] outputToSender = createOutput(assetId, this.peerBalance, this.peerAddress, true);
+            TransactionOutput[] outputToHtlc = createOutput(assetId, HtlcValue, this.addressHtlc, true);
+            TransactionOutput[] outputsData = outputToRMSC.Concat(outputToSender).Concat(outputToHtlc).ToArray();
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            HCTX = new HtlcCommitTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                addressRSMC = this.addressRsmc,
+                addressHTLC = this.addressHtlc,
+                scriptRSMC = this.scriptRsmc,
+                scriptHTLC = this.scriptHtlc,
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "018240{signSelf}40{signOther}da" + this.scriptFunding
+            };
 
             return true;
         }
@@ -441,9 +628,32 @@ namespace Trinity.BlockChain
         /// <param name="RDTX"> output the RDTX body </param>
         /// <returns></returns>
         /// attention: balance is Receiver balance, peerBalance is Sender balance
-        public bool CreateReceiverRDTX()
+        public bool CreateReceiverRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId)
         {
-            //TODO
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId  ???
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.peerScriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = createOutput(assetId, this.balance, this.address);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            revocableDeliveryTx = new HtlcRevocableDeliveryTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
 
             return true;
         }
@@ -454,9 +664,29 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HTDTX"> output the HTDTX body </param>
         /// <returns></returns>
-        public bool CreateHTDTX()
+        public bool CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, string txId, string HtlcValue)
         {
-            //TODO
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = createOutput(assetId, HtlcValue, this.peerAddress);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            HTDTX = new HtlcTimeoutDeliveryTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc)
+            };
 
             return true;
         }
@@ -466,9 +696,36 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HETX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHETX()
+        public bool CreateHETX(out HtlcExecutionTx HETX, string txId,string HtlcValue)
         {
-            //TODO
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
+            Log.Debug("RSMCContract: {0}", RSMCContract);
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(txId, 2);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = createOutput(assetId, HtlcValue, this.addressRsmc);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            HETX = new HtlcExecutionTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                addressRSMC = this.addressRsmc,
+                scriptRSMC = this.scriptRsmc,
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc)
+            };
 
             return true;
         }
@@ -478,9 +735,33 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HERDTX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHERDTX()
+        public bool CreateHERDTX(out HtlcExecutionRevocableDeliveryTx revocableDeliveryTx, string txId, string HtlcValue)
         {
-            //TODO
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId ???
+
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = createOutput(assetId, HtlcValue, this.address);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            revocableDeliveryTx = new HtlcExecutionRevocableDeliveryTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
 
             return true;
         }
