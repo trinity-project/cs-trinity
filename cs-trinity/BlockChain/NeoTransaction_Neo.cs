@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
+#define DEBUG_LOCAL
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -133,7 +133,7 @@ namespace Trinity.BlockChain
             Vin vout = new Vin
             {
                 n = 0,
-                txid = "0xcf053a9a3e375509e72934e742b91b2d6f591869f6fd74e909ca13893de5bed6",
+                txid = "0xa174f91d5acbf704a964ebbf6e363ba252f2ffdde5bf5b87e5b4564da9766c39",
                 value = 239
             };
             string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
@@ -259,9 +259,34 @@ namespace Trinity.BlockChain
         /// <param name="revocableDeliveryTx"></param>
         /// <param name="txId"></param>
         /// <returns></returns>
-        public bool createRDTX()
+        public bool CreateRDTX(out RevocableDeliveryTx revocableDeliveryTx, string txId)
         {
-            //TODO
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = createOutput(this.assetId, this.balance, this.address);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 addressHash = NeoInterface.ToScriptHash1(this.address);
+            string preTxId = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId
+
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, addressHash, attributes).MakeAttribute(out attributes);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            revocableDeliveryTx = new RevocableDeliveryTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
 
             return true;
         }
@@ -271,9 +296,35 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="txId"></param>
         /// <returns></returns>
-        public bool CreateBRTX()
+        public bool CreateBRTX(out BreachRemedyTx breachRemedyTx, string txId)
         {
-            //TODO
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = createOutput(assetId, this.balance, this.peerAddress);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 peerAddressHash = NeoInterface.ToScriptHash1(this.peerAddress);
+
+            string preTxID = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");            //preTxId
+            UInt160 ScriptHashSelf = NeoInterface.ToScriptHash1(this.peerAddress);                              //outputTo
+
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark1, peerAddressHash, attributes).MakeAttribute(out attributes);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            breachRemedyTx = new BreachRemedyTx
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc)
+            };
 
             return true;
         }
@@ -283,9 +334,30 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="settleTx"></param>
         /// <returns></returns>
-        public bool CreateSettle()
+        public bool CreateSettle(out TxContents settleTx)
         {
-            //TODO
+            //TODO: can't get vouts of funding address                                     !!!
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = createInputsData(this.fundingTxId, 0);             //TODO
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputToSelf = createOutput(assetId, this.balance, this.address, true);
+            TransactionOutput[] outputToOther = createOutput(assetId, this.peerBalance, peerAddress, true);
+            TransactionOutput[] outputsData = outputToSelf.Concat(outputToOther).ToArray();
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_funding = NeoInterface.ToScriptHash1(this.addressFunding);
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+
+            this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
+
+            settleTx = new TxContents
+            {
+                txData = tx.GetHashData().ToHexString().NeoStrip(),
+                txId = tx.Hash.ToString().Strip("\""),
+                witness = "018240{signSelf}40{signOther}da" + this.scriptFunding
+            };
 
             return true;
         }
@@ -297,7 +369,7 @@ namespace Trinity.BlockChain
         /// <returns></returns>
         public bool CreateSenderHCTX()
         {
-            //TODO
+            //TODO 
 
             return true;
         }
