@@ -143,7 +143,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Verify()
         {
-            this.VerifyNonce(fundingNonce);
+            this.VerifyNonce(fundingNonce, true);
             this.VerifyDeposit(this.Request.MessageBody.Deposit);
             this.VerifyRoleIndex();
 
@@ -235,7 +235,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 }
 
                 // record the transaction to levelDB
-                this.GetChannelLevelDbEntry()?.AddTransaction(this.Request.TxNonce, txContent);
+                this.AddTransaction(this.Request.TxNonce, txContent, true);
             }
         }
 
@@ -255,8 +255,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     this.currentTransaction.revocableDelivery.originalData = this.Request.MessageBody.RevocableDelivery;
                 }
 
+                this.currentTransaction.state = EnumTransactionState.confirming.ToString();
+
                 // update the transaction
-                this.GetChannelLevelDbEntry()?.UpdateTransaction(this.Request.TxNonce, this.currentTransaction);
+                this.UpdateTransaction(this.Request.TxNonce, this.currentTransaction, true);
             }
         }
 
@@ -376,7 +378,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool Verify()
         {
-            this.VerifyNonce(fundingNonce);
+            this.VerifyNonce(fundingNonce, true);
             this.VerifyDeposit(this.Request.MessageBody.Deposit);
             this.VerifyRoleIndex();
 
@@ -429,6 +431,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.currentTransaction.founder.txDataSign = this.Request.MessageBody.Founder.txDataSign;
                 this.currentTransaction.commitment.txDataSign = this.Request.MessageBody.Commitment.txDataSign;
                 this.currentTransaction.revocableDelivery.txDataSign = this.Request.MessageBody.RevocableDelivery.txDataSign;
+
+                this.currentTransaction.state = EnumTransactionState.confirmed.ToString();
 
                 this.GetChannelLevelDbEntry().UpdateTransaction(this.Request.TxNonce, this.currentTransaction);
             }

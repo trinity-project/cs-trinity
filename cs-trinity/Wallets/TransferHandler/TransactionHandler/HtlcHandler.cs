@@ -75,6 +75,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
             }
+
+            // calculate balance after payment according to the flag : isFounder
+            this.CalculateBalance();
         }
 
         public HtlcHandler(Htlc message, int role=0) : base(message, role)
@@ -83,7 +86,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.Request.Next = this.onGoingRequest.Next;
             this.isFounder = this.IsRole0(role);
 
-            if (this.IsRole1(role))
+            if (this.IsRole1(this.Request.MessageBody.RoleIndex))
             {
                 this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
             }
@@ -336,7 +339,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // record the transaction to levelDB
-            this.GetChannelLevelDbEntry()?.AddTransaction(this.Request.TxNonce, txContent);
+            this.AddTransaction(this.Request.TxNonce, txContent);
 
             // reord the htlc lock pair
             this.AddHLockPair(isFounder);
@@ -367,7 +370,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // update the transaction
-            this.GetChannelLevelDbEntry()?.UpdateTransaction(this.Request.TxNonce, this.currentTransaction);
+            this.UpdateTransaction(this.Request.TxNonce, this.currentTransaction);
         }
         #endregion //Htlc_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
     }
@@ -393,8 +396,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
 
             // Get the current transaction
-            this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
+            this.currentTransaction =
+                this.GetChannelLevelDbEntry().TryGetTransaction<TransactionHtlcContent>(this.Request.TxNonce);
             this.currentHLockTransaction = this.GetHLockPair();
+
+            // calculate balance after payment according to the flag : isFounder
+            this.CalculateBalance();
         }
 
         public HtlcSignHandler(Htlc message, string errorCode="Ok"):base(message)

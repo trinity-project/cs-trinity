@@ -91,8 +91,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.currentTransaction = this.GetCurrentTransaction<TransactionRsmcContent>();
             this.currentHLockTransaction = this.GetHLockPair();
 
+            // calculate the balance after payment according to role played by peers
             this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex)
                 || this.IsRole3(this.Request.MessageBody.RoleIndex);
+            this.CalculateBalance();
         }
 
         public override bool SucceedStep()
@@ -277,7 +279,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // record the transaction to levelDB
-            this.GetChannelLevelDbEntry()?.AddTransaction(this.Request.TxNonce, txContent);
+            this.AddTransaction(this.Request.TxNonce, txContent);
         }
 
         public override void UpdateTransaction()
@@ -321,12 +323,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // update the transaction
-            this.GetChannelLevelDbEntry()?.UpdateTransaction(this.Request.TxNonce, this.currentTransaction);
+            this.UpdateTransaction(this.Request.TxNonce, this.currentTransaction);
         }
 
         public override RsmcSignHandler CreateResponseHndl(string errorCode)
         {
-            return new RsmcSignHandler(this.onGoingRequest, errorCode);
+            return new RsmcSignHandler(this.Request, errorCode);
         }
 
         public override RsmcHandler CreateRequestHndl(int role)
@@ -372,10 +374,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public RsmcSignHandler(string message) : base(message)
         {
             // Get the current transaction
-            this.currentTransaction = this.GetCurrentTransaction<TransactionRsmcContent>();
+            this.currentTransaction =
+                this.GetChannelLevelDbEntry().TryGetTransaction<TransactionRsmcContent>(this.Request.TxNonce);
             this.currentHLockTransaction = this.GetHLockPair();
 
+            // Calculate the balance according to flag: isFounder
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
+            this.CalculateBalance();
         }
 
         public override bool FailStep(string errorCode)
@@ -441,7 +446,14 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.VerifyUri();
             this.VerifyRoleIndex();
             this.VerifyAssetType(this.Request.MessageBody.AssetType);
-            this.VerifyNonce(this.CurrentNonce(this.Request.ChannelName));
+            if (this.IsRole0(this.Request.MessageBody.RoleIndex))
+            {
+                this.VerifyNonce(this.NextNonce(this.Request.ChannelName));
+            }
+            else
+            {
+                this.VerifyNonce(this.CurrentNonce(this.Request.ChannelName));
+            }
 
             if (this.IsRole0(this.Request.MessageBody.RoleIndex) || this.IsRole1(this.Request.MessageBody.RoleIndex))
             {
@@ -478,7 +490,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.HashR = this.Request.MessageBody.HashR ?? this.Request.MessageBody.Comments;
 
             // Asset type from message body for adaptor old version trinity
-            this.Request.AssetType = this.onGoingRequest.MessageBody.AssetType;
+            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override void UpdateTransaction()

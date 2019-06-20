@@ -91,7 +91,7 @@ namespace Trinity.Exceptions
         }
 
         public TError GetError() { return this.trinityInnerError; }
-        public uint GetErrorBase() { return this.errorType.ToErrorCode<TErrorBase>(); }
+        public uint GetErrorBase() { return this.errorType.ToUpper().ToErrorCode<TErrorBase>(); }
         public override string GetErrorString() { return this.trinityInnerError.ToString(); }
         private void SetHResult()
         {

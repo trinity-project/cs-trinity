@@ -40,7 +40,7 @@ namespace Trinity.Exceptions
             {
                 return 0;
             }
-            return (uint)Enum.Parse(typeof(TErrorBase), error.ToUpper());
+            return (uint)Enum.Parse(typeof(TErrorBase), error);
         }
     }
 }

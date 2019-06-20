@@ -86,7 +86,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private string peerUri = null;
         private long balance = 0;
         private long peerBalance = 0;
-        private UInt64 latestNonce = 0;
         protected string channelName = null;
 
         // record current role
@@ -192,18 +191,23 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// </summary>
         /// <returns></returns>
         /// Verification method sets
-        public virtual bool VerifyNonce(UInt64 expectedNonce)
+        public virtual bool VerifyNonce(UInt64 expectedNonce, bool isFunding=false)
         {
-            if (this.Request.TxNonce == expectedNonce)
+            return true;
+
+#if CouldBeUsedInFuture
+            if ((this.Request.TxNonce == expectedNonce && fundingNonce < this.Request.TxNonce) 
+                || (isFunding && this.Request.TxNonce == fundingNonce))
             {
                 return true;
             }
 
             throw new TransactionException(
                     EnumTransactionErrorCode.Incompatible_Nonce,
-                    string.Format("{0} : Nonce of peers are incompatible. Nonce: {1}, PeerNonce: {2}.",
-                            this.Request.MessageType, expectedNonce, this.Request.TxNonce),
+                    string.Format("{0} : Nonce of peers are incompatible. Nonce: {1}, ExpectedNonce: {2}.",
+                            this.Request.MessageType, this.Request.TxNonce, expectedNonce),
                     this.Request.MessageType);
+#endif
         }
 
         public virtual bool VerifyDeposit(long deposit)
@@ -461,10 +465,40 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.currentHLockTransaction.rsmcNonce = nonce;
             this.currentHLockTransaction.state = state.ToString();
             this.GetChannelLevelDbEntry()?.AddTransactionHLockPair(this.HashR, this.currentHLockTransaction);
-
         }
 
-        #region VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        // The 2 method are used to Avoid the leveldb error
+        public void AddTransaction<TItemContent>(UInt64 nonce, TItemContent content, bool isFunding = false)
+        {
+            if (!isFunding && fundingNonce == nonce)
+            {
+                throw new TransactionException(EnumTransactionErrorCode.Transaction_Nonce_Should_Be_largger_Than_Zero,
+                    "AddTransaction Error: Nonce<0> is only be used as funding transaction for creating channel.",
+                    this.Request.MessageType
+                    );
+            }
+
+            // update the transaction
+            this.GetChannelLevelDbEntry()?.UpdateTransaction(this.Request.TxNonce, content);
+            //this.GetChannelLevelDbEntry()?.AddTransaction(this.Request.TxNonce, content);
+        }
+
+        public void UpdateTransaction<TItemContent>(UInt64 nonce, TItemContent content, bool isFunding=false)
+        {
+            if (!isFunding && nonce == fundingNonce)
+            {
+                throw new TransactionException(EnumTransactionErrorCode.Transaction_Nonce_Should_Be_largger_Than_Zero,
+                    "UpdateTransaction Error: Nonce<0> is only be used as funding transaction for creating channel.",
+                    this.Request.MessageType
+                    );
+            }
+
+            // update the transaction
+            this.GetChannelLevelDbEntry()?.UpdateTransaction(this.Request.TxNonce, content);
+        }
+
+
+#region VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
         //////////////////////////////////////////////////////////////////////////////////
         /// Start of virtual methods for different actions:
         /// 
@@ -482,7 +516,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 ChannelName = channel,
                 AssetType = asset,
                 NetMagic = magic ?? this.GetNetMagic(),
-                TxNonce = this.latestNonce
+                TxNonce = nonce
             };
         }
 
@@ -512,7 +546,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.GetChannelLevelDbEntry();
 
             // Get current channel information
-            this.GetCurrentChannel();
+            if (null != this.GetCurrentChannel())
+            {
+                this.balance = this.currentChannel.balance;
+                this.peerBalance = this.currentChannel.peerBalance;
+            }
         }
 
         /// <summary>
@@ -520,7 +558,14 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// </summary>
         public virtual void InitializeBlockChainApi()
         {
-            // default is for Founder
+            if (null == this.currentChannel)
+            {
+                throw new TransactionException( EnumTransactionErrorCode.Channel_Not_Found,
+                    string.Format("Channel: {0} not found in database", this.Request.ChannelName),
+                    this.Request.MessageType.ToUpper());
+            }
+
+            // default is for Founder transaction
             this.GetBlockChainAdaptorApi();
 
             return;
@@ -587,11 +632,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public NeoTransaction GetBlockChainAdaptorApi()
         {
             // Use the current channel balance to initialize some locals here
-            this.balance = this.GetCurrentChannel().balance;
-            this.peerBalance = this.GetCurrentChannel().peerBalance;
-
             this.neoTransaction = new NeoTransaction(this.Request.AssetType.ToAssetId(),
                 this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString());
+
+            this.SetTransactionValid();
+
             return this.neoTransaction;
         }
 
@@ -612,6 +657,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.neoTransaction = new NeoTransaction(this.Request.AssetType.ToAssetId(), 
                 this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString(),
                 this.fundingTrade?.founder.originalData.addressFunding, this.fundingTrade?.founder.originalData.scriptFunding);
+
+            this.SetTransactionValid();
+
             return this.neoTransaction;
         }
 
@@ -621,6 +669,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public virtual void UpdateChannelSummary() { }
 
         ////////////////////////////////////////////////////////////////////////////
-        #endregion // VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+#endregion // VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
     }
 }
