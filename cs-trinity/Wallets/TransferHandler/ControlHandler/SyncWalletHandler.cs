@@ -46,16 +46,11 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
         }
 
         public SyncWalletHandler(string sender, string magic, string localIp="localhost", string port="21556")
+            : base(sender, null, null, magic)
         {
-            this.Request = new SyncWalletData
+            this.Request.MessageBody = new SyncWalletBody
             {
-                Sender = sender,
-                NetMagic = magic ?? this.GetNetMagic(),
-
-                MessageBody = new SyncWalletBody
-                {
-                    Channel = new Dictionary<string, Dictionary<string, double>>(),
-                }
+                Channel = new Dictionary<string, Dictionary<string, double>>(),
             };
 
             this.localAddress = string.Format("{0}:{1}", localIp, port);

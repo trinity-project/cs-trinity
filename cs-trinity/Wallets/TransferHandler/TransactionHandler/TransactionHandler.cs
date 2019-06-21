@@ -47,6 +47,7 @@ using Trinity.ChannelSet;
 using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
 using Trinity.Exceptions.WalletError;
+using Trinity.Wallets.TransferHandler.ControlHandler;
 
 
 namespace Trinity.Wallets.TransferHandler.TransactionHandler
@@ -727,6 +728,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             Channel channelLevelDbApi = new Channel(channel, asset, sender, receiver);
             ChannelTableContent currentChannel = channelLevelDbApi.GetChannel(channel);
 
+#if TEST_GETROUTER
+            //GetRouterInfoHandler getRouterInfoHndl = new GetRouterInfoHandler(sender, receiver, asset, magic, payment);
+            //getRouterInfoHndl.MakeTransaction();
+#else
             // to decide which transaction is used
             if (currentChannel.peer.Equals(receiver))
             {
@@ -749,6 +754,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
                 }
             }
+#endif
         }
     }
 }

@@ -73,5 +73,16 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
         public ControlHandler(string message) : base(message)
         {
         }
+
+        public ControlHandler(string sender, string receiver, string asset, string magic)
+        {
+            this.Request = new TMessage
+            {
+                Sender = sender,
+                Receiver = receiver,
+                AssetType = asset,
+                NetMagic = magic ?? this.GetNetMagic()
+            };
+        }
     }
 }

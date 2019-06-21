@@ -29,28 +29,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MessagePack;
 
-namespace Trinity.Wallets.Templates.Messages
+using Trinity.Wallets.Templates.Messages;
+using Trinity.Wallets.TransferHandler;
+
+namespace Trinity.Wallets.TransferHandler.ControlHandler
 {
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class RouteInfoBody
+    public class GetRouterInfoHandler : ControlHandler<GetRouterInfo, VoidControlMessage, GetRouterInfoHandler, VoidHandler>
     {
-        public string AssetType { get; set; }
-        public long Value { get; set; }
+        public GetRouterInfoHandler(string sender, string receiver, string asset, string magic, long payment)
+            : base(sender, receiver, asset, magic)
+        {
+            this.Request.MessageBody = new RouteInfoBody
+            {
+                AssetType = asset,
+                Value = payment
+            };
+        }
     }
 
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class GetRouterInfo : ContolPlaneGeneric<RouteInfoBody>
+    public class AckRouterInfoHandler : ControlHandler<AckRouterInfo, VoidControlMessage, AckRouterInfoHandler, VoidHandler>
     {
+        public AckRouterInfoHandler(string message) : base(message)
+        {
+        }
     }
-
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class AckRouterInfoBody
-    { }
-
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class AckRouterInfo : ContolPlaneGeneric<AckRouterInfoBody>
-    { }
 }
-

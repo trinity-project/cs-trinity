@@ -37,6 +37,7 @@ using Trinity.BlockChain;
 using Trinity.Network.TCP;
 using Trinity.Wallets.Templates.Messages;
 using Trinity.Wallets.TransferHandler.TransactionHandler;
+using Trinity.Wallets.TransferHandler.ControlHandler;
 
 namespace Trinity
 {
@@ -206,13 +207,13 @@ namespace Trinity
                     new RsmcFailHandler(message).Handle();
                     break;
                 case "Htlc":
-                    // new HtlcHandler(message).Handle();
+                    new HtlcHandler(message).Handle();
                     break;
                 case "HtlcSign":
-                    // new HtlcSignHandler(message).Handle();
+                    new HtlcSignHandler(message).Handle();
                     break;
                 case "HtlcFail":
-                    // new HtlcFailHandler(message).Handle();
+                    new HtlcFailHandler(message).Handle();
                     break;
                 case "Settle":
                     new SettleHandler(message).Handle();
@@ -221,7 +222,10 @@ namespace Trinity
                     new SettleSignHandler(message).Handle();
                     break;
                 case "RResponse":
-                    //new RResponseHandler(message).Handle();
+                    new RResponseHandler(message).Handle();
+                    break;
+                case "AckRouterInfo":
+                    new AckRouterInfoHandler(message).Handle();
                     break;
                 default:
                     this.ProcessControlMessage(header.MessageType, message);

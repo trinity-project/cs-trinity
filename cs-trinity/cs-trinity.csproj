@@ -323,6 +323,7 @@
     <Compile Include="Wallets\Templates\Messages\RouteInfo.cs" />
     <Compile Include="Wallets\Templates\Messages\RsmcFail.cs" />
     <Compile Include="Wallets\TransferHandler\ControlHandler\ControlHandler.cs" />
+    <Compile Include="Wallets\TransferHandler\ControlHandler\GetRouterInfoHandler.cs" />
     <Compile Include="Wallets\TransferHandler\ControlHandler\PaymentLink.cs" />
     <Compile Include="Wallets\TransferHandler\TransactionHandler\TransactionHandler.cs" />
     <Compile Include="Exceptions\TrinityException.cs" />
