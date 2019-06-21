@@ -72,17 +72,10 @@ namespace Trinity.ChannelSet
             this.peerUri = peerUri;
             this.channelName = channel;
             this.assetType = asset;
-
-            if (null != uri)
-            {
-                this.TableChannel = new ChannelModel(this.dbPath(), uri, peerUri);
-                this.TableBlock = new BlockModel(this.dbPath(), uri);
-            }
-
-            if (null != channel)
-            { 
-                this.TableTransaction = new TransactionModel(this.dbPath(), channel);
-            }
+            
+            this.TableChannel = new ChannelModel(this.dbPath(), uri, peerUri);
+            this.TableBlock = new BlockModel(this.dbPath(), uri);
+            this.TableTransaction = new TransactionModel(this.dbPath(), channel);
             
         }
 

@@ -39,7 +39,18 @@ namespace Trinity.TrinityDB
     {
         private readonly byte[] group;
 
-        public SliceBuilder keyword => SliceBuilder.Begin(ModelPrefix.MPBlockGroup).Add(this.group);
+        public SliceBuilder keyword
+        {
+            get
+            {
+                if (null != this.group)
+                {
+                    return SliceBuilder.Begin(ModelPrefix.MPBlockGroup).Add(this.group);
+                }
+
+                return null;
+            }
+        }
 
         /// <summary>
         /// 

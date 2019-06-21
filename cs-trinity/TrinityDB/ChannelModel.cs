@@ -44,9 +44,32 @@ namespace Trinity.TrinityDB
         private readonly byte[] group;
         // private readonly byte[] peerGroup;
 
-        public SliceBuilder keyword => SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
-        public SliceBuilder bothKeyword => SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
         public SliceBuilder summary => SliceBuilder.Begin(ModelPrefix.MPChannelSummary);
+        public SliceBuilder keyword
+        {
+            get
+            {
+                if (null != this.group)
+                {
+                    return SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
+                }
+
+                return null;
+            }
+        }
+
+        public SliceBuilder bothKeyword
+        {
+            get
+            {
+                if (null != this.group)
+                {
+                    return SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
+                }
+
+                return null;
+            }
+        }
 
         /// <summary>
         /// Default Constructor

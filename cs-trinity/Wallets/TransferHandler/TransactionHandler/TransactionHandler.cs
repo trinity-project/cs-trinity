@@ -715,7 +715,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         ////////////////////////////////////////////////////////////////////////////
 #endregion // VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+    }
 
+    public sealed class TransactionHandler
+    {
         // public static methods
         public static void MakeTransaction(string sender, string receiver, string channel, string asset,
             string magic, UInt64 nonce, long payment, string hashcode = null)
