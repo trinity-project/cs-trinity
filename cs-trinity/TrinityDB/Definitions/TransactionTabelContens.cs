@@ -47,6 +47,7 @@ namespace Trinity.TrinityDB.Definitions
     public class TransactionTabelHLockPair
     {
         public string transactionType;
+        public string asset;            // Asset type
         public string rcode;
         public string state;            // mapping to EnumTransactionState
         public string incomeChannel;    // { get; set; }

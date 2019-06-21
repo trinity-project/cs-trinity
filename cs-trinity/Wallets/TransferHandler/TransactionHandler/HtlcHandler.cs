@@ -47,6 +47,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         // current transaction by nonce
         private TransactionHtlcContent currentTransaction = null;
+        private TransactionTabelHLockPair currentHLockTransaction = null;
 
         private HtlcCommitTx hcTx;
         private HtlcRevocableDeliveryTx rdTx;
@@ -61,37 +62,41 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             string magic, UInt64 nonce, long payment, string hashcode, List<string> router, int role = 0)
             :base(sender, receiver, channel, asset, magic, nonce, payment, role, hashcode)
         {
+            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
+
+            // Set Htlc header or body
+            this.Request.TxNonce = this.NextNonce(channel);
             this.Request.Router = router;
             this.Request.Next = router?[router.IndexOf(receiver) + 1];
 
-            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
+            // Get record of htlc locked payment
+            this.currentHLockTransaction = this.GetHLockPair();
+        }
+
+        public HtlcHandler(Htlc message, int role = 0) : base(message, role)
+        {
+            this.isFounder = this.IsRole0(role);
+
+            // Set Htlc header or body
+            this.Request.Router = this.onGoingRequest.Router;
+            this.Request.Next = this.onGoingRequest.Next;
+
+            // Get current transaction and locked payment record
+            this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
+            this.currentHLockTransaction = this.GetHLockPair();
         }
 
         public HtlcHandler(string message) : base(message)
         {
             this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
 
-            if (this.IsRole1(this.Request.MessageBody.RoleIndex))
-            {
-                this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
-            }
+            this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
+            this.currentHLockTransaction = this.GetHLockPair();
 
             // calculate balance after payment according to the flag : isFounder
             this.CalculateBalance();
         }
 
-        public HtlcHandler(Htlc message, int role=0) : base(message, role)
-        {
-            this.Request.Router = this.onGoingRequest.Router;
-            this.Request.Next = this.onGoingRequest.Next;
-            this.isFounder = this.IsRole0(role);
-
-            if (this.IsRole1(this.Request.MessageBody.RoleIndex))
-            {
-                this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
-            }
-        }
-        
         public override bool SucceedStep()
         {
             if (base.SucceedStep())
@@ -136,6 +141,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             if (this.IsRole0(this.Request.MessageBody.RoleIndex))
             {
+                this.VerifyBalance(this.Request.MessageBody.Count, this.isFounder);
                 this.VerifyNonce(this.NextNonce(this.Request.ChannelName));
             }
             else
@@ -226,25 +232,57 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private void AddHLockPair(bool isFounder)
         {
-            // add new hlock pair for this transaction
-            TransactionTabelHLockPair hLockPair = new TransactionTabelHLockPair
+            // Just add the locked payment with hashcode when role index is zero
+            if (!IsRole0(this.Request.MessageBody.RoleIndex) || null == this.Request.MessageBody.HashR)
             {
-                transactionType = EnumTransactionType.HTLC.ToString(),
-                state = EnumTransactionState.initial.ToString(),
-                htlcNonce = this.Request.TxNonce,
-                router = this.Request.Router
-            };
+                return;
+            }
 
-            // record the below information according to the transaction play role
-            if (isFounder)
+            if (null != this.currentHLockTransaction)
             {
-                hLockPair.paymentChannel = this.Request.ChannelName;
-                hLockPair.payment = this.Request.MessageBody.Count;
+                // update the HLockPair
+                if (isFounder) // means this is a router point
+                {
+                    this.currentHLockTransaction.paymentChannel = this.Request.ChannelName;
+                    this.currentHLockTransaction.payment = this.Request.MessageBody.Count;
+                }
+                else // means this is it's payee, it will trigger htlc to rsmc later by RResponse
+                {
+                    this.currentHLockTransaction.transactionType = EnumTransactionType.HTLC.ToString();
+                    this.currentHLockTransaction.state = EnumTransactionState.initial.ToString();
+                    this.currentHLockTransaction.router = this.Request.Router;
+                    this.currentHLockTransaction.incomeChannel = this.Request.ChannelName;
+                    this.currentHLockTransaction.income = this.Request.MessageBody.Count;
+                    this.currentHLockTransaction.htlcNonce = this.Request.TxNonce;
+                }
+
+                this.GetChannelLevelDbEntry()?.UpdateTransactionHLockPair(this.Request.MessageBody.HashR, this.currentHLockTransaction);
             }
             else
             {
-                hLockPair.incomeChannel = this.Request.ChannelName;
-                hLockPair.income = this.Request.MessageBody.Count;
+                // add new hlock pair for this transaction
+                TransactionTabelHLockPair hLockPair = new TransactionTabelHLockPair
+                {
+                    transactionType = EnumTransactionType.HTLC.ToString(),
+                    asset = this.Request.MessageBody.AssetType,
+                    state = EnumTransactionState.initial.ToString(),
+                    htlcNonce = this.Request.TxNonce,
+                    router = this.Request.Router
+                };
+
+                // record the below information according to the transaction play role
+                if (isFounder)
+                {
+                    hLockPair.paymentChannel = this.Request.ChannelName;
+                    hLockPair.payment = this.Request.MessageBody.Count;
+                }
+                else
+                {
+                    hLockPair.incomeChannel = this.Request.ChannelName;
+                    hLockPair.income = this.Request.MessageBody.Count;
+                }
+
+                this.GetChannelLevelDbEntry()?.AddTransactionHLockPair(this.Request.MessageBody.HashR, hLockPair);
             }
         }
 
@@ -406,17 +444,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public HtlcSignHandler(Htlc message, string errorCode="Ok"):base(message)
         {
+            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
+
+            // set HtlcSign header or body
             this.Request.Router = this.onGoingRequest.Router;
             this.Request.Next = this.onGoingRequest.Next;
             this.Request.Error = errorCode;
-            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
-
-            if (this.IsRole1(this.Request.MessageBody.RoleIndex))
-            {   
-                // Get the current transaction
-                this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
-                this.currentHLockTransaction = this.GetHLockPair();
-            }
+            
+            // Get the current transaction
+            this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
+            this.currentHLockTransaction = this.GetHLockPair();
         }
 
         public override bool Handle()
@@ -473,7 +510,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.VerifyUri();
             this.VerifyRoleIndex();
             this.VerifyAssetType(this.Request.MessageBody.AssetType);
-            this.VerifyNonce(this.CurrentNonce(this.Request.ChannelName));
+
+            if (IsRole0(this.Request.MessageBody.RoleIndex))
+            {
+                this.VerifyBalance(this.Request.MessageBody.Count, this.isFounder);
+                this.VerifyNonce(this.CurrentNonce(this.Request.ChannelName));
+            }
+            else
+            {
+                this.VerifyNonce(this.NextNonce(this.Request.ChannelName));
+            }
 
             return true;
         }
@@ -525,10 +571,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // trigger htlc to next peer
-            if (this.IsPayee(out int currentUriIndex))
+            if (this.IsReachedPayee(this.Request.Router, out int currentUriIndex))
             {
                 Log.Info("Htlc with HashR<{0}> has been finished since the payee has received the payment: {1}.",
                     this.Request.MessageBody.HashR, this.Request.MessageBody.Count);
+
+                // Trigger RResponse to peer wallet
+                RResponseHandler RResponseHndl = new RResponseHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
+                    this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.MessageBody.Count,
+                    this.Request.MessageBody.HashR, this.currentHLockTransaction.rcode);
+                RResponseHndl.MakeTransaction();
                 return;
             }
 
@@ -552,23 +604,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return;
         }
 
-        private bool IsPayee(out int currentUriIndex)
+        private long CalculatePayment(long fee = 1000000)
         {
-            // for adapting the old trinity, here we have to use complicated logics
-            currentUriIndex = this.Request.Router.IndexOf(this.GetUri());
-            if (2 >= this.Request.Router.Count - currentUriIndex)
-            {
-                Log.Info("HTLC with HashR<{0}> finished since the payee has received the payment");
-                return true;
-            }
-
-            return false;
-        }
-        
-        private long CalculatePayment()
-        {
-            // use Hardcode Fee this time
-            long fee = 100000; // 0.01
+            // default fee is 0.01
             return this.Request.MessageBody.Count - fee;
         }
 

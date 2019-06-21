@@ -55,21 +55,26 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public FounderHandler(string sender, string receiver, string channel, string asset,
             string magic, long deposit) : base(sender, receiver, channel, asset, magic, fundingNonce, deposit)
         {
-            this.Request.TxNonce = fundingNonce; // To avoid rewrite outside.
-
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
-        }
 
-        public FounderHandler(string message) : base(message)
-        {
-            this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
-            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
+            // set message header or message body
+            this.Request.TxNonce = fundingNonce; // To avoid rewrite outside.
         }
 
         public FounderHandler(Founder request, int role = 0) : base(request, role)
         {
-            this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
+
+            // Get current transaction with nonce 0
+            this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
+        }
+
+        public FounderHandler(string message) : base(message)
+        {
+            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
+
+            // Get current transaction with nonce 0
+            this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
         }
 
         public override bool SucceedStep()
@@ -286,29 +291,53 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private TransactionFundingContent currentTransaction = null;
 
         /// <summary>
-        /// Handle received FounderSign message
-        /// </summary>
-        /// <param name="message"></param>
-        public FounderSignHandler(string message) : base(message)
-        {
-            this.currentTransaction =
-                this.GetChannelLevelDbEntry().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
-            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
-        }
-
-        /// <summary>
         /// Create new FounderSign message after received Founder.
         /// </summary>
         /// <param name="message">Received Founder message</param>
         /// <param name="errorCode"></param>
         public FounderSignHandler(Founder message, string errorCode = "Ok") : base(message)
         {
+            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
             this.Request.AssetType = message.MessageBody.AssetType;
             this.Request.Error = errorCode;
 
             // Get current transaction
             this.currentTransaction = this.GetCurrentTransaction<TransactionFundingContent>();
-            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
+            
+        }
+
+        /// <summary>
+        /// Handle received FounderSign message
+        /// </summary>
+        /// <param name="message"></param>
+        public FounderSignHandler(string message) : base(message)
+        {
+            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
+
+            // Get current transaction with nonce zero
+            this.currentTransaction =
+                this.GetChannelLevelDbEntry().TryGetTransaction<TransactionFundingContent>(this.Request.TxNonce);
+        }
+
+        public override bool SucceedStep()
+        {
+            if (!base.SucceedStep())
+            {
+                return false;
+            }
+
+            Log.Info("Succeed handling FounderSign. Channel: {0}, AssetType: {1}, Deposit: {2}, RoleIndex: {3}.",
+                this.Request.ChannelName, this.Request.MessageBody.AssetType,
+                this.Request.MessageBody.Deposit, this.Request.MessageBody.RoleIndex);
+
+            // broadcast this transaction
+            if (IsRole1(this.Request.MessageBody.RoleIndex))
+            {
+                this.BroadcastTransaction();
+                this.ExtraSucceedAction();
+            }
+
+            return true;
         }
 
         public override bool FailStep(string errorCode)
@@ -332,27 +361,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             return false;
-        }
-
-        public override bool SucceedStep()
-        {
-            if (!base.SucceedStep())
-            {
-                return false;
-            }
-
-            Log.Info("Succeed handling FounderSign. Channel: {0}, AssetType: {1}, Deposit: {2}, RoleIndex: {3}.",
-                this.Request.ChannelName, this.Request.MessageBody.AssetType,
-                this.Request.MessageBody.Deposit, this.Request.MessageBody.RoleIndex);
-
-            // broadcast this transaction
-            if (IsRole1(this.Request.MessageBody.RoleIndex))
-            {
-                this.BroadcastTransaction();
-                this.ExtraSucceedAction();
-            }
-
-            return true;
         }
 
         public override bool MakeupMessage()

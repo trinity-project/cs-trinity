@@ -36,6 +36,7 @@ SOFTWARE.
 */
 
 using System;
+using System.Collections.Generic;
 
 using Neo.IO.Json;
 using Trinity;
@@ -225,7 +226,39 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     this.Request.MessageType);
         }
 
-        public virtual bool VerifyBalance() { return true; }
+        public virtual bool VerifyBalance(long payment, bool isFounder=true)
+        {
+            if ((isFounder && this.currentChannel.balance >= payment) 
+                || (!isFounder && this.currentChannel.peerBalance > payment))
+            {
+                return true;
+            }
+
+            throw new TransactionException(EnumTransactionErrorCode.Channel_Without_Enough_Balance_For_Payment,
+                string.Format("Not enough balance for payment. Balance: {0}, Payment: {1}.", 
+                isFounder ? this.currentChannel.balance : this.currentChannel.peerBalance, payment),
+                this.Request.MessageType
+                );
+        }
+
+        public bool CheckChannelIsOpened()
+        {
+            return this.CheckChannelState(EnumChannelState.OPENED, EnumTransactionErrorCode.Channel_Not_Opened);
+        }
+
+        private bool CheckChannelState(EnumChannelState state, EnumTransactionErrorCode errorcode)
+        {
+            if (state.ToString().Equals(this.currentChannel.state))
+            {
+                return true;
+            }
+
+            throw new TransactionException(errorcode,
+                string.Format("Incompatible Channel state. State: {0}, ExpectedState: {1}.", this.currentChannel.state, state),
+                this.Request.MessageType
+                );
+        }
+
         public virtual bool VerifyRoleIndex()
         { 
             if (IsIllegalRole(this.currentRole))
@@ -378,6 +411,18 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private bool IsHtlcToRsmc()
         {
             return EnumTransactionType.HTLC.ToString().Equals(this.currentHLockTransaction?.transactionType);
+        }
+
+        protected bool IsReachedPayee(List<string> router, out int currentUriIndex)
+        {
+            // for adapting the old trinity, here we have to use complicated logics
+            currentUriIndex = router.IndexOf(this.GetUri());
+            if (2 >= router.Count - currentUriIndex)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -670,5 +715,37 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         ////////////////////////////////////////////////////////////////////////////
 #endregion // VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+
+        // public static methods
+        public static void MakeTransaction(string sender, string receiver, string channel, string asset,
+            string magic, UInt64 nonce, long payment, string hashcode = null)
+        {
+            // GetCurrent Channel
+            Channel channelLevelDbApi = new Channel(channel, asset, sender, receiver);
+            ChannelTableContent currentChannel = channelLevelDbApi.GetChannel(channel);
+
+            // to decide which transaction is used
+            if (currentChannel.peer.Equals(receiver))
+            {
+                RsmcHandler rsmcHndl = new RsmcHandler(sender, receiver, channel, asset,
+                            magic, nonce, payment);
+                rsmcHndl.MakeTransaction();
+            }
+            else
+            {
+                // Get route info here
+                List<string> router = null;
+                string channelName = null; // channel in router
+
+                // Htlc transaction
+                if (null != channelName)
+                {
+                    // start HTLC transaction
+                    HtlcHandler htlcHndl = new HtlcHandler(sender, receiver, channelName, asset, magic, nonce, payment, hashcode, router);
+                    htlcHndl.MakeTransaction();
+
+                }
+            }
+        }
     }
 }

@@ -55,9 +55,9 @@ namespace Trinity.ChannelSet
         //private Dictionary<string, double> Deposit;
         //private Dictionary<string, double> Balance;
         
-        private readonly ChannelModel TableChannel;
-        private readonly TransactionModel TableTransaction;
-        private readonly BlockModel TableBlock;
+        private readonly ChannelModel TableChannel = null;
+        private readonly TransactionModel TableTransaction = null;
+        private readonly BlockModel TableBlock = null;
 
         /// <summary>
         /// Default Constructor
@@ -66,16 +66,24 @@ namespace Trinity.ChannelSet
         /// <param name="uri"></param>
         /// <param name="peerUri"></param>
         /// <param name="channel"></param>
-        public Channel(string channel, string asset, string uri, string peerUri=null)
+        public Channel(string channel, string asset, string uri, string peerUri = null)
         {
             this.uri = uri;
             this.peerUri = peerUri;
             this.channelName = channel;
             this.assetType = asset;
+
+            if (null != uri)
+            {
+                this.TableChannel = new ChannelModel(this.dbPath(), uri, peerUri);
+                this.TableBlock = new BlockModel(this.dbPath(), uri);
+            }
+
+            if (null != channel)
+            { 
+                this.TableTransaction = new TransactionModel(this.dbPath(), channel);
+            }
             
-            this.TableChannel = new ChannelModel(this.dbPath(), uri, peerUri);
-            this.TableTransaction = new TransactionModel(this.dbPath(), channel);
-            this.TableBlock = new BlockModel(this.dbPath(), uri);
         }
 
         public ChannelTableContent GetChannel(string channel)

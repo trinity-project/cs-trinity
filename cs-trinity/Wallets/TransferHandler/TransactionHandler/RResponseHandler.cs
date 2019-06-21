@@ -24,9 +24,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 using System;
+
+using Neo.Cryptography;
+
 using Trinity.BlockChain;
 using Trinity.Wallets.Templates.Messages;
 using Trinity.TrinityDB.Definitions;
+using Trinity.Exceptions.WalletError;
 
 namespace Trinity.Wallets.TransferHandler.TransactionHandler
 {
@@ -35,15 +39,23 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
     /// </summary>
     public class RResponseHandler : TransactionHandler<RResponse, RResponse, RResponseHandler, RResponseHandler>
     {
+        // current transaction by nonce
+        private TransactionTabelHLockPair currentHLock = null;
+
         public RResponseHandler(string sender, string receiver, string channel, string asset,
             string magic, long payment, string hashcode, string rcode)
             : base(sender, receiver, channel, asset, magic, 0, payment, 0, hashcode, rcode)
-        { }
+        {
+            // Get record of htlc locked payment
+            this.currentHLock = this.GetHLockPair();
+        }
 
         public RResponseHandler(string message) : base(message)
         {
+            // Get record of htlc locked payment
+            this.currentHLock = this.GetHLockPair();
         }
-
+        
         public override bool FailStep(string errorCode)
         {
             return base.FailStep(errorCode);
@@ -51,10 +63,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override bool SucceedStep()
         {
-            // TODO: update the Htlc Locked pair content to level db
-            TransactionTabelHLockPair currentHlock = this.GetHtlcLockTrade();
-            currentHlock.rcode = this.Request.MessageBody.R;
-            this.GetChannelLevelDbEntry()?.UpdateTransactionHLockPair(this.Request.MessageBody.HR, currentHlock);
+            // Check the Hash Lock Pair
+            this.CheckHashLockPair();
+
+            // update the current htlc lock payment transaction by hash
+            this.currentHLock.rcode = this.Request.MessageBody.R;
+            this.GetChannelLevelDbEntry()?.UpdateTransactionHLockPair(this.Request.MessageBody.HR, currentHLock);
 
             // Trigger Htlc to Rsmc
             RsmcHandler rsmcHndl = new RsmcHandler(this.Request.Receiver, this.Request.Sender,
@@ -63,12 +77,38 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             rsmcHndl.MakeTransaction();
 
             // Trigger RResponse to previous peer
-            if (null != this.GetHtlcLockTrade()?.incomeChannel)
+            ChannelTableContent nextChannel = this.GetChannelLevelDbEntry()?.GetChannel(currentHLock?.incomeChannel);
+            if (null != nextChannel)
             {
-                this.MakeRequest();
+
+                RResponseHandler RResponseHndl = 
+                    new RResponseHandler(this.Request.Receiver, nextChannel.peer, nextChannel.channel,
+                this.Request.MessageBody.AssetType, this.Request.NetMagic, currentHLock.income,
+                this.Request.MessageBody.HR, this.Request.MessageBody.R);
             }
 
             return true;
+        }
+
+        private void CheckHashLockPair()
+        {
+            if (null == this.Request.MessageBody.HR || null == this.Request.MessageBody.R)
+            {
+                throw new TransactionException(EnumTransactionErrorCode.NullReferrence_Hash_Lock_Pair,
+                    string.Format("HashR or Rcode is null. HashR: {0}, Rcode: {0}",
+                        this.Request.MessageBody.HR, this.Request.MessageBody.R),
+                    EnumTransactionErrorBase.RRESPONSE.ToString());
+            }
+
+            // Check the HashR-R pair
+            if (this.Request.MessageBody.R.Sha1() != this.Request.MessageBody.HR)
+            {
+                throw new TransactionException(EnumTransactionErrorCode.Imcompatible_Hash_Lock_Pair_For_Transaction,
+                    string.Format("HashR or Rcode is null. HashR: {0}, Rcode: {0}",
+                        this.Request.MessageBody.HR, this.Request.MessageBody.R),
+                    EnumTransactionErrorBase.RRESPONSE.ToString());
+            }
+
         }
 
         #region RResponse_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
@@ -85,16 +125,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override void SetLocalsFromBody()
         {
-            this.HashR = this.onGoingRequest.MessageBody.HR;
+            this.HashR = this.Request.MessageBody.HR;
         }
 
-        public override RResponseHandler CreateRequestHndl(int role=0)
-        {
-            ChannelTableContent incomeChannel = this.GetChannelLevelDbEntry()?.TryGetChannel(this.GetHtlcLockTrade()?.incomeChannel);
-            return new RResponseHandler(this.onGoingRequest.Receiver, incomeChannel.peer, incomeChannel.channel,
-                this.onGoingRequest.MessageBody.AssetType, this.onGoingRequest.NetMagic, this.GetHtlcLockTrade().income,
-                this.onGoingRequest.MessageBody.HR, this.onGoingRequest.MessageBody.R);
-        }
         #endregion
     }
 }

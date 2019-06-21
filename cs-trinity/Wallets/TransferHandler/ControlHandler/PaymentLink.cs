@@ -36,6 +36,8 @@ using Neo.Cryptography;
 using Trinity.BlockChain;
 using Trinity.Wallets;
 using Trinity.TrinityDB;
+using Trinity.TrinityDB.Definitions;
+using Trinity.ChannelSet;
 
 namespace Trinity.Wallets.TransferHandler.ControlHandler
 {
@@ -69,10 +71,11 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
 
             string rcode = CreateRCode(uri.Split('@')[0].ToHash160());
             string hashcode = rcode.Sha1();
-            
-            // TODO: record the Hashcode and RCode pair into database.
 
-            string paymentCode = string.Format("{0}&{1}&{2}&{3}&{4}", uri, hashcode, asset, payment, comments);
+            // record the Hashcode and RCode pair into database.
+            AddHLockTransaction(asset, hashcode, rcode, payment.GetData());
+
+            string paymentCode = string.Format("{0}&{1}&{2}&{3}&{4}", uri, hashcode, asset, payment.GetData(), comments);
 
             return Base58.Encode(paymentCode.ToBytesUtf8());
         }
@@ -94,6 +97,19 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
             string rcodeString = rcodeBytes.ToHexString();
             
             return rcodeString;
+        }
+
+        internal static void AddHLockTransaction(string asset, string hashcode, string rcode, long income)
+        {
+            TransactionTabelHLockPair hLockPair = new TransactionTabelHLockPair
+            {
+                asset = asset,
+                rcode = rcode,
+                income = income,
+            };
+
+            Channel levelDbApi = new Channel("hLockPair", null, null);
+            levelDbApi.AddTransactionHLockPair(hashcode, hLockPair);
         }
 
     }

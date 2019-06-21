@@ -115,6 +115,10 @@ namespace Trinity.Exceptions.WalletError
         Invalid_Url = 0x2,
         Transaction_With_Wrong_Signature = 0x3,
 
+        // Invalid Hash locked pair
+        NullReferrence_Hash_Lock_Pair = 0x3E,
+        Imcompatible_Hash_Lock_Pair_For_Transaction = 0x3F,
+
         // Asset Type related error
         NullReferrence_Asset_Type_Or_ID = 0x40,
         Unsupported_Asset_Type_Or_ID = 0x41,

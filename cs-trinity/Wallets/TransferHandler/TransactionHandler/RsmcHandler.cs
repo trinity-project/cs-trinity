@@ -64,10 +64,14 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             string magic, UInt64 nonce, long payment, string hashcode=null)
             : base(sender, receiver, channel, asset, magic, nonce, payment, 0, hashcode)
         {
-            this.Request.TxNonce = this.NextNonce(channel);
-            this.currentHLockTransaction = this.GetHLockPair();
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex)
                 || this.IsRole2(this.Request.MessageBody.RoleIndex);
+
+            // Set Rsmc header or body
+            this.Request.TxNonce = this.NextNonce(channel);
+
+            // Get the current htlc locked payment
+            this.currentHLockTransaction = this.GetHLockPair();
         }
 
         /// <summary>
@@ -77,23 +81,24 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="role"></param>
         public RsmcHandler(Rsmc message, int role) : base(message, role)
         {
+            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex)
+                || this.IsRole2(this.Request.MessageBody.RoleIndex);
+
             // Get the current transaction
             this.currentTransaction = this.GetCurrentTransaction<TransactionRsmcContent>();
             this.currentHLockTransaction = this.GetHLockPair();
-
-            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex)
-                || this.IsRole2(this.Request.MessageBody.RoleIndex);
         }
 
         public RsmcHandler(string message) : base(message)
         {
+            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex)
+                || this.IsRole3(this.Request.MessageBody.RoleIndex);
+
             // Get the current transaction
             this.currentTransaction = this.GetCurrentTransaction<TransactionRsmcContent>();
             this.currentHLockTransaction = this.GetHLockPair();
 
             // calculate the balance after payment according to role played by peers
-            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex)
-                || this.IsRole3(this.Request.MessageBody.RoleIndex);
             this.CalculateBalance();
         }
 
@@ -147,6 +152,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.VerifyAssetType(this.Request.MessageBody.AssetType);
 
             if (this.IsRole0(this.Request.MessageBody.RoleIndex)) {
+                this.VerifyBalance(this.Request.MessageBody.Value, this.isFounder);
                 this.VerifyNonce(this.NextNonce(this.Request.ChannelName));
             }
             else { 
@@ -362,24 +368,27 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <param name="role"></param>
         public RsmcSignHandler(Rsmc message, string errorCode="Ok") : base(message)
         {
+            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
+
+            // set message header or body
             this.Request.AssetType = message.MessageBody.AssetType;
             this.Request.Error = errorCode;
+
             // Get the current transaction
             this.currentTransaction = this.GetCurrentTransaction<TransactionRsmcContent>();
             this.currentHLockTransaction = this.GetHLockPair();
-
-            this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
         }
 
         public RsmcSignHandler(string message) : base(message)
         {
+            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
+
             // Get the current transaction
             this.currentTransaction =
                 this.GetChannelLevelDbEntry().TryGetTransaction<TransactionRsmcContent>(this.Request.TxNonce);
             this.currentHLockTransaction = this.GetHLockPair();
 
             // Calculate the balance according to flag: isFounder
-            this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
             this.CalculateBalance();
         }
 
@@ -448,6 +457,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.VerifyAssetType(this.Request.MessageBody.AssetType);
             if (this.IsRole0(this.Request.MessageBody.RoleIndex))
             {
+                this.VerifyBalance(this.Request.MessageBody.Value, this.isFounder);
                 this.VerifyNonce(this.NextNonce(this.Request.ChannelName));
             }
             else
