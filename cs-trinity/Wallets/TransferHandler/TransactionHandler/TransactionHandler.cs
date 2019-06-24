@@ -518,7 +518,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             if (!isFunding && fundingNonce == nonce)
             {
-                throw new TransactionException(EnumTransactionErrorCode.Transaction_Nonce_Should_Be_largger_Than_Zero,
+                throw new TransactionException(EnumTransactionErrorCode.Transaction_Nonce_Should_Be_Larger_Than_Zero,
                     "AddTransaction Error: Nonce<0> is only be used as funding transaction for creating channel.",
                     this.Request.MessageType
                     );
@@ -533,7 +533,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             if (!isFunding && nonce == fundingNonce)
             {
-                throw new TransactionException(EnumTransactionErrorCode.Transaction_Nonce_Should_Be_largger_Than_Zero,
+                throw new TransactionException(EnumTransactionErrorCode.Transaction_Nonce_Should_Be_Larger_Than_Zero,
                     "UpdateTransaction Error: Nonce<0> is only be used as funding transaction for creating channel.",
                     this.Request.MessageType
                     );

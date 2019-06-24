@@ -130,7 +130,7 @@ namespace Trinity.Exceptions.WalletError
 
         // Nonce Related Error
         Incompatible_Nonce = 0x58,
-        Transaction_Nonce_Should_Be_largger_Than_Zero = 0x59,
+        Transaction_Nonce_Should_Be_Larger_Than_Zero = 0x59,
 
         // Role related error
         NullReferrence_Role_Index = 0x70,
