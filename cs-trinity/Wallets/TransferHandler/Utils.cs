@@ -40,6 +40,8 @@ using Neo.SmartContract;
 using Trinity.BlockChain;
 using Trinity.Wallets.Templates.Definitions;
 
+using System.Web.Script.Serialization;
+
 namespace Trinity.Wallets
 {
     public static class Utils
@@ -83,6 +85,12 @@ namespace Trinity.Wallets
         public static TMessage Deserialize<TMessage>(this string msg)
         {
             return MessagePackSerializer.Deserialize<TMessage>(MessagePackSerializer.FromJson(msg));
+        }
+
+        public static TMessage DeserializeObject<TMessage>(this string msg)
+        {
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            return serializer.Deserialize<TMessage>(msg);
         }
 
         /////////////////////////////////////////////////////////////////////////////

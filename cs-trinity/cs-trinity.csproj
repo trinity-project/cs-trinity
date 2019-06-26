@@ -273,6 +273,7 @@
       <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.1\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="System.Transactions" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -281,9 +282,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlockChain\Indexer.cs" />
     <Compile Include="BlockChain\NeoInterface.cs" />
     <Compile Include="BlockChain\Monitor.cs" />
     <Compile Include="BlockChain\NeoTransaction.cs" />
+    <Compile Include="BlockChain\NeoTransaction_Neo.cs" />
     <Compile Include="BlockChain\NeoUtils.cs" />
     <Compile Include="ChannelSet\Channel.cs" />
     <Compile Include="ChannelSet\Definitions\EnumChannelState.cs" />
@@ -300,6 +303,8 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
+    <Compile Include="TrinityDB\Definitions\IndexerTableContents.cs" />
+    <Compile Include="TrinityDB\IndexerModel.cs" />
     <Compile Include="Wallets\Templates\Definitions\EnumTransactionState.cs" />
     <Compile Include="Exceptions\TransactionException.cs" />
     <Compile Include="Exceptions\Utils.cs" />

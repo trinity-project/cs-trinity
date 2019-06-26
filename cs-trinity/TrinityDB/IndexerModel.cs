@@ -30,19 +30,44 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Trinity.TrinityDB.Definitions
+using Neo.IO.Data.LevelDB;
+
+using Trinity.TrinityDB.Definitions;
+
+namespace Trinity.TrinityDB
 {
-    internal static class ModelPrefix
+    /// <summary>
+    /// 
+    /// </summary>
+    public class IndexerModel : BaseModel
     {
-        public const byte MPChannelSummary = 0x1;
-        public const byte MPChannel = 0x10;
+        private readonly byte[] group;
+        // private readonly byte[] peerGroup;
 
-        public const byte MPTransaction = 0x20;
-        public const byte MPTransactionTxId = 0x21;
-        public const byte MPTransactionHtlcLockPair = 0x22;
+        public SliceBuilder keyword => SliceBuilder.Begin(ModelPrefix.MPIndexer).Add(this.group);
+        public SliceBuilder bothKeyword => SliceBuilder.Begin(ModelPrefix.MPIndexer).Add(this.group);
 
-        public const byte MPBlockGroup = 0x40;
+        /// <summary>
+        /// Default Constructor
+        /// </summary>
+        /// <param name="path"></param>
+        /// 
+        public IndexerModel(string path, string address) : base(path)
+        {
+            if (null != address)
+            {
+                this.group = address.ToHashBytes();
+            }
+        }
 
-        public const byte MPIndexer = 0x50;
+        /// <summary>
+        /// Default Constructor
+        /// </summary>
+        /// <param name="path"></param>
+        /// 
+        //public IndexerModel(string path, string uri, string peerUri = null) : base(path)
+        //{
+        //    this.group = uri.ToHashBytes();
+        //}
     }
 }

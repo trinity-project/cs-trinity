@@ -30,19 +30,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using MessagePack;
+using Trinity.ChannelSet.Definitions;
+
 namespace Trinity.TrinityDB.Definitions
 {
-    internal static class ModelPrefix
+    [MessagePackObject(keyAsPropertyName:true)]
+    public class IndexerTableContent
     {
-        public const byte MPChannelSummary = 0x1;
-        public const byte MPChannel = 0x10;
-
-        public const byte MPTransaction = 0x20;
-        public const byte MPTransactionTxId = 0x21;
-        public const byte MPTransactionHtlcLockPair = 0x22;
-
-        public const byte MPBlockGroup = 0x40;
-
-        public const byte MPIndexer = 0x50;
+        public string PrevIndex;
+        public string PrevHash;
+        public string Value;
     }
 }
