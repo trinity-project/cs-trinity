@@ -1,4 +1,4 @@
-/*
+О╩©/*
 Author: Trinity Core Team
 
 MIT License
@@ -31,6 +31,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neo;
+using Neo.Wallets;
 using Neo.SmartContract;
 using Neo.IO.Json;
 using Neo.Network.P2P;
@@ -42,6 +43,9 @@ using Trinity.Wallets.Templates.Definitions;
 using MessagePack;
 using Trinity.Wallets;
 using static Trinity.BlockChain.NeoInterface;
+
+
+
 
 namespace Trinity.BlockChain
 {
@@ -66,7 +70,7 @@ namespace Trinity.BlockChain
         private readonly string assetId;
 
         // founder trade information
-        private string addressFunding;          //©ии╬ЁЩё©ё©ё©
+        private string addressFunding;          //О©╫О©╫и╬О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫
         private string scriptFunding;
         private string fundingTxId;
 
@@ -268,7 +272,7 @@ namespace Trinity.BlockChain
             TransactionOutput[] outputsData = createOutput(this.assetId, this.balance, this.address);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 addressHash = NeoInterface.ToScriptHash1(this.address);
+            UInt160 addressHash = this.address.ToScriptHash();
             string preTxId = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId
 
 #if DEBUG_LOCAL
@@ -305,10 +309,10 @@ namespace Trinity.BlockChain
             TransactionOutput[] outputsData = createOutput(assetId, this.balance, this.peerAddress);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 peerAddressHash = NeoInterface.ToScriptHash1(this.peerAddress);
+            UInt160 peerAddressHash = this.peerAddress.ToScriptHash();
 
             string preTxID = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");            //preTxId
-            UInt160 ScriptHashSelf = NeoInterface.ToScriptHash1(this.peerAddress);                              //outputTo
+            UInt160 ScriptHashSelf = this.peerAddress.ToScriptHash();                              //outputTo
 
 #if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
@@ -336,10 +340,12 @@ namespace Trinity.BlockChain
         /// <returns></returns>
         public bool CreateSettle(out TxContents settleTx)
         {
-            //TODO: can't get vouts of funding address                                     !!!
+            UInt160 fundingScriptHash = this.addressFunding.ToScriptHash();
+            uint amount = uint.Parse(this.balance) + uint.Parse(this.peerBalance);
 
             // Assembly transaction with input for both wallets
-            CoinReference[] inputsData = createInputsData(this.fundingTxId, 0);             //TODO
+            List<string> vouts = getGloablAssetVout(fundingScriptHash, assetId, amount);
+            CoinReference[] inputsData = getInputFormVout(vouts);
 
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputToSelf = createOutput(assetId, this.balance, this.address, true);
@@ -347,7 +353,6 @@ namespace Trinity.BlockChain
             TransactionOutput[] outputsData = outputToSelf.Concat(outputToOther).ToArray();
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_funding = NeoInterface.ToScriptHash1(this.addressFunding);
             new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
 
             this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
@@ -391,10 +396,12 @@ namespace Trinity.BlockChain
             this.SetAddressHTLC(HTLCContract["address"].ToString());
             this.SetScripHTLC(HTLCContract["script"].ToString());
 
-            //TODO: can't get vouts of funding address                                     !!!
+            UInt160 fundingScriptHash = this.addressFunding.ToScriptHash();
+            uint amount = uint.Parse(this.balance) + uint.Parse(this.peerBalance) + uint.Parse(HtlcValue);
 
             // Assembly transaction with input for both wallets
-            CoinReference[] inputsData = createInputsData(this.fundingTxId, 0);             //TODO
+            List<string> vouts = getGloablAssetVout(fundingScriptHash, assetId, amount);
+            CoinReference[] inputsData = getInputFormVout(vouts);
 
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputToRMSC = createOutput(assetId, this.balance, this.addressRsmc, true);
@@ -595,10 +602,12 @@ namespace Trinity.BlockChain
             this.SetAddressHTLC(HTLCContract["address"].ToString());
             this.SetScripHTLC(HTLCContract["script"].ToString());
 
-            //TODO: can't get vouts of funding address                                     !!!
+            UInt160 fundingScriptHash = this.addressFunding.ToScriptHash();
+            uint amount = uint.Parse(this.balance) + uint.Parse(this.peerBalance) + uint.Parse(HtlcValue);
 
             // Assembly transaction with input for both wallets
-            CoinReference[] inputsData = createInputsData(this.fundingTxId, 0);             //TODO
+            List<string> vouts = getGloablAssetVout(fundingScriptHash, assetId, amount);
+            CoinReference[] inputsData = getInputFormVout(vouts);
 
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputToRMSC = createOutput(assetId, this.balance, this.addressRsmc, true);
@@ -696,7 +705,7 @@ namespace Trinity.BlockChain
         /// </summary>
         /// <param name="HETX"> output the HTTX body </param>
         /// <returns></returns>
-        public bool CreateHETX(out HtlcExecutionTx HETX, string txId,string HtlcValue)
+        public bool CreateHETX(out HtlcExecutionTx HETX, string txId, string HtlcValue)
         {
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
             Log.Debug("RSMCContract: {0}", RSMCContract);

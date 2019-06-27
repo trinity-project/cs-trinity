@@ -45,12 +45,14 @@ using Neo.Cryptography.ECC;
 using MessagePack;
 
 using Trinity.Wallets;
+using Trinity.TrinityDB.Definitions;
+using Neo.Wallets.NEP6;
 
 namespace Trinity.BlockChain
 {
     public sealed class NeoInterface
     {
-        
+
         static System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create();
 
         private static BigDecimal GetNep5Balance(UInt160 asset_id, UInt160 scriptHash)
@@ -130,6 +132,32 @@ namespace Trinity.BlockChain
             return txidList;
         }
 
+        /// <summary>
+        /// Get block data for monitoring the multi-sign contract address
+        /// </summary>
+        /// <param name="blockHeight"></param>
+        public static List<Transaction> GetBlockData(uint blockHeight)
+        {
+            JObject blockInfo = new JObject();
+            JArray tx;
+            Block block;
+            List<Transaction> txList = new List<Transaction>();
+            block = Blockchain.Singleton.Store.GetBlock(blockHeight);
+            if (block == null)
+            {
+                return null;
+            }
+            Transaction[] transactions = block.Transactions;
+            for (int txNum = 0; txNum < transactions.Count(); txNum++)
+            {
+                if (transactions[txNum].GetType() == typeof(ContractTransaction))
+                {
+                    txList.Add(transactions[txNum]);
+                }
+            }
+            return txList;
+        }
+
         public static uint GetBlockHeight()
         {
             return Blockchain.Singleton.HeaderHeight;
@@ -143,8 +171,8 @@ namespace Trinity.BlockChain
             }
             else
             {
-                return (startTrinity.currentWallet.WalletHeight > 0)? startTrinity.currentWallet.WalletHeight-1 : 0;
-            }            
+                return (startTrinity.currentWallet.WalletHeight > 0) ? startTrinity.currentWallet.WalletHeight - 1 : 0;
+            }
         }
 
         private static JObject GetRelayResult(RelayResultReason reason)
@@ -270,13 +298,13 @@ namespace Trinity.BlockChain
         ///<returns>
         ///脚本哈希scriptHash
         ///</returns>
-        public static UInt160 ToScriptHash1(string address)
-        {
-            byte[] data = address.RemovePrefix().Base58CheckDecode();
-            if (data.Length != 21)
-                throw new FormatException();
-            return new UInt160(data.Skip(1).ToArray());
-        }
+        //public static UInt160 ToScriptHash1(string address)
+        //{
+        //    byte[] data = address.RemovePrefix().Base58CheckDecode();
+        //    if (data.Length != 21)
+        //        throw new FormatException();
+        //    return new UInt160(data.Skip(1).ToArray());
+        //}
 
         ///<summary>
         ///Script转ScriptHash
@@ -367,28 +395,6 @@ namespace Trinity.BlockChain
             return BigInteger.Parse(i.ToString()).ToByteArray().ToHexString();
         }
 
-        //创建多签合约，封装自NEO方法
-        //弃用
-        //public static Contract CreateMultiSigContract1(string publicKey1, string publicKey2)
-        //{
-        //    ECPoint[] publicKeys;
-        //    List<System.String> listS = new List<System.String>();
-        //    if (publicKey1.CompareTo(publicKey2) > 0)
-        //    {
-        //        listS.Add(publicKey1);
-        //        listS.Add(publicKey2);
-        //    }
-        //    else
-        //    {
-        //        listS.Add(publicKey2);
-        //        listS.Add(publicKey1);
-        //    }
-
-        //    publicKeys = listS.Select(p => ECPoint.DecodePoint(p.HexToBytes(), ECCurve.Secp256r1)).ToArray();
-        //    Contract contract = Contract.CreateMultiSigContract(2, publicKeys);
-        //    return contract;
-        //}
-
         ///<summary>
         ///创建多签合约，封装自NEO方法
         ///</summary>
@@ -465,8 +471,8 @@ namespace Trinity.BlockChain
         {
             string OpCode = "";
             string Value1 = BigInteger.Parse(Value).ToByteArray().ToHexString();
-            string ScriptHashFrom = ToScriptHash1(AddressFrom).ToArray().ToHexString();
-            string ScriptHashTo = ToScriptHash1(AddressTo).ToArray().ToHexString();
+            string ScriptHashFrom = AddressFrom.ToScriptHash().ToArray().ToHexString();
+            string ScriptHashTo = AddressTo.ToScriptHash().ToArray().ToHexString();
             string method = StringToHexString("transfer");            //7472616e73666572
             string[] invoke_args = { Value1, ScriptHashTo, ScriptHashFrom };
             foreach (var item in invoke_args)
@@ -549,7 +555,7 @@ namespace Trinity.BlockChain
             //string length = NeoInterface.IntToHex(TimestampByte.Length / 2).PadLeft(2, '0');
             //string magicTimestamp = length + Timestamp;
 
-            string contractTemplate = 
+            string contractTemplate =
                      "58c56b6c766b00527ac46c766b51527ac46c766b52527ac4616c766b52c3a76c766b53527ac46168184e656f2e4" +
                      "26c6f636b636861696e2e4765744865696768746168184e656f2e426c6f636b636861696e2e4765744865616465" +
                      "726c766b54527ac46c766b00c36121{0}ac642f006c766b51c36121{1}ac635f006c766b00c3612" +
@@ -719,12 +725,12 @@ namespace Trinity.BlockChain
         private const long D = 100_000_000;
 
         //查找未花费的资产交易信息
-        public static List<string> getGloablAssetVout(string publicKey, string _assetId, uint _amount)
+        public static List<string> getGloablAssetVout(UInt160 scriptHash, string _assetId, uint _amount)
         {
             UInt256 assetId = UInt256.Parse(_assetId);
             Fixed8 amount = Fixed8.FromDecimal(_amount);
-            UInt160 account = NeoInterface.PublicKeyToScriptHash(publicKey);
-            UInt160[] accounts = { account };
+            //UInt160 account = NeoInterface.PublicKeyToScriptHash(scriptHash);
+            UInt160[] accounts = { scriptHash };
             Coin[] coinList = GetUnspentCoins(accounts, assetId, amount);
             List<string> listData = new List<string>();
             if (coinList == null)
@@ -759,7 +765,7 @@ namespace Trinity.BlockChain
             foreach (string vinData in listData)
             {
                 Vin vin = vinData.Deserialize<Vin>();
-                CoinReference input = createInput(vin.txid, vin.n); 
+                CoinReference input = createInput(vin.txid, vin.n);
                 inputList.Add(input);
             }
             CoinReference[] inputArray = inputList.ToArray();
@@ -805,7 +811,7 @@ namespace Trinity.BlockChain
             {
                 amount = Fixed8.FromDecimal(uAmount);
             }
-            UInt160 address_hash = ToScriptHash1(address);
+            UInt160 address_hash = address.ToScriptHash();
 
             List<TransactionOutput> outputList = new List<TransactionOutput> { };
             TransactionOutput Output = new TransactionOutput
@@ -816,6 +822,60 @@ namespace Trinity.BlockChain
             };
             outputList.Add(Output);
             return outputList.ToArray();
+        }
+
+        //测试使用
+        public static void dbTest()
+        {
+            Console.WriteLine("开始");
+            string address = "AMMwK187AFPMmQHjFXqx5M5uw56FhbySbb";
+            string assetId = "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
+            List<IndexerTableContent> contents = new List<IndexerTableContent> { };
+            IndexerTableContent content = new IndexerTableContent
+            {
+                PrevIndex = "123",
+                PrevHash = "456",
+                Value = "789"
+            };
+            contents.Add(content);
+            Indexer indexerDBEntry = new Indexer(address);
+
+            indexerDBEntry.AddIndexer(address, assetId, contents.ToArray());
+            Console.WriteLine("添加数据结束");
+
+            IndexerTableContent[] data1 = indexerDBEntry.GetIndexer(address, assetId);
+            Console.WriteLine("获取数据结束");
+
+            IndexerTableContent content1 = new IndexerTableContent
+            {
+                PrevIndex = "1230",
+                PrevHash = "4560",
+                Value = "7890"
+            };
+            contents.Add(content1);
+            indexerDBEntry.UpdateIndexer(address, assetId, contents.ToArray());
+            Console.WriteLine("修改数据结束");
+
+            IndexerTableContent[] data2 = indexerDBEntry.GetIndexer(address, assetId);
+            Console.WriteLine("获取数据结束");
+
+            indexerDBEntry.DeleteIndexer(address, assetId);
+            Console.WriteLine("删除数据结束");
+
+            IndexerTableContent[] data3 = indexerDBEntry.GetIndexer(address, assetId);
+            Console.WriteLine("获取数据结束");
+        }
+
+        //测试使用
+        public static void addtest1()
+        {
+            string pubKey = "025aa64efb9a5176a550210cdc795060cab8f7711e7cd69dbe12b9bbd3ee2dd721";
+            string peerPubkey = "0391e05b532e5e8aa9eb0ef3c3888cf7636a428c339c33ad620d0f2900437999d6";
+            Contract contract = NeoInterface.CreateMultiSigContract(pubKey, peerPubkey);
+            Console.WriteLine(contract.Address);
+            WalletAccount account = startTrinity.currentWallet.CreateAccount(contract);
+            if (startTrinity.currentWallet is NEP6Wallet wallet)
+                wallet.Save();
         }
     }
 }

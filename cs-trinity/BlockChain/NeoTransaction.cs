@@ -1,4 +1,4 @@
-/*
+ï»¿/*
 Author: Trinity Core Team
 
 MIT License
@@ -31,6 +31,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neo;
+using Neo.Wallets;
 using Neo.SmartContract;
 using Neo.IO.Json;
 using Neo.Network.P2P;
@@ -119,10 +120,10 @@ namespace Trinity.BlockChain
         /// <param name="addressFunding"> Contract address for storing 2 wallets' Deposit. It's JUST created when Founder Message is triggerred. </param>
         /// <param name="scriptFunding"> Contract script </param>
         public NeoTransaction(string assetId, string pubKey, string balance, string peerPubKey, string peerBalance,
-            string addressFunding=null, string scriptFunding=null)
+            string addressFunding = null, string scriptFunding = null)
         {
             this.assetId = assetId;
-            
+
 
             this.pubKey = pubKey.NeoStrip();
             this.balance = balance.NeoStrip();
@@ -148,7 +149,7 @@ namespace Trinity.BlockChain
             string opdata = NeoInterface.CreateOpdata(address, contract.Address, balance, assetId);
             string peerOpdata = NeoInterface.CreateOpdata(peerAddress, contract.Address, peerBalance, assetId);
             Log.Debug("Assembly opdata. opdata: {0}.\r\n peerOpdata: {1}", opdata, peerOpdata);
-            
+
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.scriptHash, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.peerScriptHash, attributes).MakeAttribute(out attributes);
@@ -195,7 +196,7 @@ namespace Trinity.BlockChain
 
             this.SetAddressRSMC(RSMCContract["address"].ToString());
             this.SetScripRSMC(RSMCContract["script"].ToString());
-            string RSMCContractAddress =this.addressRsmc;                                                   //ÔÝÓÃ
+            string RSMCContractAddress = this.addressRsmc;                                                   //ï¿½ï¿½ï¿½ï¿½
 
             string opdataRsmc = NeoInterface.CreateOpdata(this.addressFunding, RSMCContractAddress, this.balance, this.assetId);
             Log.Debug("opdataRsmc: {0}", opdataRsmc);
@@ -204,7 +205,7 @@ namespace Trinity.BlockChain
             Log.Debug("peerOpdataRsmc: {0}", peerOpdataRsmc);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_funding = NeoInterface.ToScriptHash1(this.addressFunding);
+            UInt160 address_hash_funding = this.addressFunding.ToScriptHash();
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_funding, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
 
@@ -235,7 +236,7 @@ namespace Trinity.BlockChain
             Log.Debug("createRDTX opdata: {0}", opdata);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
+            UInt160 address_hash_RSMC = this.addressRsmc.ToScriptHash();
             string preTxId = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
@@ -266,10 +267,10 @@ namespace Trinity.BlockChain
             Console.WriteLine("createBRTX: opdata: {0}", opdata);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
+            UInt160 address_hash_RSMC = this.addressRsmc.ToScriptHash();
 
             string preTxID = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");            //preTxId
-            UInt160 ScriptHashSelf = NeoInterface.ToScriptHash1(this.peerAddress);                              //outputTo
+            UInt160 ScriptHashSelf = this.peerAddress.ToScriptHash();                              //outputTo
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
@@ -302,7 +303,7 @@ namespace Trinity.BlockChain
             Log.Debug("CreateSettle: peerOpdata: {0}", peerOpdata);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_funding = NeoInterface.ToScriptHash1(this.addressFunding);
+            UInt160 address_hash_funding = this.addressFunding.ToScriptHash();
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_funding, attributes).MakeAttribute(out attributes);
             new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
 
@@ -336,7 +337,7 @@ namespace Trinity.BlockChain
             Log.Debug("HTLCContract: {0}", HTLCContract);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_funding = NeoInterface.ToScriptHash1(this.addressFunding);
+            UInt160 address_hash_funding = this.addressFunding.ToScriptHash();
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_funding, attributes).MakeAttribute(out attributes);
 #if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
@@ -380,7 +381,7 @@ namespace Trinity.BlockChain
         public bool CreateSenderRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
+            UInt160 address_hash_RSMC = this.addressRsmc.ToScriptHash();
             string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId  ???
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
@@ -415,7 +416,7 @@ namespace Trinity.BlockChain
         public bool CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, string HtlcValue)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
+            UInt160 address_hash_HTLC = this.addressHtlc.ToScriptHash();
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
 #if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
@@ -451,7 +452,7 @@ namespace Trinity.BlockChain
             this.SetScripRSMC(RSMCContract["script"].ToString());
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
+            UInt160 address_hash_HTLC = this.addressHtlc.ToScriptHash();
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
 #if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
@@ -484,7 +485,7 @@ namespace Trinity.BlockChain
         public bool CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx revocableDeliveryTx, string txId, string HtlcValue)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
+            UInt160 address_hash_RSMC = this.addressRsmc.ToScriptHash();
             string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId ???
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
@@ -530,7 +531,7 @@ namespace Trinity.BlockChain
             Log.Debug("HTLCContract: {0}", HTLCContract);
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_funding = NeoInterface.ToScriptHash1(this.addressFunding);
+            UInt160 address_hash_funding = this.addressFunding.ToScriptHash();
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_funding, attributes).MakeAttribute(out attributes);
 #if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
@@ -575,7 +576,7 @@ namespace Trinity.BlockChain
         public bool CreateReceiverRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
+            UInt160 address_hash_RSMC = this.addressRsmc.ToScriptHash();
             string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId  ???
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
@@ -611,7 +612,7 @@ namespace Trinity.BlockChain
         public bool CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, string HtlcValue)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
+            UInt160 address_hash_HTLC = this.addressHtlc.ToScriptHash();
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
 #if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
@@ -647,7 +648,7 @@ namespace Trinity.BlockChain
             this.SetScripRSMC(RSMCContract["script"].ToString());
 
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_HTLC = NeoInterface.ToScriptHash1(this.addressHtlc);
+            UInt160 address_hash_HTLC = this.addressHtlc.ToScriptHash();
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_HTLC, attributes).MakeAttribute(out attributes);
 #if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
@@ -680,7 +681,7 @@ namespace Trinity.BlockChain
         public bool CreateHERDTX(out HtlcExecutionRevocableDeliveryTx revocableDeliveryTx, string txId, string HtlcValue)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_RSMC = NeoInterface.ToScriptHash1(this.addressRsmc);
+            UInt160 address_hash_RSMC = this.addressRsmc.ToScriptHash();
             string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId ???
 
             new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, address_hash_RSMC, attributes).MakeAttribute(out attributes);
