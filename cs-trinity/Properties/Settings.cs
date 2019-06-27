@@ -8,6 +8,7 @@ namespace Trinity.Properties
     {
         public string gatewayIP { get; private set; }
         public string gatewayPort { get; private set; }
+        public string gatewayRpcPort { get; private set; }
         public string localIp { get; private set; }
         public string localPort { get; private set; }
         public uint trinityMagicMainNet { get; private set; }
@@ -24,6 +25,7 @@ namespace Trinity.Properties
         {
             this.gatewayIP = section.GetSection("Gateway").GetSection("ip").Value;
             this.gatewayPort = section.GetSection("Gateway").GetSection("port").Value;
+            this.gatewayRpcPort = section.GetSection("Gateway").GetSection("rpcPort").Value;
             this.localIp = section.GetSection("Local").GetSection("ip").Value;
             this.localPort = section.GetSection("Local").GetSection("port").Value;
             this.trinityMagicMainNet = MagicMainNet;

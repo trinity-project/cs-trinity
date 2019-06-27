@@ -38,6 +38,7 @@ using Trinity.Network.TCP;
 using Trinity.Wallets.Templates.Messages;
 using Trinity.Wallets.TransferHandler.TransactionHandler;
 using Trinity.Wallets.TransferHandler.ControlHandler;
+using Trinity.Properties;
 
 namespace Trinity
 {
@@ -56,6 +57,9 @@ namespace Trinity
         private readonly string netMagic;
         private TrinityTcpClient client;
 
+        // private static variables
+        private static string gatewayRpcServer;
+
         public string pubKey;
         /// <summary>
         /// 
@@ -71,6 +75,8 @@ namespace Trinity
             this.netMagic = magic;
             this.gatewayIp = ip ?? TrinityWalletConfig.ip;
             this.gatewayPort = port ?? TrinityWalletConfig.port;
+
+            TrinityWallet.gatewayRpcServer = string.Format(@"http://{0}:{1}", Settings.Default.gatewayIP, Settings.Default.gatewayRpcPort);
 
             // get the wallet pair key by neo wallet instance
             this.walletKey = this.neoWallet?.GetAccount(pubKey?.ToHash160()).GetKey();
@@ -132,6 +138,11 @@ namespace Trinity
         public virtual string Sign(string content)
         {
             return NeoInterface.Sign(content, this.walletKey.PrivateKey);
+        }
+
+        public static string GetGatewayRpcServer()
+        {
+            return TrinityWallet.gatewayRpcServer;
         }
 
      #region private_method_sets

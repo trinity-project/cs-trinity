@@ -118,6 +118,8 @@ namespace Trinity.ChannelSet
         public void UpdateChannel(string channel, ChannelTableContent value)
         {
             this.TableChannel.Db.Update(this.TableChannel.bothKeyword.Add(channel.ToBytesUtf8()), channel, value);
+
+
         }
 
         public void DeleteChannel(string channel)

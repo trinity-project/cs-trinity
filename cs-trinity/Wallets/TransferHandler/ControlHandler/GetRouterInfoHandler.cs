@@ -31,7 +31,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Trinity.Wallets.Templates.Messages;
-using Trinity.Wallets.TransferHandler;
+using Trinity.Network.RPC;
 
 namespace Trinity.Wallets.TransferHandler.ControlHandler
 {
@@ -45,6 +45,24 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
                 AssetType = asset,
                 Value = payment
             };
+        }
+
+        public static string GetRouter(string sender, string receiver, string asset, string magic, long payment)
+        {
+            GetRouterInfo request = new GetRouterInfo
+            {
+                Sender = sender,
+                Receiver = receiver,
+                NetMagic = magic,
+
+                MessageBody = new RouteInfoBody
+                {
+                    AssetType = asset,
+                    Value = payment
+                }
+            };
+
+            return TrinityRpcRequest.Post(TrinityWallet.GetGatewayRpcServer(), "GetRouterInfo", request);
         }
     }
 

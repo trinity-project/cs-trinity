@@ -2,7 +2,8 @@
   "ProtocolConfiguration": {
     "Gateway": {
       "ip": "47.98.228.81",
-      "port": "8089"
+      "port": "8089",
+      "rpcPort" : "8077"
     },
     "Local": {
       "ip": "localhost",

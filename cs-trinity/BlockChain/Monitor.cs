@@ -37,6 +37,7 @@ using Trinity.ChannelSet;
 using Trinity.TrinityDB.Definitions;
 using Trinity.BlockChain;
 using Trinity.ChannelSet.Definitions;
+using Trinity.Wallets.TransferHandler.ControlHandler;
 
 namespace Trinity.BlockChain
 {
@@ -163,6 +164,7 @@ namespace Trinity.BlockChain
                     case "funding":
                         ChannelData.state = EnumChannelState.OPENED.ToString();
                         Log.Debug("Change {0} to OPENED state.", Summary.channel);
+                        SyncNetTopologyHandler.AddNetworkTopology(ChannelData);
                         break;
                     case "settle":
                         ChannelData.state = EnumChannelState.SETTLED.ToString();

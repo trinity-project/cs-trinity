@@ -306,6 +306,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // Update the channel state
             channelContent.state = state.ToString();
             this.channelDBEntry?.UpdateChannel(channelName, channelContent);
+
+            // notify gateway to delete graph
+            if (EnumChannelState.SETTLING.Equals(state))
+            {
+                SyncNetTopologyHandler.DeleteNetworkTopology(channelContent);
+            }
         }
 
         public void UpdateChannelBalance()
@@ -317,6 +323,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             channelContent.balance = this.balance;
             channelContent.peerBalance = this.peerBalance;
             this.channelDBEntry?.UpdateChannel(channelName, channelContent);
+
+            // notify gateway to delete graph
+            if (EnumChannelState.OPENED.ToString().Equals(channelContent.state))
+            {
+                SyncNetTopologyHandler.UpdateNetworkTopology(channelContent);
+            }
         }
 
         public void RecordChannelSummary()
@@ -728,10 +740,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             Channel channelLevelDbApi = new Channel(channel, asset, sender, receiver);
             ChannelTableContent currentChannel = channelLevelDbApi.GetChannel(channel);
 
-#if TEST_GETROUTER
+            string routerInfo = GetRouterInfoHandler.GetRouter(sender, receiver, asset, magic, payment);
             //GetRouterInfoHandler getRouterInfoHndl = new GetRouterInfoHandler(sender, receiver, asset, magic, payment);
             //getRouterInfoHndl.MakeTransaction();
-#else
+
             // to decide which transaction is used
             if (currentChannel.peer.Equals(receiver))
             {
@@ -754,7 +766,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
                 }
             }
-#endif
+
         }
     }
 }

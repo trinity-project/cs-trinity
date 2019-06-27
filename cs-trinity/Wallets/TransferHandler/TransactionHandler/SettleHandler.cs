@@ -30,11 +30,8 @@ using Neo.IO.Json;
 using Neo.Wallets;
 
 using Trinity.ChannelSet.Definitions;
-using Trinity.TrinityDB.Definitions;
-using Trinity.BlockChain;
 using Trinity.Wallets.Templates.Definitions;
 using Trinity.Wallets.Templates.Messages;
-using Trinity.Network.TCP;
 
 namespace Trinity.Wallets.TransferHandler.TransactionHandler
 {

@@ -100,4 +100,23 @@ namespace Trinity.Wallets.Templates.Messages
         public string AssetType { get; set; }
         public string NetMagic { get; set; }
     }
+
+    /// <summary>
+    /// RpcHeader for RPC messages
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RpcHeader
+    {
+        public virtual string MessageType { get; set; }
+        public string NetMagic { get; set; }
+    }
+
+    /// <summary>
+    /// ContolPlaneGeneric: generic for Control plane messages.
+    /// </summary>
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RpcMessageGeneric<TBody> : RpcHeader
+    {
+        public TBody MessageBody { get; set; }
+    }
 }
