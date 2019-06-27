@@ -8,5 +8,11 @@
     <Setting Name="MagicTestNet" Type="System.UInt32" Scope="User">
       <Value Profile="(Default)">19990331</Value>
     </Setting>
+    <Setting Name="NeoMagicMainNet" Type="System.UInt32" Scope="User">
+      <Value Profile="(Default)">7630401</Value>
+    </Setting>
+    <Setting Name="NeoMagicTestNet" Type="System.UInt32" Scope="User">
+      <Value Profile="(Default)">1953787457</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

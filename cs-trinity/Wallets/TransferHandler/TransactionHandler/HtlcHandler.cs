@@ -26,6 +26,7 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 
+using Neo;
 using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
 using Trinity.BlockChain;
@@ -59,7 +60,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private HtlcTimeoutRevocableDelivertyTx htRdTx;
 
         public HtlcHandler(string sender, string receiver, string channel, string asset,
-            string magic, UInt64 nonce, long payment, string hashcode, List<string> router, int role = 0)
+            string magic, UInt64 nonce, long payment, string hashcode, List<PathInfo> router, int role = 0)
             :base(sender, receiver, channel, asset, magic, nonce, payment, role, hashcode)
         {
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
@@ -67,7 +68,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // Set Htlc header or body
             this.Request.TxNonce = this.NextNonce(channel);
             this.Request.Router = router;
-            this.Request.Next = router?[router.IndexOf(receiver) + 1];
+            int currentIndex = this.IndexOfRouter(router, receiver);
+            if (0 < currentIndex && currentIndex + 1 < router.Count)
+            {
+                this.Request.Next = router[currentIndex + 1].uri;
+            }
 
             // Get record of htlc locked payment
             this.currentHLockTransaction = this.GetHLockPair();
@@ -550,17 +555,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         // ToDo: used in future
         private string ChooseChannel(string peer, long payment)
         {
-            foreach (ChannelTableContent channel in this.GetChannelLevelDbEntry()?.GetChannelListOfThisWallet())
-            {
-                if (channel.peer.Equals(peer)
-                    && channel.state.Equals(EnumChannelState.OPENED.ToString())
-                    && payment <= channel.balance)
-                {
-                    return channel.channel;
-                }
-            }
-
-            return null;
+            return this.GetChannelLevelDbEntry()?.GetChannel(peer, payment, EnumChannelState.OPENED.ToString());
         }
 
         private void TriggerHtlcToNextPeer()
@@ -583,9 +578,14 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 RResponseHndl.MakeTransaction();
                 return;
             }
+            else if (0 > currentUriIndex)
+            {
+                Log.Error("Current wallet uri not found. Uri: {0}, Router: {1}", this.GetUri(), this.Request.Router);
+                return;
+            }
 
-            string nextPeerUri = this.Request.Router[currentUriIndex + 1];
-            long payment = this.CalculatePayment();
+            string nextPeerUri = this.Request.Router[currentUriIndex + 1].uri;
+            long payment = this.CalculatePayment(Fixed8.Parse(this.Request.Router[currentUriIndex + 1].fee.ToString()).GetData()) ;
 
             // Get the channel for next htlc
             string channelName = this.ChooseChannel(nextPeerUri, payment);
@@ -595,6 +595,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 HtlcHandler htlcHndl = new HtlcHandler(
                     this.GetUri(), nextPeerUri, channelName, this.Request.MessageBody.AssetType,
                     this.Request.NetMagic, 0, payment, this.Request.MessageBody.HashR, this.Request.Router);
+                htlcHndl.MakeTransaction();
             }
             else
             {

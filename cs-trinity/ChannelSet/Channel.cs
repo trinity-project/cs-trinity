@@ -94,6 +94,21 @@ namespace Trinity.ChannelSet
             return null;
         }
 
+        public string GetChannel(string peer, long payment, string state)
+        {
+            foreach (ChannelTableContent channel in this.GetChannelListOfThisWallet())
+            {
+                if (channel.peer.Equals(peer)
+                    && channel.state.Equals(state)
+                    && payment <= channel.balance)
+                {
+                    return channel.channel;
+                }
+            }
+
+            return null;
+        }
+
         public ChannelTableContent TryGetChannel(string channel)
         {
             if (this.TableChannel.Db.TryGet(this.TableChannel.bothKeyword.Add(channel.ToBytesUtf8()), channel, out Slice chContent))

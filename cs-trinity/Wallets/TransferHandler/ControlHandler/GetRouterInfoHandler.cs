@@ -47,7 +47,7 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
             };
         }
 
-        public static string GetRouter(string sender, string receiver, string asset, string magic, long payment)
+        public static AckRouterInfo GetRouter(string sender, string receiver, string asset, string magic, long payment)
         {
             GetRouterInfo request = new GetRouterInfo
             {
@@ -62,14 +62,15 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
                 }
             };
 
-            return TrinityRpcRequest.PostIgnoreException(TrinityWallet.GetGatewayRpcServer(), "GetRouterInfo", request);
+            string routerInfo = TrinityRpcRequest.PostIgnoreException(TrinityWallet.GetGatewayRpcServer(), "GetRouterInfo", request);
+            return routerInfo?.Deserialize<RpcResponse>()?.result?.Deserialize<AckRouterInfo>();
         }
     }
 
-    public class AckRouterInfoHandler : ControlHandler<AckRouterInfo, VoidControlMessage, AckRouterInfoHandler, VoidHandler>
-    {
-        public AckRouterInfoHandler(string message) : base(message)
-        {
-        }
-    }
+    //public class AckRouterInfoHandler : ControlHandler<AckRouterInfo, VoidControlMessage, AckRouterInfoHandler, VoidHandler>
+    //{
+    //    public AckRouterInfoHandler(string message) : base(message)
+    //    {
+    //    }
+    //}
 }

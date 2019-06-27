@@ -45,12 +45,28 @@ namespace Trinity.Wallets.Templates.Messages
     {
     }
 
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class AckRouterInfoBody
-    { }
+    [MessagePackObject]
+    public class PathInfo
+    {
+        [Key(0)]
+        public string uri { get; set; }
+        [Key(1)]
+        public double fee { get; set; }
+    }
+
 
     [MessagePackObject(keyAsPropertyName: true)]
-    public class AckRouterInfo : ContolPlaneGeneric<AckRouterInfoBody>
-    { }
+    public class AckRouterInfoBody
+    {
+        public List<PathInfo> FullPath { get; set; }
+        public string Next { get; set; }
+    }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class AckRouterInfo
+    {
+        public string MessageType { get; set; }
+        public AckRouterInfoBody RouterInfo { get; set; }
+    }
 }
 

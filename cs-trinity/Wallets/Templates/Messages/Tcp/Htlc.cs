@@ -56,7 +56,7 @@ namespace Trinity.Wallets.Templates.Messages
     [MessagePackObject(keyAsPropertyName: true)]
     public class Htlc : TransactionPlaneGeneric<HtlcBody>
     {
-        public List<string> Router { get; set; }
+        public List<PathInfo> Router { get; set; }
         public string Next { get; set; }
     }
 }

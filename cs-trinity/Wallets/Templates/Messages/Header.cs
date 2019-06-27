@@ -119,4 +119,12 @@ namespace Trinity.Wallets.Templates.Messages
     {
         public TBody MessageBody { get; set; }
     }
+
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class RpcResponse
+    {
+        public string jsonrpc { get; set; }
+        public string result { get; set; }
+        public int id { get; set; }
+    }
 }

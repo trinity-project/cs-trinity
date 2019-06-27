@@ -32,6 +32,7 @@ using System.Threading.Tasks;
 using MessagePack;
 
 using Trinity.Wallets.Templates.Definitions;
+using Trinity.Wallets.Templates.Messages;
 
 namespace Trinity.TrinityDB.Definitions
 {
@@ -56,7 +57,7 @@ namespace Trinity.TrinityDB.Definitions
         public UInt64 htlcNonce;        // htlcNonce
         public long income;     // How much gains
         public long payment;    // How much is paid
-        public List<string> router; // for adapting the old trinity
+        public List<PathInfo> router; // for adapting the old trinity
     }
 
     [MessagePackObject(keyAsPropertyName: true)]

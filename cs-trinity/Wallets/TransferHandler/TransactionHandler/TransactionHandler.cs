@@ -38,6 +38,7 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 
+using Neo;
 using Neo.IO.Json;
 using Trinity;
 using Trinity.BlockChain;
@@ -426,16 +427,34 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return EnumTransactionType.HTLC.ToString().Equals(this.currentHLockTransaction?.transactionType);
         }
 
-        protected bool IsReachedPayee(List<string> router, out int currentUriIndex)
+        protected bool IsReachedPayee(List<PathInfo> router, out int currentUriIndex)
         {
             // for adapting the old trinity, here we have to use complicated logics
-            currentUriIndex = router.IndexOf(this.GetUri());
-            if (2 >= router.Count - currentUriIndex)
+            currentUriIndex = this.IndexOfRouter(router, this.GetUri());
+            if (0 <= currentUriIndex && 2 >= router.Count - currentUriIndex)
             {
                 return true;
             }
 
             return false;
+        }
+
+        protected int IndexOfRouter(List<PathInfo> router, string uri)
+        {
+            if (null == uri || null == router)
+            {
+                return -1;
+            }
+
+            foreach(PathInfo currentPoint in router)
+            {
+                if (currentPoint.uri == uri)
+                {
+                    return router.IndexOf(currentPoint);
+                }
+            }
+
+            return -1;
         }
 
         /// <summary>
@@ -739,11 +758,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // GetCurrent Channel
             Channel channelLevelDbApi = new Channel(channel, asset, sender, receiver);
             ChannelTableContent currentChannel = channelLevelDbApi.GetChannel(channel);
-
-            string routerInfo = GetRouterInfoHandler.GetRouter(sender, receiver, asset, magic, payment);
-            //GetRouterInfoHandler getRouterInfoHndl = new GetRouterInfoHandler(sender, receiver, asset, magic, payment);
-            //getRouterInfoHndl.MakeTransaction();
-
+            
             // to decide which transaction is used
             if (currentChannel.peer.Equals(receiver))
             {
@@ -754,19 +769,34 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             else
             {
                 // Get route info here
-                List<string> router = null;
-                string channelName = null; // channel in router
+                AckRouterInfo routerInfo = GetRouterInfoHandler.GetRouter(sender, receiver, asset, TrinityWallet.GetMagic(), payment);
+                List<PathInfo> router = routerInfo?.RouterInfo?.FullPath;
 
+                if (2 > router.Count)
+                {
+                    Log.Error("Failed to make Htlc transaction since wrong router. Router: {0}", router);
+                    return;
+                }
+
+                // Calculate the payment with fee
+                for (int routerIndex=1; routerIndex < router.Count-1; routerIndex++)
+                {
+                    payment += Fixed8.Parse(router[routerIndex].fee.ToString()).GetData();
+                }
+
+                string channelName = channelLevelDbApi.GetChannel(router[1].uri, payment, EnumChannelState.OPENED.ToString());
                 // Htlc transaction
                 if (null != channelName)
                 {
                     // start HTLC transaction
                     HtlcHandler htlcHndl = new HtlcHandler(sender, receiver, channelName, asset, magic, nonce, payment, hashcode, router);
                     htlcHndl.MakeTransaction();
-
+                }
+                else
+                {
+                    Log.Error("No satisfied Channel is found between {0} and {1}. Payment: {2}", sender, router[1].uri, payment);
                 }
             }
-
         }
     }
 }

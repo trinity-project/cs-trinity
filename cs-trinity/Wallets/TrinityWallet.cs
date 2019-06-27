@@ -54,11 +54,15 @@ namespace Trinity
 
         private readonly string gatewayIp;
         private readonly string gatewayPort;
-        private readonly string netMagic;
+        private readonly string magic;
         private TrinityTcpClient client;
 
         // private static variables
-        private static string gatewayRpcServer;
+        private static readonly string gatewayRpcServer 
+            = string.Format(@"http://{0}:{1}", Settings.Default.gatewayIP, Settings.Default.gatewayRpcPort);
+        private static readonly string netMagic
+            = string.Format(@"{0}{1}", Neo.Network.P2P.Message.Magic,
+                Neo.Network.P2P.Message.Magic == Settings.Default.NeoMagicMainNet ? Settings.Default.trinityMagicMainNet : Settings.Default.trinityMagicTestNet);
 
         public string pubKey;
         /// <summary>
@@ -72,11 +76,9 @@ namespace Trinity
             this.neoSystem = system;
             this.neoWallet = wallet;
             this.pubKey = pubKey;
-            this.netMagic = magic;
+            this.magic = TrinityWallet.netMagic;
             this.gatewayIp = ip ?? TrinityWalletConfig.ip;
             this.gatewayPort = port ?? TrinityWalletConfig.port;
-
-            TrinityWallet.gatewayRpcServer = string.Format(@"http://{0}:{1}", Settings.Default.gatewayIP, Settings.Default.gatewayRpcPort);
 
             // get the wallet pair key by neo wallet instance
             this.walletKey = this.neoWallet?.GetAccount(pubKey?.ToHash160()).GetKey();
@@ -122,7 +124,7 @@ namespace Trinity
 
         public string GetNetMagic()
         {
-            return this.netMagic;
+            return this.magic;
         }
 
         public UInt160 GetPublicKeyHash()
@@ -143,6 +145,11 @@ namespace Trinity
         public static string GetGatewayRpcServer()
         {
             return TrinityWallet.gatewayRpcServer;
+        }
+
+        public static string GetMagic()
+        {
+            return TrinityWallet.netMagic;
         }
 
      #region private_method_sets
@@ -236,7 +243,7 @@ namespace Trinity
                     new RResponseHandler(message).Handle();
                     break;
                 case "AckRouterInfo":
-                    new AckRouterInfoHandler(message).Handle();
+                    // new AckRouterInfoHandler(message).Handle();
                     break;
                 default:
                     this.ProcessControlMessage(header.MessageType, message);
