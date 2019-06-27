@@ -825,48 +825,6 @@ namespace Trinity.BlockChain
         }
 
         //测试使用
-        public static void dbTest()
-        {
-            Console.WriteLine("开始");
-            string address = "AMMwK187AFPMmQHjFXqx5M5uw56FhbySbb";
-            string assetId = "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
-            List<IndexerTableContent> contents = new List<IndexerTableContent> { };
-            IndexerTableContent content = new IndexerTableContent
-            {
-                PrevIndex = "123",
-                PrevHash = "456",
-                Value = "789"
-            };
-            contents.Add(content);
-            Indexer indexerDBEntry = new Indexer(address);
-
-            indexerDBEntry.AddIndexer(address, assetId, contents.ToArray());
-            Console.WriteLine("添加数据结束");
-
-            IndexerTableContent[] data1 = indexerDBEntry.GetIndexer(address, assetId);
-            Console.WriteLine("获取数据结束");
-
-            IndexerTableContent content1 = new IndexerTableContent
-            {
-                PrevIndex = "1230",
-                PrevHash = "4560",
-                Value = "7890"
-            };
-            contents.Add(content1);
-            indexerDBEntry.UpdateIndexer(address, assetId, contents.ToArray());
-            Console.WriteLine("修改数据结束");
-
-            IndexerTableContent[] data2 = indexerDBEntry.GetIndexer(address, assetId);
-            Console.WriteLine("获取数据结束");
-
-            indexerDBEntry.DeleteIndexer(address, assetId);
-            Console.WriteLine("删除数据结束");
-
-            IndexerTableContent[] data3 = indexerDBEntry.GetIndexer(address, assetId);
-            Console.WriteLine("获取数据结束");
-        }
-
-        //测试使用
         public static void addtest1()
         {
             string pubKey = "025aa64efb9a5176a550210cdc795060cab8f7711e7cd69dbe12b9bbd3ee2dd721";
