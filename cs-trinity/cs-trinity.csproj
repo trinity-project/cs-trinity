@@ -282,7 +282,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BlockChain\Indexer.cs" />
     <Compile Include="BlockChain\NeoInterface.cs" />
     <Compile Include="BlockChain\Monitor.cs" />
     <Compile Include="BlockChain\NeoTransaction.cs" />
@@ -303,8 +302,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="TrinityDB\Definitions\IndexerTableContents.cs" />
-    <Compile Include="TrinityDB\IndexerModel.cs" />
     <Compile Include="Wallets\Templates\Definitions\EnumSyncTopoAction.cs" />
     <Compile Include="Wallets\Templates\Definitions\EnumTransactionState.cs" />
     <Compile Include="Exceptions\TransactionException.cs" />
