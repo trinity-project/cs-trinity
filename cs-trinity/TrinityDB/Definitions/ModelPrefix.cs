@@ -42,7 +42,5 @@ namespace Trinity.TrinityDB.Definitions
         public const byte MPTransactionHtlcLockPair = 0x22;
 
         public const byte MPBlockGroup = 0x40;
-
-        public const byte MPIndexer = 0x50;
     }
 }
