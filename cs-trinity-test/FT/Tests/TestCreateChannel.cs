@@ -38,7 +38,7 @@ namespace TestTrinity.FT.Tests
     {
 
         public TestRegisterWallet(TrinityWallet wallet, TrinityTcpClient client,
-            string ip, string port, string protocol) : base(ip, port, protocol)
+            string ip, string port, string protocol) : base(protocol)
         {
         }
 
@@ -80,7 +80,7 @@ namespace TestTrinity.FT.Tests
 
     internal class TestRegisterChannelHandler : RegisterChannelHandler
     {
-        public TestRegisterChannelHandler() : base()
+        public TestRegisterChannelHandler() : base("")
         {
         }
 

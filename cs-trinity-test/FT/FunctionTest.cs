@@ -235,7 +235,9 @@ namespace TestTrinity
             //MFTestRegisterKeepAlive(client); // RegisterKeepAlive
             //MFTestSyncWalletData(client); // SyncWalletData
 
-            MFTestCreateChannel();
+            //MFTestCreateChannel();
+
+            TestRpc();
 
             Console.ReadKey();
         }
@@ -290,8 +292,9 @@ namespace TestTrinity
 
         public static void TestRpc()
         {
-            string uri = "http://47.97.198.8:8077";
-        
+            //string uri = "http://47.97.198.8:8077";
+            string uri = "http://47.98.228.81:8077";
+
             GetRouterInfo content = new GetRouterInfo
             {
                 Sender = "03745d64d8f1fd71c7dbb05dd043eaa94e114290642678e36d33ee5df23970e881@47.97.198.8:8089",

@@ -45,7 +45,7 @@ namespace TestTrinity.FT.Tests
 
         public void RegisterToGateWay()
         {
-            RegisterWallet msgHandler = new RegisterWallet("localhost", "20556");
+            RegisterWallet msgHandler = new RegisterWallet();
 
             // Start to send RegisterKeepAlive to gateway
             Console.WriteLine("Send RegisterKeepAlive: {0}", msgHandler.ToJson());
