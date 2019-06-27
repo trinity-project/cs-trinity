@@ -62,7 +62,7 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
                 }
             };
 
-            return TrinityRpcRequest.Post(TrinityWallet.GetGatewayRpcServer(), "GetRouterInfo", request);
+            return TrinityRpcRequest.PostIgnoreException(TrinityWallet.GetGatewayRpcServer(), "GetRouterInfo", request);
         }
     }
 

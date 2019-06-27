@@ -11,7 +11,7 @@ namespace Trinity.Network.RPC
 {
     public class TrinityRpcRequest
     {
-        public static string Post<T>(string gateWayUri, string messagType, T TRequest)
+        public static string Post<T>(string gateWayUri, string messageType, T TRequest)
         {
             string result = null;
 
@@ -19,7 +19,7 @@ namespace Trinity.Network.RPC
             JObject request = new JObject();
             request["jsonrpc"] = "2.0";
             request["id"] = 1;
-            request["method"] = messagType;
+            request["method"] = messageType;
             request["params"] = JObject.Parse(parameters.Serialize());
 
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(gateWayUri);
@@ -45,6 +45,19 @@ namespace Trinity.Network.RPC
                 result = reader.ReadToEnd();
             }
             return result;
+        }
+
+        public static string PostIgnoreException<T>(string gateWayUri, string messageType, T TRequest)
+        {
+            try
+            {
+                return Post(gateWayUri, messageType, TRequest);
+            }
+            catch (Exception ExpInfo)
+            {
+                Log.Warn("Exception occurred during RPC call for {0}. Exception: {1}", messageType, ExpInfo);
+                return null;
+            }
         }
     }
 }

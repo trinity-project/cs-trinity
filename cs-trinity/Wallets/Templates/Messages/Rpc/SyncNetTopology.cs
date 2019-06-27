@@ -40,7 +40,7 @@ namespace Trinity.Wallets.Templates.Messages
         public string ChannelName { get; set; }
         public string Founder { get; set; }
         public string Receiver { get; set; }
-        public Dictionary<string, long> Balance { get; set; }
+        public Dictionary<string, Dictionary<string, long>> Balance { get; set; }
     }
 
     public class SyncNetTopology : RpcMessageGeneric<SyncNetTopologyBody>

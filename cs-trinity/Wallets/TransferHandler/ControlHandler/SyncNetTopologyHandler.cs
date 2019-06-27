@@ -52,23 +52,23 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
             // get the founder and receiver
             string founder;
             string receiver;
-            Dictionary<string, long> balance = new Dictionary<string, long>();
+            Dictionary<string, Dictionary<string, long>> balance = new Dictionary<string, Dictionary<string, long>>();
 
             if (channelContent.role.Contains(EnumRole.FOUNDER.ToString()))
             {
                 founder = channelContent.uri;
                 receiver = channelContent.peer;
 
-                balance.Add(founder, channelContent.balance);
-                balance.Add(receiver, channelContent.peerBalance);
+                balance.Add(founder, new Dictionary<string, long> {{ channelContent.asset, channelContent.balance}});
+                balance.Add(receiver, new Dictionary<string, long> { { channelContent.asset, channelContent.peerBalance } });
             }
             else
             {
                 founder = channelContent.peer;
                 receiver = channelContent.uri;
 
-                balance.Add(founder, channelContent.peerBalance);
-                balance.Add(receiver, channelContent.balance);
+                balance.Add(founder, new Dictionary<string, long> { { channelContent.asset, channelContent.peerBalance } });
+                balance.Add(receiver, new Dictionary<string, long> { { channelContent.asset, channelContent.balance } });
             }
 
 
@@ -88,7 +88,8 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
                 }
             };
 
-            return TrinityRpcRequest.Post(TrinityWallet.GetGatewayRpcServer(), "SyncChannel", syncRequest);
+            
+            return TrinityRpcRequest.PostIgnoreException(TrinityWallet.GetGatewayRpcServer(), "SyncChannel", syncRequest);
         }
 
         public static void AddNetworkTopology(ChannelTableContent channelContent)
