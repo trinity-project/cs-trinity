@@ -343,7 +343,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public override HtlcSignHandler CreateResponseHndl(string errorCode = "Ok")
         {
-            return new HtlcSignHandler(this.onGoingRequest, errorCode);
+            return new HtlcSignHandler(this.Request, errorCode);
         }
 
         public override void AddTransaction(bool isFounder = false)
