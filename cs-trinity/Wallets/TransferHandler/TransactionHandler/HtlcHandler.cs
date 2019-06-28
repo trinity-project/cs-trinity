@@ -485,7 +485,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // Trigger htlc to next peer
-            if (this.IsRole1(this.Request.MessageBody.RoleIndex))
+            if (this.IsRole0(this.Request.MessageBody.RoleIndex))
             {
                 this.TriggerHtlcToNextPeer();
             }
@@ -576,11 +576,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private void TriggerHtlcToNextPeer()
         {
-            if (!this.IsRole1(this.Request.MessageBody.RoleIndex))
-            {
-                return;
-            }
-
             // trigger htlc to next peer
             if (this.IsReachedPayee(this.Request.Router, out int currentUriIndex))
             {
