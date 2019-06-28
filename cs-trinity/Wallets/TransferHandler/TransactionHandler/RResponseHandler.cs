@@ -43,8 +43,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private TransactionTabelHLockPair currentHLock = null;
 
         public RResponseHandler(string sender, string receiver, string channel, string asset,
-            string magic, long payment, string hashcode, string rcode)
-            : base(sender, receiver, channel, asset, magic, 0, payment, 0, hashcode, rcode)
+            string magic, UInt64 nonce, long payment, string hashcode, string rcode)
+            : base(sender, receiver, channel, asset, magic, nonce, payment, 0, hashcode, rcode)
         {
             // Get record of htlc locked payment
             this.currentHLock = this.GetHLockPair();
@@ -80,11 +80,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             ChannelTableContent nextChannel = this.GetChannelLevelDbEntry()?.GetChannel(currentHLock?.incomeChannel);
             if (null != nextChannel)
             {
-
                 RResponseHandler RResponseHndl = 
                     new RResponseHandler(this.Request.Receiver, nextChannel.peer, nextChannel.channel,
-                this.Request.MessageBody.AssetType, this.Request.NetMagic, currentHLock.income,
+                this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, currentHLock.income,
                 this.Request.MessageBody.HR, this.Request.MessageBody.R);
+                RResponseHndl.MakeTransaction();
             }
 
             return true;
@@ -95,7 +95,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             if (null == this.Request.MessageBody.HR || null == this.Request.MessageBody.R)
             {
                 throw new TransactionException(EnumTransactionErrorCode.NullReferrence_Hash_Lock_Pair,
-                    string.Format("HashR or Rcode is null. HashR: {0}, Rcode: {0}",
+                    string.Format("HashR or Rcode is null. HashR: {0}, Rcode: {1}",
                         this.Request.MessageBody.HR, this.Request.MessageBody.R),
                     EnumTransactionErrorBase.RRESPONSE.ToString());
             }
@@ -104,7 +104,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             if (this.Request.MessageBody.R.Sha1() != this.Request.MessageBody.HR)
             {
                 throw new TransactionException(EnumTransactionErrorCode.Imcompatible_Hash_Lock_Pair_For_Transaction,
-                    string.Format("HashR or Rcode is null. HashR: {0}, Rcode: {0}",
+                    string.Format("HashR or Rcode is null. HashR: {0}, Rcode: {1}",
                         this.Request.MessageBody.HR, this.Request.MessageBody.R),
                     EnumTransactionErrorBase.RRESPONSE.ToString());
             }

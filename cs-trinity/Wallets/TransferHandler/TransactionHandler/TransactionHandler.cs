@@ -431,7 +431,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             // for adapting the old trinity, here we have to use complicated logics
             currentUriIndex = this.IndexOfRouter(router, this.GetUri());
-            if (0 <= currentUriIndex && 2 >= router.Count - currentUriIndex)
+            if (0 <= currentUriIndex && router.Count <= currentUriIndex + 1)
             {
                 return true;
             }

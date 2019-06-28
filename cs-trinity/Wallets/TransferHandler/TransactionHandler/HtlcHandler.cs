@@ -573,7 +573,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
                 // Trigger RResponse to peer wallet
                 RResponseHandler RResponseHndl = new RResponseHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                    this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.MessageBody.Count,
+                    this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Count,
                     this.Request.MessageBody.HashR, this.currentHLockTransaction.rcode);
                 RResponseHndl.MakeTransaction();
                 return;
