@@ -73,10 +73,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.GetChannelLevelDbEntry()?.UpdateTransactionHLockPair(this.Request.MessageBody.HR, currentHLock);
 
             // Trigger Htlc to Rsmc
-            RsmcHandler rsmcHndl = new RsmcHandler(this.Request.Receiver, this.Request.Sender,
-                this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.NetMagic,
-                0, this.Request.MessageBody.Count);
-            rsmcHndl.MakeTransaction();
+            if (null != this.Request.ChannelName && currentHLock.paymentChannel == this.Request.ChannelName)
+            {
+                RsmcHandler rsmcHndl = new RsmcHandler(this.Request.Receiver, this.Request.Sender,
+                    this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.NetMagic,
+                    0, this.Request.MessageBody.Count);
+                rsmcHndl.MakeTransaction();
+            }
 
             Log.Info("Succeed to handle RResponse. HashR: {0}, RCode: {1}",
                 this.Request.MessageBody.HR, this.Request.MessageBody.R);

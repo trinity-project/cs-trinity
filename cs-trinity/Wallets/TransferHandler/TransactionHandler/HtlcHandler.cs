@@ -276,7 +276,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 };
 
                 // record the below information according to the transaction play role
-                if (isFounder)
+                if (this.isFounder)
                 {
                     hLockPair.paymentChannel = this.Request.ChannelName;
                     hLockPair.payment = this.Request.MessageBody.Count;
