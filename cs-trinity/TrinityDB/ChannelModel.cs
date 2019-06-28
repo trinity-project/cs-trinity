@@ -53,8 +53,10 @@ namespace Trinity.TrinityDB
                 {
                     return SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
                 }
-
-                return null;
+                else
+                {
+                    return SliceBuilder.Begin(ModelPrefix.MPChannel);
+                }
             }
         }
 
@@ -66,8 +68,10 @@ namespace Trinity.TrinityDB
                 {
                     return SliceBuilder.Begin(ModelPrefix.MPChannel).Add(this.group);
                 }
-
-                return null;
+                else
+                {
+                    return SliceBuilder.Begin(ModelPrefix.MPChannel);
+                }
             }
         }
 
@@ -78,7 +82,7 @@ namespace Trinity.TrinityDB
         /// 
         public ChannelModel(string path, string uri, string peerUri=null) : base(path)
         {
-            this.group = uri.ToHashBytes();
+            this.group = uri?.ToHashBytes();
 
             //if (null != peerUri)
             //{

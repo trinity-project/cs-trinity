@@ -47,8 +47,10 @@ namespace Trinity.TrinityDB
                 {
                     return SliceBuilder.Begin(ModelPrefix.MPBlockGroup).Add(this.group);
                 }
-
-                return null;
+                else
+                {
+                    return SliceBuilder.Begin(ModelPrefix.MPBlockGroup);
+                }
             }
         }
 
@@ -59,7 +61,7 @@ namespace Trinity.TrinityDB
         /// <param name="uri"></param>
         public BlockModel(string path, string uri) : base(path)
         {
-            this.group = uri.ToHashBytes();
+            this.group = uri?.ToHashBytes();
         }
     }
 }

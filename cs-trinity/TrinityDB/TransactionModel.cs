@@ -52,8 +52,10 @@ namespace Trinity.TrinityDB
                 {
                     return SliceBuilder.Begin(ModelPrefix.MPTransaction).Add(this.group);
                 }
-
-                return null;
+                else
+                {
+                    return SliceBuilder.Begin(ModelPrefix.MPTransaction);
+                }
             }
         }
         
@@ -64,10 +66,7 @@ namespace Trinity.TrinityDB
         /// <param name="path"></param>
         public TransactionModel(string path, string channel) : base(path)
         {
-            if (null != channel)
-            {
-                this.group = channel.ToHashBytes();
-            }
+            this.group = channel?.ToHashBytes();
         }
         
     }
