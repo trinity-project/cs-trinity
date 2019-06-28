@@ -553,7 +553,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         // ToDo: used in future
-        private string ChooseChannel(string peer, long payment)
+        private ChannelTableContent ChooseChannel(string peer, long payment)
         {
             return this.GetChannelLevelDbEntry()?.GetChannel(peer, payment, EnumChannelState.OPENED.ToString());
         }
@@ -588,12 +588,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             long payment = this.CalculatePayment(Fixed8.Parse(this.Request.Router[currentUriIndex + 1].fee.ToString()).GetData()) ;
 
             // Get the channel for next htlc
-            string channelName = this.ChooseChannel(nextPeerUri, payment);
-            if (null != channelName)
+            ChannelTableContent currentChannel = this.ChooseChannel(nextPeerUri, payment);
+            if (null != currentChannel)
             {
                 // trigger new htlc
                 HtlcHandler htlcHndl = new HtlcHandler(
-                    this.GetUri(), nextPeerUri, channelName, this.Request.MessageBody.AssetType,
+                    this.GetUri(), nextPeerUri, currentChannel.channel, this.Request.MessageBody.AssetType,
                     this.Request.NetMagic, 0, payment, this.Request.MessageBody.HashR, this.Request.Router);
                 htlcHndl.MakeTransaction();
             }

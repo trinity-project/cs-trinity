@@ -94,7 +94,7 @@ namespace Trinity.ChannelSet
             return null;
         }
 
-        public string GetChannel(string peer, long payment, string state)
+        public ChannelTableContent GetChannel(string peer, long payment, string state)
         {
             foreach (ChannelTableContent channel in this.GetChannelListOfThisWallet())
             {
@@ -102,7 +102,7 @@ namespace Trinity.ChannelSet
                     && channel.state.Equals(state)
                     && payment <= channel.balance)
                 {
-                    return channel.channel;
+                    return channel;
                 }
             }
 

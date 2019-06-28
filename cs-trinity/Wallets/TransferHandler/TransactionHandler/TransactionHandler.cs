@@ -784,12 +784,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     payment += Fixed8.Parse(router[routerIndex].fee.ToString()).GetData();
                 }
 
-                string channelName = channelLevelDbApi.GetChannel(router[1].uri, payment, EnumChannelState.OPENED.ToString());
+                currentChannel = channelLevelDbApi.GetChannel(router[1].uri, payment, EnumChannelState.OPENED.ToString());
                 // Htlc transaction
-                if (null != channelName)
+                if (null != currentChannel)
                 {
                     // start HTLC transaction
-                    HtlcHandler htlcHndl = new HtlcHandler(sender, receiver, channelName, asset, magic, nonce, payment, hashcode, router);
+                    HtlcHandler htlcHndl = new HtlcHandler(
+                        sender, currentChannel.peer, currentChannel.channel, asset, magic, nonce, payment, hashcode, router);
                     htlcHndl.MakeTransaction();
                 }
                 else
