@@ -585,15 +585,15 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             string nextPeerUri = this.Request.Router[currentUriIndex + 1].uri;
-            long payment = this.CalculatePayment(Fixed8.Parse(this.Request.Router[currentUriIndex + 1].fee.ToString()).GetData()) ;
+            long payment = this.CalculatePayment(Fixed8.Parse(this.Request.Router[currentUriIndex].fee.ToString()).GetData()) ;
 
             // Get the channel for next htlc
-            ChannelTableContent currentChannel = this.ChooseChannel(nextPeerUri, payment);
-            if (null != currentChannel)
+            ChannelTableContent nextChannel = this.ChooseChannel(nextPeerUri, payment);
+            if (null != nextChannel)
             {
                 // trigger new htlc
                 HtlcHandler htlcHndl = new HtlcHandler(
-                    this.GetUri(), nextPeerUri, currentChannel.channel, this.Request.MessageBody.AssetType,
+                    this.GetUri(), nextPeerUri, nextChannel.channel, this.Request.MessageBody.AssetType,
                     this.Request.NetMagic, 0, payment, this.Request.MessageBody.HashR, this.Request.Router);
                 htlcHndl.MakeTransaction();
             }
