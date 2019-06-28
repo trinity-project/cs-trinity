@@ -63,6 +63,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             string magic, UInt64 nonce, long payment, string hashcode, List<PathInfo> router, int role = 0)
             :base(sender, receiver, channel, asset, magic, nonce, payment, role, hashcode)
         {
+            // check the channel is opened firstly
+            this.CheckChannelIsOpened();
+
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
 
             // Set Htlc header or body
@@ -93,6 +96,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public HtlcHandler(string message) : base(message)
         {
+            // check the channel is opened firstly
+            this.CheckChannelIsOpened();
+
             this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
 
             this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
@@ -443,6 +449,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public HtlcSignHandler(string message) : base(message)
         {
+            // check the channel is opened firstly
+            this.CheckChannelIsOpened();
+
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
 
             // Get the current transaction
