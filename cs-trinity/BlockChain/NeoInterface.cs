@@ -824,16 +824,29 @@ namespace Trinity.BlockChain
             return outputList.ToArray();
         }
 
-        //测试使用
-        public static void addtest1()
+        public static void addContractToAccount(string sender, string receiver)
         {
-            string pubKey = "025aa64efb9a5176a550210cdc795060cab8f7711e7cd69dbe12b9bbd3ee2dd721";
-            string peerPubkey = "0391e05b532e5e8aa9eb0ef3c3888cf7636a428c339c33ad620d0f2900437999d6";
+            string pubKey = sender?.Split('@').First();
+            string peerPubkey = receiver?.Split('@').First();
             Contract contract = NeoInterface.CreateMultiSigContract(pubKey, peerPubkey);
-            Console.WriteLine(contract.Address);
+
             WalletAccount account = startTrinity.currentWallet.CreateAccount(contract);
             if (startTrinity.currentWallet is NEP6Wallet wallet)
                 wallet.Save();
+            Log.Info("Succeed add contract address to account. ContractAddress: {0}.",
+                contract.Address);
         }
+
+        //测试使用
+        //public static void addtest1()
+        //{
+        //    string pubKey = "025aa64efb9a5176a550210cdc795060cab8f7711e7cd69dbe12b9bbd3ee2dd721";
+        //    string peerPubkey = "0391e05b532e5e8aa9eb0ef3c3888cf7636a428c339c33ad620d0f2900437999d6";
+        //    Contract contract = NeoInterface.CreateMultiSigContract(pubKey, peerPubkey);
+        //    Console.WriteLine(contract.Address);
+        //    WalletAccount account = startTrinity.currentWallet.CreateAccount(contract);
+        //    if (startTrinity.currentWallet is NEP6Wallet wallet)
+        //        wallet.Save();
+        //}
     }
 }

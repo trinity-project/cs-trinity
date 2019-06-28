@@ -36,6 +36,7 @@ using Trinity.BlockChain;
 using Trinity.Wallets.Templates.Definitions;
 using Trinity.Wallets.Templates.Messages;
 using Trinity.Network.TCP;
+using Neo.SmartContract;
 
 namespace Trinity.Wallets.TransferHandler.TransactionHandler
 {
@@ -329,6 +330,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             Log.Info("Succeed handling FounderSign. Channel: {0}, AssetType: {1}, Deposit: {2}, RoleIndex: {3}.",
                 this.Request.ChannelName, this.Request.MessageBody.AssetType,
                 this.Request.MessageBody.Deposit, this.Request.MessageBody.RoleIndex);
+
+            // Add contract address to the account to monitor it
+            NeoInterface.addContractToAccount(this.Request.Sender, this.Request.Receiver);
 
             // broadcast this transaction
             if (IsRole1(this.Request.MessageBody.RoleIndex))
