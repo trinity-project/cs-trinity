@@ -54,9 +54,10 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
         /// <param name="payment"> How much to pay </param>
         /// <param name="comments"> User comments for this payment </param>
         /// <returns></returns>
-        public static string GeneratePaymentCode(string uri, string assetId, Fixed8 payment, string comments)
+        public static string GeneratePaymentCode(string uri, string assetId, string payment, string comments)
         {
-            if (new Fixed8(0) > payment)
+            Fixed8 paymentFixed = Fixed8.Parse(payment);
+            if (new Fixed8(0) >= paymentFixed)
             {
                 Log.Error("Payment value: {0} should not be less than 0.", payment);
                 return null;
@@ -73,9 +74,9 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
             string hashcode = rcode.Sha1();
 
             // record the Hashcode and RCode pair into database.
-            AddHLockTransaction(asset, hashcode, rcode, payment.GetData());
+            AddHLockTransaction(asset, hashcode, rcode, paymentFixed.GetData());
 
-            string paymentCode = string.Format("{0}&{1}&{2}&{3}&{4}", uri, hashcode, asset, payment.GetData(), comments);
+            string paymentCode = string.Format("{0}&{1}&{2}&{3}&{4}", uri, hashcode, asset, payment, comments);
 
             return Base58.Encode(paymentCode.ToBytesUtf8());
         }

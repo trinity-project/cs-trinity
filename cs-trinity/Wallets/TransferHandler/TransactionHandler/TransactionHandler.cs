@@ -760,7 +760,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             ChannelTableContent currentChannel = channelLevelDbApi.GetChannel(channel);
             
             // to decide which transaction is used
-            if (currentChannel.peer.Equals(receiver))
+            if (null != currentChannel && currentChannel.peer.Equals(receiver))
             {
                 RsmcHandler rsmcHndl = new RsmcHandler(sender, receiver, channel, asset,
                             magic, nonce, payment);
