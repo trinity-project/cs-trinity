@@ -546,7 +546,7 @@ namespace Trinity.BlockChain
 
         public static JObject CreateHTLCContract(string futureTimestamp, string PubkeySelf, string PubkeyOther, string HashR)
         {
-            long time = long.Parse(futureTimestamp);
+            long time = long.Parse(futureTimestamp?.Split('.')[0]);
             futureTimestamp = LongToBytes(time).Reverse().ToHexString();
             Console.WriteLine("------------------futureTimestamp------------------");
             Console.WriteLine(futureTimestamp);
