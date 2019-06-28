@@ -45,7 +45,7 @@ namespace Trinity
     public class TrinityWallet
     {
         // const declaration
-        private const int msSleep = 1000;
+        private const int msSleep = 10;
 
         // Variable declaration
         private readonly NeoSystem neoSystem;
