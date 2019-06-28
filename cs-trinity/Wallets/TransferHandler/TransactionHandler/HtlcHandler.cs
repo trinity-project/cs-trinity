@@ -619,7 +619,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 AssetType = this.onGoingRequest.MessageBody.AssetType,
                 Count = this.onGoingRequest.MessageBody.Count,
-                RoleIndex = role,
+                RoleIndex = this.onGoingRequest.MessageBody.RoleIndex,
                 HashR = this.onGoingRequest.MessageBody.HashR,
             };
         }
@@ -629,6 +629,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // RoleIndex Related
             this.RoleMax = 1;
             this.currentRole = this.Request.MessageBody.RoleIndex; // record current role Index
+            this.HashR = this.Request.MessageBody.HashR;
 
             // Asset type from message body for adaptor old version trinity
             this.Request.AssetType = this.Request.MessageBody.AssetType;
