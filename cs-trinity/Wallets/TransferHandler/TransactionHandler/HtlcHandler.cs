@@ -235,7 +235,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
-        private void AddHLockPair(bool isFounder)
+        private void AddHLockPair()
         {
             // Just add the locked payment with hashcode when role index is zero
             if (!IsRole0(this.Request.MessageBody.RoleIndex) || null == this.Request.MessageBody.HashR)
@@ -246,7 +246,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             if (null != this.currentHLockTransaction)
             {
                 // update the HLockPair
-                if (isFounder) // means this is a router point
+                if (this.isFounder) // means this is a router point
                 {
                     this.currentHLockTransaction.paymentChannel = this.Request.ChannelName;
                     this.currentHLockTransaction.payment = this.Request.MessageBody.Count;
@@ -385,7 +385,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.AddTransaction(this.Request.TxNonce, txContent);
 
             // reord the htlc lock pair
-            this.AddHLockPair(isFounder);
+            this.AddHLockPair();
         }
 
         public override void UpdateTransaction()
