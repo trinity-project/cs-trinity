@@ -58,6 +58,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         
         public override bool FailStep(string errorCode)
         {
+            Log.Error("Failed to handle RResponse. HashR: {0}, RCode: {1}",
+                this.Request.MessageBody.HR, this.Request.MessageBody.R);
             return base.FailStep(errorCode);
         }
 
@@ -76,10 +78,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 0, this.Request.MessageBody.Count);
             rsmcHndl.MakeTransaction();
 
+            Log.Info("Succeed to handle RResponse. HashR: {0}, RCode: {1}",
+                this.Request.MessageBody.HR, this.Request.MessageBody.R);
+
             // Trigger RResponse to previous peer
-            ChannelTableContent nextChannel = this.GetChannelLevelDbEntry()?.GetChannel(currentHLock?.incomeChannel);
-            if (null != nextChannel)
+            if (null != currentHLock?.incomeChannel)
             {
+                ChannelTableContent nextChannel = this.GetChannelLevelDbEntry()?.GetChannel(currentHLock?.incomeChannel);
                 RResponseHandler RResponseHndl = 
                     new RResponseHandler(this.Request.Receiver, nextChannel.peer, nextChannel.channel,
                 this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, currentHLock.income,
@@ -88,6 +93,17 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             return true;
+        }
+
+        public override bool MakeTransaction()
+        {
+            if (base.MakeTransaction())
+            {
+                Log.Info("Succeed to send RResponse to Payer. Payer: {0}", this.Request.Receiver);
+                return true;
+            }
+
+            return false;
         }
 
         private void CheckHashLockPair()
