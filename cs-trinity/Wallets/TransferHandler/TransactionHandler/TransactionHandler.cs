@@ -325,7 +325,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             channelContent.peerBalance = this.peerBalance;
             this.channelDBEntry?.UpdateChannel(channelName, channelContent);
 
-            // notify gateway to delete graph
+            // notify gateway to update the balance saved in gateway
             if (EnumChannelState.OPENED.ToString().Equals(channelContent.state))
             {
                 SyncNetTopologyHandler.UpdateNetworkTopology(channelContent);

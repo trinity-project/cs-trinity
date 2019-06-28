@@ -235,14 +235,15 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return true;
         }
 
-        private void AddHLockPair()
+        private void AddOrUpdateHLockPair()
         {
-            // Just add the locked payment with hashcode when role index is zero
-            if (!IsRole0(this.Request.MessageBody.RoleIndex) || null == this.Request.MessageBody.HashR)
+            // Just add the locked payment with not null hashcode
+            if (null == this.Request.MessageBody.HashR)
             {
                 return;
             }
 
+            // update the current lock pair
             if (null != this.currentHLockTransaction)
             {
                 // update the HLockPair
@@ -263,8 +264,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
                 this.GetChannelLevelDbEntry()?.UpdateTransactionHLockPair(this.Request.MessageBody.HashR, this.currentHLockTransaction);
             }
-            else
+            else if (this.IsRole0(this.Request.MessageBody.RoleIndex))
             {
+                // Just add the locked payment with hashcode when role index is zero
                 // add new hlock pair for this transaction
                 TransactionTabelHLockPair hLockPair = new TransactionTabelHLockPair
                 {
@@ -288,6 +290,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 }
 
                 this.GetChannelLevelDbEntry()?.AddTransactionHLockPair(this.Request.MessageBody.HashR, hLockPair);
+            }
+            else
+            {
+
             }
         }
 
@@ -385,7 +391,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.AddTransaction(this.Request.TxNonce, txContent);
 
             // reord the htlc lock pair
-            this.AddHLockPair();
+            this.AddOrUpdateHLockPair();
         }
 
         public override void UpdateTransaction()
