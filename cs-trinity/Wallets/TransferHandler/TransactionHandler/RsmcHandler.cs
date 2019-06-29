@@ -64,6 +64,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             string magic, UInt64 nonce, long payment, string hashcode=null)
             : base(sender, receiver, channel, asset, magic, nonce, payment, 0, hashcode)
         {
+            // check the channel is opened firstly
+            this.CheckChannelIsOpened();
+
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex)
                 || this.IsRole2(this.Request.MessageBody.RoleIndex);
 
@@ -91,6 +94,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public RsmcHandler(string message) : base(message)
         {
+            // check the channel is opened firstly
+            this.CheckChannelIsOpened();
+
             this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex)
                 || this.IsRole3(this.Request.MessageBody.RoleIndex);
 
@@ -381,6 +387,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public RsmcSignHandler(string message) : base(message)
         {
+            // check the channel is opened firstly
+            this.CheckChannelIsOpened();
+
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
 
             // Get the current transaction

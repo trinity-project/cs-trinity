@@ -63,6 +63,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             string magic, UInt64 nonce, long payment, string hashcode, List<PathInfo> router, int role = 0)
             :base(sender, receiver, channel, asset, magic, nonce, payment, role, hashcode)
         {
+            // check the channel is opened firstly
+            this.CheckChannelIsOpened();
+
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
 
             // Set Htlc header or body
@@ -93,6 +96,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public HtlcHandler(string message) : base(message)
         {
+            // check the channel is opened firstly
+            this.CheckChannelIsOpened();
+
             this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
 
             this.currentTransaction = this.GetCurrentTransaction<TransactionHtlcContent>();
@@ -100,6 +106,22 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             // calculate balance after payment according to the flag : isFounder
             this.CalculateBalance();
+        }
+
+        public override bool Handle()
+        {
+            if (!base.Handle())
+            {
+                return false;
+            }
+
+            // Trigger htlc to next peer
+            if (this.IsRole0(this.Request.MessageBody.RoleIndex))
+            {
+                this.TriggerHtlcToNextPeer();
+            }
+
+            return true;
         }
 
         public override bool SucceedStep()
@@ -297,6 +319,60 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
         }
 
+        // ToDo: used in future
+        private ChannelTableContent ChooseChannel(string peer, long payment)
+        {
+            return this.GetChannelLevelDbEntry()?.GetChannel(peer, payment, EnumChannelState.OPENED.ToString());
+        }
+
+        private void TriggerHtlcToNextPeer()
+        {
+            // trigger htlc to next peer
+            if (this.IsReachedPayee(this.Request.Router, out int currentUriIndex))
+            {
+                Log.Info("Htlc with HashR<{0}> has been finished since the payee has received the payment: {1}.",
+                    this.Request.MessageBody.HashR, this.Request.MessageBody.Count);
+
+                // Trigger RResponse to peer wallet
+                RResponseHandler RResponseHndl = new RResponseHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
+                    this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Count,
+                    this.Request.MessageBody.HashR, this.currentHLockTransaction.rcode);
+                RResponseHndl.MakeTransaction();
+                return;
+            }
+            else if (0 > currentUriIndex)
+            {
+                Log.Error("Current wallet uri not found. Uri: {0}, Router: {1}", this.GetUri(), this.Request.Router);
+                return;
+            }
+
+            string nextPeerUri = this.Request.Router[currentUriIndex + 1].uri;
+            long payment = this.CalculatePayment(Fixed8.Parse(this.Request.Router[currentUriIndex].fee.ToString()).GetData());
+
+            // Get the channel for next htlc
+            ChannelTableContent nextChannel = this.ChooseChannel(nextPeerUri, payment);
+            if (null != nextChannel)
+            {
+                // trigger new htlc
+                HtlcHandler htlcHndl = new HtlcHandler(
+                    this.GetUri(), nextPeerUri, nextChannel.channel, this.Request.MessageBody.AssetType,
+                    this.Request.NetMagic, 0, payment, this.Request.MessageBody.HashR, this.Request.Router);
+                htlcHndl.MakeTransaction();
+            }
+            else
+            {
+                Log.Error("Could not find the channel for HTLC with HashR: {0}", this.Request.MessageBody.HashR);
+            }
+
+            return;
+        }
+
+        private long CalculatePayment(long fee = 1000000)
+        {
+            // default fee is 0.01
+            return this.Request.MessageBody.Count - fee;
+        }
+
         #region Htlc_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
         public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(false); }
 
@@ -443,6 +519,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public HtlcSignHandler(string message) : base(message)
         {
+            // check the channel is opened firstly
+            this.CheckChannelIsOpened();
+
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
 
             // Get the current transaction
@@ -468,22 +547,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.currentHLockTransaction = this.GetHLockPair();
         }
 
-        public override bool Handle()
-        {
-            if (!base.Handle())
-            {
-                return false;
-            }
-
-            // Trigger htlc to next peer
-            if (this.IsRole1(this.Request.MessageBody.RoleIndex))
-            {
-                this.TriggerHtlcToNextPeer();
-            }
-
-            return true;
-        }
-        
         public override bool SucceedStep()
         {
             if (base.SucceedStep())
@@ -557,65 +620,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             return base.MakeupMessage();
-        }
-
-        // ToDo: used in future
-        private ChannelTableContent ChooseChannel(string peer, long payment)
-        {
-            return this.GetChannelLevelDbEntry()?.GetChannel(peer, payment, EnumChannelState.OPENED.ToString());
-        }
-
-        private void TriggerHtlcToNextPeer()
-        {
-            if (!this.IsRole1(this.Request.MessageBody.RoleIndex))
-            {
-                return;
-            }
-
-            // trigger htlc to next peer
-            if (this.IsReachedPayee(this.Request.Router, out int currentUriIndex))
-            {
-                Log.Info("Htlc with HashR<{0}> has been finished since the payee has received the payment: {1}.",
-                    this.Request.MessageBody.HashR, this.Request.MessageBody.Count);
-
-                // Trigger RResponse to peer wallet
-                RResponseHandler RResponseHndl = new RResponseHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                    this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Count,
-                    this.Request.MessageBody.HashR, this.currentHLockTransaction.rcode);
-                RResponseHndl.MakeTransaction();
-                return;
-            }
-            else if (0 > currentUriIndex)
-            {
-                Log.Error("Current wallet uri not found. Uri: {0}, Router: {1}", this.GetUri(), this.Request.Router);
-                return;
-            }
-
-            string nextPeerUri = this.Request.Router[currentUriIndex + 1].uri;
-            long payment = this.CalculatePayment(Fixed8.Parse(this.Request.Router[currentUriIndex].fee.ToString()).GetData()) ;
-
-            // Get the channel for next htlc
-            ChannelTableContent nextChannel = this.ChooseChannel(nextPeerUri, payment);
-            if (null != nextChannel)
-            {
-                // trigger new htlc
-                HtlcHandler htlcHndl = new HtlcHandler(
-                    this.GetUri(), nextPeerUri, nextChannel.channel, this.Request.MessageBody.AssetType,
-                    this.Request.NetMagic, 0, payment, this.Request.MessageBody.HashR, this.Request.Router);
-                htlcHndl.MakeTransaction();
-            }
-            else
-            {
-                Log.Error("Could not find the channel for HTLC with HashR: {0}", this.Request.MessageBody.HashR);
-            }
-
-            return;
-        }
-
-        private long CalculatePayment(long fee = 1000000)
-        {
-            // default fee is 0.01
-            return this.Request.MessageBody.Count - fee;
         }
 
         #region HtlcSign_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER

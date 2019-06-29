@@ -47,6 +47,7 @@ namespace Trinity.Network.TCP
     public class TrinityTcpClient
     {
         private TcpClient tcpClient;
+        private readonly int msSleep = 10;
         private const int bufferSize = 1024;
         private string serverIp;
         private string serverPort;
@@ -267,7 +268,7 @@ namespace Trinity.Network.TCP
                     recvLength = this.Receive(out byte[] messages);
                     if (0 >= recvLength)
                     {
-                        Thread.Sleep(200);
+                        Thread.Sleep(this.msSleep);
                         continue;
                     }
 
@@ -283,7 +284,7 @@ namespace Trinity.Network.TCP
                     Log.Error("Exception occurred during receive message. Exception: {0}", ExpInfo);
                 }
 
-                Thread.Sleep(200);
+                Thread.Sleep(this.msSleep);
             }
 
             return VerificationResult;

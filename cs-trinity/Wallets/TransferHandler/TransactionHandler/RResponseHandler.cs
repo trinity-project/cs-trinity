@@ -77,7 +77,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 RsmcHandler rsmcHndl = new RsmcHandler(this.Request.Receiver, this.Request.Sender,
                     this.Request.ChannelName, this.Request.MessageBody.AssetType, this.Request.NetMagic,
-                    0, this.Request.MessageBody.Count);
+                    0, this.Request.MessageBody.Count, this.HashR);
                 rsmcHndl.MakeTransaction();
             }
 
