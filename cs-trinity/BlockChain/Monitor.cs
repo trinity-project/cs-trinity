@@ -168,8 +168,9 @@ namespace Trinity.BlockChain
                         break;
                     case "settle":
                         ChannelData.state = EnumChannelState.SETTLED.ToString();
-                        
                         Log.Debug("Change {0} to SETTLED state.", Summary.channel);
+
+                        NeoInterface.removeContractFormAccount(channel, ChannelData);
                         break;
                     default:
                         Log.Debug("Unsuport transaction type -- {0} for trinity channel.", Summary.txType);

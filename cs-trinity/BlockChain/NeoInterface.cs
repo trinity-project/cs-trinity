@@ -41,12 +41,14 @@ using Neo.Wallets;
 using System.Numerics;
 using VMArray = Neo.VM.Types.Array;
 using Neo.VM;
+using Neo.Wallets.NEP6;
 using Neo.Cryptography.ECC;
 using MessagePack;
 
 using Trinity.Wallets;
 using Trinity.TrinityDB.Definitions;
-using Neo.Wallets.NEP6;
+using Trinity.ChannelSet;
+using Trinity.ChannelSet.Definitions;
 
 namespace Trinity.BlockChain
 {
@@ -837,16 +839,21 @@ namespace Trinity.BlockChain
                 contract.Address);
         }
 
-        public static void removeContractFormAccount(string sender, string receiver)
+        public static void removeContractFormAccount(Channel channel, ChannelTableContent ChannelData)
         {
-            string pubKey = sender?.Split('@').First();
-            string peerPubkey = receiver?.Split('@').First();
-            Contract contract = NeoInterface.CreateMultiSigContract(pubKey, peerPubkey);
-
-            if (startTrinity.currentWallet.DeleteAccount(contract.ScriptHash))
+            List<ChannelTableContent> ChannelList = channel.GetChannelList(ChannelData.peer, 0, EnumChannelState.OPENED.ToString());
+            // When this contract address is the last one, delete it from the account
+            if (ChannelList.Count == 1)
             {
-                Log.Info("Succeed delete contract address form account. ContractAddress: {0}, ContractScriptHash: {0}.",
-                contract.Address, contract.ScriptHash);
+                string pubKey = ChannelData.uri?.Split('@').First();
+                string peerPubkey = ChannelData.peer?.Split('@').First();
+                Contract contract = NeoInterface.CreateMultiSigContract(pubKey, peerPubkey);
+
+                if (startTrinity.currentWallet.DeleteAccount(contract.ScriptHash))
+                {
+                    Log.Info("Succeed delete contract address form account. ContractAddress: {0}, ContractScriptHash: {0}.",
+                    contract.Address, contract.ScriptHash);
+                }
             }
         }
     }
