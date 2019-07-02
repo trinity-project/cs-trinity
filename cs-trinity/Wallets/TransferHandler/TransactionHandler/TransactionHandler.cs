@@ -235,6 +235,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             {
                 return true;
             }
+            else if (this.IsHtlcToRsmc())
+            {
+                return true;
+            }
 
             throw new TransactionException(EnumTransactionErrorCode.Channel_Without_Enough_Balance_For_Payment,
                 string.Format("Not enough balance for payment. Balance: {0}, Payment: {1}.", 
