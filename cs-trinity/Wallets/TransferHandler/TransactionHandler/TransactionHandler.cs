@@ -105,7 +105,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public TransactionHandler(string message) : base(message)
         {
-            this.InitializeAssetType();
+            this.InitializeAssetType(true);
 
             // LevelDB API & channel related intialiazation
             this.InitializeLocals(true); // Common local variables intializtion
