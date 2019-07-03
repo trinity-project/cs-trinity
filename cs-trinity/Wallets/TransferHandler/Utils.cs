@@ -116,6 +116,11 @@ namespace Trinity.Wallets
         ///
         public static string ToAssetId(this string assetType, bool isTestNet=true)
         {
+            if (assetType.Trim().StartsWith("0x") || assetType.Trim().StartsWith("0X"))
+            {
+                return assetType;
+            }
+
             if (isTestNet)
             {
                 return ToAssetIDTestNet(assetType);
@@ -132,10 +137,12 @@ namespace Trinity.Wallets
             {
                 case AssetTypeTemplate.NEO:
                     return AssetIDTemplate.NEO;
-                case AssetTypeTemplate.GAS:
-                    return AssetIDTemplate.GAS;
+                case AssetTypeTemplate.NEOGAS:
+                    return AssetIDTemplate.NEOGAS;
                 case AssetTypeTemplate.TNC:
                     return AssetIDTemplate.TNC;
+                case AssetTypeTemplate.TSST:
+                    return AssetIDTemplate.TSST;
                 default:
                     return null;
             }
@@ -147,8 +154,8 @@ namespace Trinity.Wallets
             {
                 case AssetTypeTemplate.NEO:
                     return AssetIDTemplateMainNet.NEO;
-                case AssetTypeTemplate.GAS:
-                    return AssetIDTemplateMainNet.GAS;
+                case AssetTypeTemplate.NEOGAS:
+                    return AssetIDTemplateMainNet.NEOGAS;
                 case AssetTypeTemplate.TNC:
                     return AssetIDTemplateMainNet.TNC;
                 default:
@@ -162,11 +169,13 @@ namespace Trinity.Wallets
             {
                 case AssetIDTemplate.NEO:
                     return AssetTypeTemplate.NEO;
-                case AssetIDTemplate.GAS:
-                    return AssetTypeTemplate.GAS;
+                case AssetIDTemplate.NEOGAS:
+                    return AssetTypeTemplate.NEOGAS;
                 case AssetIDTemplate.TNC:
                 case AssetIDTemplateMainNet.TNC:
                     return AssetTypeTemplate.TNC;
+                case AssetIDTemplate.TSST:
+                    return AssetTypeTemplate.TSST;
                 default:
                     return null;
             }

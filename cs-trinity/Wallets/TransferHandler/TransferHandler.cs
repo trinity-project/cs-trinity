@@ -123,6 +123,11 @@ namespace Trinity.Wallets.TransferHandler
             return this.wallet;
         }
 
+        public bool IsMainNet()
+        {
+            return TrinityWallet.IsMainnet();
+        }
+
         public void ParsePubkeyPair(string uri, string peerUri)
         {
             this.pubKey = uri?.Split('@').First();

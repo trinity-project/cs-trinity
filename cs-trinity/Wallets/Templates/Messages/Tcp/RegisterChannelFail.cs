@@ -39,6 +39,7 @@ namespace Trinity.Wallets.Templates.Messages
     [MessagePackObject(keyAsPropertyName: true)]
     public class RegisterChannelFailBody
     {
+        public string AssetType { get; set; }
         public RegisterChannelBody OriginalMessage { get; set; }
     }
 

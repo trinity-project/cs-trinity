@@ -220,7 +220,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.Request.MessageBody = new RsmcBody
             {
-                AssetType = asset,
+                AssetType = this.assetId,
                 Value = payment,
                 RoleIndex = role,
                 Comments = hashcode,
@@ -232,7 +232,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.Request.MessageBody = new RsmcBody
             {
-                AssetType = this.onGoingRequest.MessageBody.AssetType,
+                AssetType = this.assetId,
                 Value = this.onGoingRequest.MessageBody.Value,
                 RoleIndex = role,
                 Comments = this.onGoingRequest.MessageBody.Comments,
@@ -246,9 +246,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.RoleMax = 3;
             this.currentRole = this.Request.MessageBody.RoleIndex; // record current role Index
             this.HashR = this.Request.MessageBody.HashR ?? this.Request.MessageBody.Comments;
-
-            // Asset type from message body for adaptor old version trinity
-            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override void SetTransactionValid()
@@ -377,7 +374,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
 
             // set message header or body
-            this.Request.AssetType = message.MessageBody.AssetType;
+            this.Request.AssetType = this.assetId;
             this.Request.Error = errorCode;
 
             // Get the current transaction
@@ -493,7 +490,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.Request.MessageBody = new RsmcSignBody
             {
-                AssetType = this.onGoingRequest.MessageBody.AssetType,
+                AssetType = this.assetId,
                 Value = this.onGoingRequest.MessageBody.Value,
                 RoleIndex = this.onGoingRequest.MessageBody.RoleIndex,
                 HashR = this.onGoingRequest.MessageBody.HashR ?? this.onGoingRequest.MessageBody.Comments,
@@ -507,9 +504,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.RoleMax = 1;
             this.currentRole = this.Request.MessageBody.RoleIndex; // record current role Index
             this.HashR = this.Request.MessageBody.HashR ?? this.Request.MessageBody.Comments;
-
-            // Asset type from message body for adaptor old version trinity
-            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override void UpdateTransaction()
