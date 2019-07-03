@@ -90,6 +90,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private long balance = 0;
         private long peerBalance = 0;
         protected string channelName = null;
+        protected readonly string assetId = null;
 
         // record current role
         protected int currentRole = -1;
@@ -105,6 +106,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public TransactionHandler(string message) : base(message)
         {
             // LevelDB API & channel related intialiazation
+            this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
             this.InitializeLocals(true); // Common local variables intializtion
             this.InitializeLevelDBApi();    // LevelDB API & channel related intialization
         }
@@ -112,10 +114,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public TransactionHandler(TRMessage request, int role=0) : base()
         {
             this.onGoingRequest = request;
+            this.assetId = request?.MessageBody.AssetType.ToAssetId(this.IsMainNet());
 
             // Allocate new request and intialize the header & body
             this.InitializeMessage(request.Receiver, request.Sender, request.ChannelName,
-                request.AssetType, request.NetMagic, request.TxNonce);
+                this.assetId, request.NetMagic, request.TxNonce);
             this.InitializeMessageBody(role);
 
             // Initialize the components for this class
@@ -127,9 +130,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public TransactionHandler(string sender, string receiver, string channel, string asset,
             string magic, UInt64 nonce, long payment, int role = 0, string hashcode=null, string rcode=null) : base()
         {
+            this.assetId = asset?.ToAssetId(this.IsMainNet());
+
             // Allocate new request and intialize the header & body
-            this.InitializeMessage(sender, receiver, channel, asset, magic, nonce);
-            this.InitializeMessageBody(asset, payment, role, hashcode, rcode);
+            this.InitializeMessage(sender, receiver, channel, this.assetId, magic, nonce);
+            this.InitializeMessageBody(this.assetId, payment, role, hashcode, rcode);
 
             // Initialize the components for this class
             this.InitializeLocals(); // Common local variables intializtion
@@ -713,7 +718,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public NeoTransaction GetBlockChainAdaptorApi()
         {
             // Use the current channel balance to initialize some locals here
-            this.neoTransaction = new NeoTransaction(this.Request.AssetType.ToAssetId(),
+            this.neoTransaction = new NeoTransaction(this.assetId,
                 this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString());
 
             this.SetTransactionValid();

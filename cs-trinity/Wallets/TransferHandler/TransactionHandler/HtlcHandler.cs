@@ -391,7 +391,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.Request.MessageBody = new HtlcBody
             {
-                AssetType = this.onGoingRequest.MessageBody.AssetType,
+                AssetType = this.assetId,
                 Count = this.onGoingRequest.MessageBody.Count,
                 RoleIndex = role,
                 HashR = this.onGoingRequest.MessageBody.HashR,
@@ -404,9 +404,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.RoleMax = 1;
             this.currentRole = this.Request.MessageBody.RoleIndex; // record current role Index
             this.HashR = this.Request.MessageBody.HashR;
-
-            // Asset type from message body for adaptor old version trinity
-            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override void SetTransactionValid()
@@ -628,7 +625,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.Request.MessageBody = new HtlcSignBody
             {
-                AssetType = this.onGoingRequest.MessageBody.AssetType,
+                AssetType = this.assetId,
                 Count = this.onGoingRequest.MessageBody.Count,
                 RoleIndex = this.onGoingRequest.MessageBody.RoleIndex,
                 HashR = this.onGoingRequest.MessageBody.HashR,
@@ -641,9 +638,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.RoleMax = 1;
             this.currentRole = this.Request.MessageBody.RoleIndex; // record current role Index
             this.HashR = this.Request.MessageBody.HashR;
-
-            // Asset type from message body for adaptor old version trinity
-            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override void CalculateBalance()

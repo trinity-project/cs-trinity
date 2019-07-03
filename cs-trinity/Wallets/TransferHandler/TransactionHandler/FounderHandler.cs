@@ -196,7 +196,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.Request.MessageBody = new FounderBody
             {
-                AssetType = this.onGoingRequest.MessageBody.AssetType,
+                AssetType = this.assetId,
                 Deposit = this.onGoingRequest.MessageBody.Deposit,
                 RoleIndex = role,
             };
@@ -207,9 +207,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // RoleIndex Related
             this.RoleMax = 1;
             this.currentRole = this.Request.MessageBody.RoleIndex; // record current role Index
-
-            // Asset type from message body for adaptor old version trinity
-            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override void AddTransaction(bool isFounder = false)
@@ -299,7 +296,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public FounderSignHandler(Founder message, string errorCode = "Ok") : base(message)
         {
             this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
-            this.Request.AssetType = message.MessageBody.AssetType;
+            this.Request.AssetType = this.assetId;
             this.Request.Error = errorCode;
 
             // Get current transaction
@@ -409,7 +406,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             this.Request.MessageBody = new FounderSignBody
             {
-                AssetType = this.onGoingRequest.MessageBody.AssetType,
+                AssetType = this.assetId,
                 Deposit = this.onGoingRequest.MessageBody.Deposit,
                 RoleIndex = this.onGoingRequest.MessageBody.RoleIndex,
             };
@@ -420,9 +417,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // RoleIndex Related
             this.RoleMax = 1;
             this.currentRole = this.Request.MessageBody.RoleIndex; // record current role Index
-
-            // Asset type from message body for adaptor old version trinity
-            this.Request.AssetType = this.Request.MessageBody.AssetType;
         }
 
         public override void ExtraSucceedAction()

@@ -33,6 +33,11 @@ namespace Trinity.Wallets.Templates.Messages
     /// This file define the prototype of the message header.
     /// </summary>
     ///
+    public class TemporaryMessageBody
+    {
+        public string AssetType { get; set; }
+    }
+
     /// HeaderBase is provided to both control and transaction plane
     [MessagePackObject(keyAsPropertyName: true)]
     public class HeaderBase
@@ -75,6 +80,8 @@ namespace Trinity.Wallets.Templates.Messages
         /// </summary>
         public string ChannelName { get; set; }
         public UInt64 TxNonce { get; set; }
+
+        public TemporaryMessageBody MessageBody { get; set; }
     }
 
     /// <summary>
@@ -83,7 +90,7 @@ namespace Trinity.Wallets.Templates.Messages
     [MessagePackObject(keyAsPropertyName: true)]
     public class TransactionPlaneGeneric<TBody> : TransactionHeader
     {
-        public TBody MessageBody { get; set; }
+        public new TBody MessageBody { get; set; }
     }
 
     /// <summary>

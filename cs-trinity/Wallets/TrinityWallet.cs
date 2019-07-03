@@ -55,6 +55,7 @@ namespace Trinity
         private readonly string gatewayIp;
         private readonly string gatewayPort;
         private readonly string magic;
+        private static readonly bool isMainnet = Neo.Network.P2P.Message.Magic == Settings.Default.NeoMagicMainNet;
         private TrinityTcpClient client;
 
         // private static variables
@@ -150,6 +151,11 @@ namespace Trinity
         public static string GetMagic()
         {
             return TrinityWallet.netMagic;
+        }
+
+        public static bool IsMainnet()
+        {
+            return TrinityWallet.isMainnet;
         }
 
      #region private_method_sets
