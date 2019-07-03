@@ -51,6 +51,7 @@ namespace Trinity
         private readonly NeoSystem neoSystem;
         private readonly Wallet neoWallet;
         private readonly KeyPair walletKey;
+        private readonly Dictionary<string, string> assetMap;
 
         private readonly string gatewayIp;
         private readonly string gatewayPort;
@@ -72,7 +73,7 @@ namespace Trinity
         /// <param name="system"></param>
         /// <param name="wallet"></param>
         /// <param name="pubKey"></param>
-        public TrinityWallet(NeoSystem system, Wallet wallet, string pubKey, string magic, string ip=null, string port=null)
+        public TrinityWallet(NeoSystem system, Wallet wallet, Dictionary<string, string> assetMap, string pubKey, string magic, string ip=null, string port=null)
         {
             this.neoSystem = system;
             this.neoWallet = wallet;
@@ -80,6 +81,7 @@ namespace Trinity
             this.magic = TrinityWallet.netMagic;
             this.gatewayIp = ip ?? TrinityWalletConfig.ip;
             this.gatewayPort = port ?? TrinityWalletConfig.port;
+            this.assetMap = assetMap;
 
             // get the wallet pair key by neo wallet instance
             this.walletKey = this.neoWallet?.GetAccount(pubKey?.ToHash160()).GetKey();
@@ -131,6 +133,11 @@ namespace Trinity
         public UInt160 GetPublicKeyHash()
         {
             return this.walletKey?.PublicKeyHash;
+        }
+
+        public Dictionary<string, string> GetAssetMap()
+        {
+            return this.assetMap;
         }
 
         public string GetPublicKey()

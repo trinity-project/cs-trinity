@@ -119,7 +119,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             ChannelTableContent content = new ChannelTableContent
             {
                 channel = this.Request.ChannelName,
-                asset = this.assetId.ToAssetType(),
+                asset = this.assetId.ToAssetType(this.GetAssetMap()),
                 uri = uri,
                 peer = peerUri,
                 magic = this.Request.NetMagic,
@@ -139,7 +139,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         #region RegisterChannel_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
         public override void InitializeAssetType(bool useCurrentRequest = false)
         {
-            this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+            this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.GetAssetMap());
         }
 
         public override void InitializeMessage(string sender, string receiver, string channel, string asset, string magic, ulong nonce)

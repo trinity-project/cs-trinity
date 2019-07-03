@@ -37,17 +37,16 @@ namespace Trinity
             NeoSystem = neoSystem;
             currentWallet = wallet;
             currentAccountPublicKey = publicKey;
+            assetTypes = GetCurrentWalletAssetType(wallet, NEP5Watched);
 
             ip = ip is null ? Settings.Default.gatewayIP : ip;
             port = port is null ? Settings.Default.gatewayPort : port;
 
-            trinityWallet = new TrinityWallet(neoSystem, wallet, publicKey, magic, ip, port);
+            trinityWallet = new TrinityWallet(neoSystem, wallet, assetTypes, publicKey, magic, ip, port);
 
             MonitorTransction monitorTransction = new MonitorTransction(publicKey, ip, port, magic);
             Thread thread = new Thread(monitorTransction.monitorBlock);
             thread.Start();
-
-            assetTypes = GetCurrentWalletAssetType(wallet, NEP5Watched);
         }
 
         public static Dictionary<string, string> GetCurrentWalletAssetType(Wallet CurrentWallet, StringCollection NEP5Watched)

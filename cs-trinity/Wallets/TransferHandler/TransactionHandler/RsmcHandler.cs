@@ -220,11 +220,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             if (useCurrentRequest)
             {
-                this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+                this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.GetAssetMap());
             }
             else
             {
-                this.assetId = this.onGoingRequest.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+                this.assetId = this.onGoingRequest.MessageBody.AssetType.ToAssetId(this.GetAssetMap());
             }
         }
 
@@ -502,11 +502,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             if (useCurrentRequest)
             {
-                this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+                this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.GetAssetMap());
             }
             else
             {
-                this.assetId = this.onGoingRequest.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+                this.assetId = this.onGoingRequest.MessageBody.AssetType.ToAssetId(this.GetAssetMap());
             }
         }
 

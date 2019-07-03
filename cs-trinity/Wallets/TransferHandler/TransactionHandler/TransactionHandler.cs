@@ -132,7 +132,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public TransactionHandler(string sender, string receiver, string channel, string asset,
             string magic, UInt64 nonce, long payment, int role = 0, string hashcode=null, string rcode=null) : base()
         {
-            this.assetId = asset?.ToAssetId(this.IsMainNet());
+            this.assetId = asset?.ToAssetId(this.GetAssetMap());
 
             // Allocate new request and intialize the header & body
             this.InitializeMessage(sender, receiver, channel, this.assetId, magic, nonce);
@@ -743,7 +743,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // generate the neotransaction
-            this.neoTransaction = new NeoTransaction(this.Request.AssetType.ToAssetId(), 
+            this.neoTransaction = new NeoTransaction(this.Request.AssetType.ToAssetId(this.GetAssetMap()), 
                 this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString(),
                 this.fundingTrade?.founder.originalData.addressFunding, this.fundingTrade?.founder.originalData.scriptFunding);
 

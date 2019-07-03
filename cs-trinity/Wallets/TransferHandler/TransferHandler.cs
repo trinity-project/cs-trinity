@@ -26,6 +26,7 @@ SOFTWARE.
 
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 using Neo;
 using Trinity.BlockChain;
@@ -121,6 +122,11 @@ namespace Trinity.Wallets.TransferHandler
         public TrinityWallet GetWallet()
         {
             return this.wallet;
+        }
+
+        public Dictionary<string, string> GetAssetMap()
+        {
+            return this.wallet?.GetAssetMap();
         }
 
         public bool IsMainNet()

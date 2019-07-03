@@ -119,7 +119,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         #region Settle_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
         public override void InitializeAssetType(bool useCurrentRequest = false)
         {
-            this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+            this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.GetAssetMap());
         }
 
         public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(true); }
@@ -250,11 +250,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             if (useCurrentRequest)
             {
-                this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+                this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.GetAssetMap());
             }
             else
             {
-                this.assetId = this.onGoingRequest.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+                this.assetId = this.onGoingRequest.MessageBody.AssetType.ToAssetId(this.GetAssetMap());
             }
         }
 

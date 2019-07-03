@@ -133,7 +133,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         #region RResponse_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
         public override void InitializeAssetType(bool useCurrentRequest = false)
         {
-            this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+            this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.GetAssetMap());
         }
 
         public override void InitializeMessageBody(string asset, long payment, int role = 0, string hashcode = null, string rcode = null)

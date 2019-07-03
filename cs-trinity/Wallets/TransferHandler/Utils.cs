@@ -114,70 +114,35 @@ namespace Trinity.Wallets
 
         /////////////////////////////////////////////////////////////////////////////
         ///
-        public static string ToAssetId(this string assetType, bool isTestNet=true)
+        public static string ToAssetId(this string assetType, Dictionary<string, string> assetMap)
         {
-            if (assetType.Trim().StartsWith("0x") || assetType.Trim().StartsWith("0X"))
+            if (assetMap.ContainsKey(assetType))
+            {
+                return assetMap[assetType];
+            }
+            else if (assetMap.ContainsValue(assetType))
             {
                 return assetType;
             }
-
-            if (isTestNet)
+            else
             {
-                return ToAssetIDTestNet(assetType);
+                throw new Exception(string.Format("Not support AssetType: {0}", assetType));
+            }
+        }
+
+        public static string ToAssetType(this string assetId, Dictionary<string, string> assetMap)
+        {
+            if (assetMap.ContainsKey(assetId))
+            {
+                return assetId;
+            }
+            else if (assetMap.ContainsValue(assetId))
+            {
+                return assetMap.FirstOrDefault(q => q.Value == assetId).Key;
             }
             else
             {
-                return ToAssetIDMainNet(assetType);
-            }
-        }
-
-        private static string ToAssetIDTestNet(string assetType)
-        {
-            switch (assetType.ToUpper())
-            {
-                case AssetTypeTemplate.NEO:
-                    return AssetIDTemplate.NEO;
-                case AssetTypeTemplate.NEOGAS:
-                    return AssetIDTemplate.NEOGAS;
-                case AssetTypeTemplate.TNC:
-                    return AssetIDTemplate.TNC;
-                case AssetTypeTemplate.TSST:
-                    return AssetIDTemplate.TSST;
-                default:
-                    return null;
-            }
-        }
-
-        private static string ToAssetIDMainNet(string assetType)
-        {
-            switch (assetType.ToUpper())
-            {
-                case AssetTypeTemplate.NEO:
-                    return AssetIDTemplateMainNet.NEO;
-                case AssetTypeTemplate.NEOGAS:
-                    return AssetIDTemplateMainNet.NEOGAS;
-                case AssetTypeTemplate.TNC:
-                    return AssetIDTemplateMainNet.TNC;
-                default:
-                    return null;
-            }
-        }
-
-        public static string ToAssetType(this string assetId)
-        {
-            switch (assetId)
-            {
-                case AssetIDTemplate.NEO:
-                    return AssetTypeTemplate.NEO;
-                case AssetIDTemplate.NEOGAS:
-                    return AssetTypeTemplate.NEOGAS;
-                case AssetIDTemplate.TNC:
-                case AssetIDTemplateMainNet.TNC:
-                    return AssetTypeTemplate.TNC;
-                case AssetIDTemplate.TSST:
-                    return AssetTypeTemplate.TSST;
-                default:
-                    return null;
+                throw new Exception(string.Format("Not support AssetID: {0}", assetId));
             }
         }
     }

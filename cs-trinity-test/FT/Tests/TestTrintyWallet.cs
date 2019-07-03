@@ -61,7 +61,7 @@ namespace TestTrinity.FT.Tests
 
         public TestTrinityWallet(NeoSystem system, Wallet wallet, string pubKey, string prikey,
             string magic, string ip = null, string port = null)
-            : base(system, wallet, pubKey, magic, ip, port)
+            : base(system, wallet, null, pubKey, magic, ip, port)
         {
             this.neoSystem = system;
             this.neoWallet = wallet;
