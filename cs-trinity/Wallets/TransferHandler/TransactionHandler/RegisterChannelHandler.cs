@@ -137,6 +137,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         #region RegisterChannel_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeAssetType(bool useCurrentRequest = false)
+        {
+            this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+        }
 
         public override void InitializeMessage(string sender, string receiver, string channel, string asset, string magic, ulong nonce)
         {

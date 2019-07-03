@@ -374,6 +374,18 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         #region Htlc_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeAssetType(bool useCurrentRequest = false)
+        {
+            if (useCurrentRequest)
+            {
+                this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+            }
+            else
+            {
+                this.assetId = this.onGoingRequest.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+            }
+        }
+
         public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(false); }
 
         public override void InitializeMessageBody(string asset, long payment, int role = 0, string hashcode = null, string rcode = null)
@@ -620,6 +632,18 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
         #region HtlcSign_OVERRIDE_VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        public override void InitializeAssetType(bool useCurrentRequest = false)
+        {
+            if (useCurrentRequest)
+            {
+                this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+            }
+            else
+            {
+                this.assetId = this.onGoingRequest.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+            }
+        }
+
         public override void InitializeBlockChainApi() { this.GetBlockChainAdaptorApi(false); }
         public override void InitializeMessageBody(int role = 0)
         {

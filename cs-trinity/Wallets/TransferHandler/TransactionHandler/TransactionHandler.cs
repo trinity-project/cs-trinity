@@ -90,7 +90,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private long balance = 0;
         private long peerBalance = 0;
         protected string channelName = null;
-        protected readonly string assetId = null;
+        protected string assetId = null;
 
         // record current role
         protected int currentRole = -1;
@@ -105,8 +105,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public TransactionHandler(string message) : base(message)
         {
+            this.InitializeAssetType();
+
             // LevelDB API & channel related intialiazation
-            this.assetId = this.Request.MessageBody.AssetType.ToAssetId(this.IsMainNet());
             this.InitializeLocals(true); // Common local variables intializtion
             this.InitializeLevelDBApi();    // LevelDB API & channel related intialization
         }
@@ -114,7 +115,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public TransactionHandler(TRMessage request, int role=0) : base()
         {
             this.onGoingRequest = request;
-            this.assetId = request?.MessageBody.AssetType.ToAssetId(this.IsMainNet());
+
+            this.InitializeAssetType();
 
             // Allocate new request and intialize the header & body
             this.InitializeMessage(request.Receiver, request.Sender, request.ChannelName,
@@ -584,13 +586,14 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
 
 
-#region VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
+        #region VIRUAL_SETS_OF_DIFFERENT_TRANSACTION_HANDLER
         //////////////////////////////////////////////////////////////////////////////////
         /// Start of virtual methods for different actions:
         /// 
         /// One set of methods are used to be overwritten for initialize transaction handler
         /// instances with different actions.
         //////////////////////////////////////////////////////////////////////////////////
+        public virtual void InitializeAssetType(bool useCurrentRequest = false) { }
 
         public virtual void InitializeMessage(string sender, string receiver, string channel, string asset,
             string magic, ulong nonce)
