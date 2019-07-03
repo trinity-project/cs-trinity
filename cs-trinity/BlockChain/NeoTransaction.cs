@@ -520,7 +520,7 @@ namespace Trinity.BlockChain
         /// attention: balance is Receiver balance, peerBalance is Sender balance
         public bool CreateReceiverHCTX(out HtlcCommitTx HCTX, string HtlcValue, string HashR)
         {
-            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.scriptHash, this.pubKey, this.peerScriptHash, this.peerPubkey, this.timestampString);
             Log.Debug("timestamp: {0}", this.timestampString);
             Log.Debug("RSMCContract: {0}", RSMCContract);
 #if DEBUG_LOCAL
@@ -586,7 +586,7 @@ namespace Trinity.BlockChain
             new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
 #endif
             new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.peerScriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
 
             string opdata = NeoInterface.CreateOpdata(this.addressRsmc, this.address, this.balance, this.assetId);
             Log.Debug("createRDTX opdata: {0}", opdata);
@@ -642,7 +642,7 @@ namespace Trinity.BlockChain
         /// <returns></returns>
         public bool CreateHETX(out HtlcExecutionTx HETX, string HtlcValue)
         {
-            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.peerScriptHash, this.peerPubkey, this.scriptHash, this.pubKey, this.timestampString);
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.scriptHash, this.pubKey, this.peerScriptHash, this.peerPubkey, this.timestampString);
             Log.Debug("RSMCContract: {0}", RSMCContract);
             this.SetAddressRSMC(RSMCContract["address"].ToString());
             this.SetScripRSMC(RSMCContract["script"].ToString());
