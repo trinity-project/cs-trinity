@@ -29,6 +29,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Trinity.Properties;
 using Trinity.Wallets.Templates.Messages;
 using Trinity.Wallets.TransferHandler;
 
@@ -56,20 +58,17 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
             this.localAddress = string.Format("{0}:{1}", localIp, port);
         }
 
-        //public override bool MakeupMessage()
-        //{
-        //    this.SetPublicKey(this.GetPubKey());
-        //    this.SetAlias("NoAlias");
-        //    this.SetAutoCreate("0");
-        //    this.SetNetAddress(string.Format("{0}:{1}", this.localAddress));
-        //    this.SetMaxChannel(10);
-        //    this.SetChannelInfo();
+        public override bool MakeupMessage()
+        {
+            this.SetPublicKey(this.GetPubKey());
+            this.SetAlias(Settings.Default.alias);
+            this.SetAutoCreate(Settings.Default.autoCreate);
+            this.SetNetAddress(string.Format("{0}:{1}", Settings.Default.localIp, Settings.Default.localPort));
+            this.SetMaxChannel(Settings.Default.maxChannel);
+            this.SetChannelInfo();
 
-        //    // Start to send RegisterKeepAlive to gateway
-        //    Console.WriteLine("Send SyncWalletData: {0}", this.ToJson());
-
-        //    return base.MakeupMessage();
-        //}
+            return base.MakeupMessage();
+        }
 
         public void SetPublicKey(string key)
         {
@@ -91,33 +90,28 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
             this.Request.MessageBody.SetAttribute("Ip", address);
         }
 
-        public void SetMaxChannel(int MaxChannel)
+        public void SetMaxChannel(uint MaxChannel)
         {
             this.Request.MessageBody.SetAttribute("MaxChannel", MaxChannel);
         }
 
         public void SetChannelInfo()
         {
-            // TODO: here the value is read from the configuration files, this code will be update later
-            // Currently ,we hardcode this value
-            Dictionary<string, Dictionary<string, Double>> ChannelInfo = new Dictionary<string, Dictionary<string, Double>>();
-            Dictionary<string, Double> InfoItem = new Dictionary<string, Double>();
-            InfoItem.Add("TNC", 10);
-            ChannelInfo.Add("Balance", InfoItem);
+            // 
+            Dictionary<string, Dictionary<string, double>> ChannelInfo = new Dictionary<string, Dictionary<string, double>>();
 
-            InfoItem.Clear();
-            InfoItem.Add("Fee", 0);
-            ChannelInfo.Add("NEO", InfoItem);
-
-            InfoItem.Clear();
-            InfoItem.Add("Fee", 0.001);
-            ChannelInfo.Add("GAS", InfoItem);
-
-            InfoItem.Clear();
-            InfoItem.Add("Fee", 0.01);
-            InfoItem.Add("CommitMinDeposit", 1);
-            InfoItem.Add("CommitMaxDeposit", 5000);
-            ChannelInfo.Add("TNC", InfoItem);
+            foreach (string assetType in this.GetAssetMap().Keys)
+            {
+                if (Settings.Default.channelFees.ContainsKey(assetType))
+                {
+                    Dictionary<string, double> InfoItem = new Dictionary<string, double>(Settings.Default.channelFees[assetType]);
+                    ChannelInfo.Add(assetType, InfoItem);
+                }
+                else
+                {
+                    ChannelInfo.Add(assetType, new Dictionary<string, double>(Settings.Default.channelFees["Nep5"]));
+                }
+            }
 
             this.Request.MessageBody.SetAttribute("Channel", ChannelInfo);
         }

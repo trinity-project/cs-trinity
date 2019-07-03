@@ -1,13 +1,29 @@
 {
   "ProtocolConfiguration": {
-    "Gateway": {
-      "ip": "47.98.228.81",
-      "port": "8089",
+    "Alias" : "CsTrinityWallet",
+    "AutoCreate" : true,
+    "Gateway" : {
+      "ip" : "47.98.228.81",
+      "port" : "8089",
       "rpcPort" : "8077"
     },
-    "Local": {
-      "ip": "localhost",
-      "port": "20556"
+    "Local" : {
+      "ip" : "localhost",
+      "port" : "20556"
+    },
+    "ChannelSettings" : {
+      "MaxChannel" : 10
+    },
+    "ChannelFees" : {
+      "Nep5" : {
+        "Fee" : 0.01
+      },
+      "NEO" : {
+        "Fee" : 0.001
+      },
+      "NeoGas" : {
+        "Fee" : 0.001
+      }
     }
   }
 }

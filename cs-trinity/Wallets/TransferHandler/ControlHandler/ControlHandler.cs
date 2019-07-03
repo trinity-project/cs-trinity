@@ -83,6 +83,8 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
                 AssetType = asset,
                 NetMagic = magic ?? this.GetNetMagic()
             };
+
+            this.ParsePubkeyPair(sender, receiver);
         }
     }
 }
