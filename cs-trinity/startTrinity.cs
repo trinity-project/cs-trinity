@@ -53,6 +53,7 @@ namespace Trinity
         {
             try
             {
+                assetTypes.Clear();
                 /* get neo/gas asset information */
                 using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
                 {
