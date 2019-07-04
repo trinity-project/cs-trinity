@@ -24,7 +24,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 using System;
 using System.Collections.Generic;
 
@@ -192,11 +191,11 @@ namespace TestTrinity
         //create_sender_HTLC_TXS_NEO
         public static void TempTest3()
         {
-            string assetId = "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
-            string pubKey = "025aa64efb9a5176a550210cdc795060cab8f7711e7cd69dbe12b9bbd3ee2dd721";
-            string deposit = "2";
-            string peerPubKey = "0391e05b532e5e8aa9eb0ef3c3888cf7636a428c339c33ad620d0f2900437999d6";
-            string peerDeposit = "2";
+            string assetId = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
+            string pubKey = "035124620caa7edc45329259ed7ac88d2b232d051c0c93f24ad237a311262f19ed";
+            string deposit = "1";
+            string peerPubKey = "02e30ac5fd122410ebd90c247cc322db0aaf6e403542a9b4fe2ad75864c477c46d";
+            string peerDeposit = "1";
             string HtlcValue = "1";
             string balance = "1";
             string peerBalance = "3";
@@ -207,9 +206,11 @@ namespace TestTrinity
             neoTransaction.CreateFundingTx(out FundingTx fundingTx);
             Log.Debug("FundingTX: {0}", fundingTx.Serialize());
 
-            //Console.WriteLine("---------CTX---------");
-            //neoTransaction.CreateCTX(out CommitmentTx commitmentTx);
-            //Log.Debug("CTX: {0}", commitmentTx.Serialize());
+            Log.Debug("txData: {0}", fundingTx.txData);
+
+            Console.WriteLine("---------CTX---------");
+            neoTransaction.CreateCTX(out CommitmentTx commitmentTx);
+            Log.Debug("CTX: {0}", commitmentTx.Serialize());
 
             //Console.WriteLine("---------RDTX---------");
             //neoTransaction.CreateRDTX(out RevocableDeliveryTx revocableDeliveryTx, commitmentTx.txId);
@@ -219,19 +220,19 @@ namespace TestTrinity
             //neoTransaction.CreateBRTX(out BreachRemedyTx breachRemedyTx, commitmentTx.txId);
             //Log.Debug("CTX: {0}", breachRemedyTx.Serialize());
 
-            //NeoTransaction_Neo neoTransaction1 = new NeoTransaction_Neo(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
-            //Console.WriteLine("---------BRTX---------");
-            //neoTransaction1.CreateSettle(out TxContents settleTx);
-            //Log.Debug("CTX: {0}", settleTx.Serialize());
+            NeoTransaction_Neo neoTransaction1 = new NeoTransaction_Neo(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
+            Console.WriteLine("---------Settle---------");
+            neoTransaction1.CreateSettle(out TxContents settleTx);
+            Log.Debug("CTX: {0}", settleTx.Serialize());
 
             //Éú³ÉHashR
-            Console.WriteLine("---------HashR---------");
+            //Console.WriteLine("---------HashR---------");
             //string R = neoTransaction.CreateR(64);
-            string R = "173968fa86d12fceeda5dc0a431f433fd68323e7e0c38e14a5611acb6a11ea66";
-            string HashR = NeoUtils.Sha1(R);
-            Console.WriteLine(HashR);                                      //f6d5a548cbb3c8f9e02c7aa1a17afc829fa65d33
+            //string R = "173968fa86d12fceeda5dc0a431f433fd68323e7e0c38e14a5611acb6a11ea66";
+            //string HashR = NeoUtils.Sha1(R);
+            //Console.WriteLine(HashR);                                      //f6d5a548cbb3c8f9e02c7aa1a17afc829fa65d33
 
-            NeoTransaction_Neo neoTransaction1 = new NeoTransaction_Neo(assetId, pubKey, balance, peerPubKey, peerBalance, fundingTx.addressFunding, fundingTx.scriptFunding);
+            //NeoTransaction_Neo neoTransaction1 = new NeoTransaction_Neo(assetId, pubKey, balance, peerPubKey, peerBalance, fundingTx.addressFunding, fundingTx.scriptFunding);
             //Console.WriteLine("---------Sender_HCTX---------");
             //neoTransaction1.CreateSenderHCTX(out HtlcCommitTx hctx, HtlcValue, HashR);
             //Log.Debug("HCTX: {0}", hctx.Serialize());
@@ -410,7 +411,7 @@ namespace TestTrinity
 
             bool verifyResult = NeoInterface.VerifySignature(originData, signedData, publicKey);
             Console.WriteLine(verifyResult.ToString());
-            
+
 
             // Verify signature
             string originData1 = "d101a00400e1f50514d4c3f3dc1498733ce4b726db8546a83502a891c214296ac124021a71c449a9bad320c16429b08ad6ee53c1087472616e7366657267f1dfcf0051ec48ec95c8d0569e0b95075d099d84f10400e1f50514b1fdddf658ce5ff9f83e66ede2f333ecfcc0463e14296ac124021a71c449a9bad320c16429b08ad6ee53c1087472616e7366657267f1dfcf0051ec48ec95c8d0569e0b95075d099d84f100000000000000000220296ac124021a71c449a9bad320c16429b08ad6eef00873d73ab53340d7410000";

@@ -23,7 +23,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#define DEBUG_LOCAL
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,7 +69,7 @@ namespace Trinity.BlockChain
         private readonly string assetId;
 
         // founder trade information
-        private string addressFunding;          //��ɾ��������
+        private string addressFunding;
         private string scriptFunding;
         private string fundingTxId;
 
@@ -137,13 +136,13 @@ namespace Trinity.BlockChain
             Vin vout = new Vin
             {
                 n = 0,
-                txid = "0x577fb4c3ca37a5eab7243478f3eae2b011800a10d5c4c0cd85e71bab52e76a78",
-                value = 239
+                txid = "d12cd540f9298fd07a4f70ff02581dd1fb2414947a0da4a550b06ec6f0c0eba9",
+                value = 2
             };
             string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
-            List<string> vouts = NeoInterface.getGloablAssetVout(pubKey, assetId, uint.Parse(balance));
+            List<string> vouts = NeoInterface.getGloablAssetVout(UInt160.Parse(pubKey), assetId, uint.Parse(balance));
 #endif
             Log.Debug("Assembly vouts. vouts: {0}.\r\n", vouts);
 
@@ -152,13 +151,13 @@ namespace Trinity.BlockChain
             Vin peerVout = new Vin
             {
                 n = 0,
-                txid = "0x47b590b1d0765b90e0f6c762ddff905ee4d8c3c81ef7ff35397942b87f8ba31b",
-                value = 64
+                txid = "a2af30d58b2e90275f5251378eccbaa8fe8eff76d4016df5337d6b2f6608dace",
+                value = 2
             };
             string peervoutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(peerVout));
             peerVouts.Add(peervoutData);
 #else
-            List<string> peerVouts = NeoInterface.getGloablAssetVout(pubKey, assetId, uint.Parse(peerBalance));
+            List<string> peerVouts = NeoInterface.getGloablAssetVout(UInt160.Parse(pubKey), assetId, uint.Parse(peerBalance));
 #endif
             Log.Debug("Assembly vouts. peerVouts: {0}.\r\n", peerVouts);
 
@@ -199,13 +198,24 @@ namespace Trinity.BlockChain
             // Start to makeup the transaction body
             this.GetContractTransaction(out ContractTransaction tx, inputsData, outputsData, attributes);
 
+            // get the witness 
+            string witness;
+            if (this.scriptHash > this.peerScriptHash)
+            {
+                witness = "024140{signOther}2321" + this.peerPubkey + "ac" + "4140{signSelf}2321" + this.pubKey + "ac";
+            }
+            else
+            {
+                witness = "024140{signSelf}2321" + this.pubKey + "ac" + "4140{signOther}2321" + this.peerPubkey + "ac";
+            }
+
             fundingTx = new FundingTx
             {
                 txData = tx.GetHashData().ToHexString().NeoStrip(),
                 addressFunding = contract.Address.NeoStrip(),
                 txId = tx.Hash.ToString().Strip("\""),
                 scriptFunding = contract.Script.ToHexString().NeoStrip(),
-                witness = "024140{signOther}2321" + this.peerPubkey + "ac" + "4140{signSelf}2321" + this.pubKey + "ac",
+                witness = witness
             };
 
             this.SetFundingTxId(fundingTx.txId);
@@ -350,7 +360,7 @@ namespace Trinity.BlockChain
             Vin vout = new Vin
             {
                 n = 0,
-                txid = "0x577fb4c3ca37a5eab7243478f3eae2b011800a10d5c4c0cd85e71bab52e76a79",
+                txid = "101c5e988e72bdabb121350f168bef8965f0fd2891c387b5384e9718c32c2c7d",
                 value = 2
             };
             string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
@@ -616,7 +626,7 @@ namespace Trinity.BlockChain
 #if DEBUG_LOCAL
             JObject HTLCContract = NeoInterface.CreateHTLCContract((this.timestampLong + 600).ToString(), this.pubKey, this.peerPubkey, HashR);
 #else
-            JObject HTLCContract = NeoInterface.CreateHTLCContract(this.timestamp + 600, this.peerPubkey, this.pubKey, HashR);
+            JObject HTLCContract = NeoInterface.CreateHTLCContract(this.timestampString, this.peerPubkey, this.pubKey, HashR);
 #endif
             Log.Debug("HTLCContract: {0}", HTLCContract);
 
@@ -654,7 +664,6 @@ namespace Trinity.BlockChain
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputToRMSC = createOutput(assetId, this.balance, this.addressRsmc, true);
             TransactionOutput[] outputToSender = createOutput(assetId, this.peerBalance, this.peerAddress, true);
-            Log.Debug("peerAddress: {0}", this.peerAddress);
             TransactionOutput[] outputToHtlc = createOutput(assetId, HtlcValue, this.addressHtlc, true);
             TransactionOutput[] outputsData = outputToRMSC.Concat(outputToSender).Concat(outputToHtlc).ToArray();
 
