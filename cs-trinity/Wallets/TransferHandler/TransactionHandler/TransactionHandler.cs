@@ -238,7 +238,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public virtual bool VerifyBalance(long payment, bool isFounder=true)
         {
             if ((isFounder && this.currentChannel.balance >= payment) 
-                || (!isFounder && this.currentChannel.peerBalance > payment))
+                || (!isFounder && this.currentChannel.peerBalance >= payment))
             {
                 return true;
             }
