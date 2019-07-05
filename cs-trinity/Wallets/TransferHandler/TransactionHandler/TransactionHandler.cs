@@ -782,6 +782,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public static void MakeTransaction(string sender, string receiver, string channel, string asset,
             string magic, UInt64 nonce, long payment, string hashcode = null)
         {
+            asset = asset.ToAssetId(startTrinity.GetAssetMap());
 
             // GetCurrent Channel
             Channel channelLevelDbApi = new Channel(channel, asset, sender, receiver);
