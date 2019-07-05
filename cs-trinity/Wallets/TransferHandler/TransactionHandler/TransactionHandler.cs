@@ -697,7 +697,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public virtual Channel GetChannelLevelDbEntry()
         {
-            this.channelDBEntry = this.channelDBEntry ?? new Channel(this.channelName, this.Request.AssetType, this.selfUri, this.peerUri);
+            this.channelDBEntry = this.channelDBEntry ?? new Channel(this.channelName, this.assetId, this.selfUri, this.peerUri);
             return this.channelDBEntry;
         }
 
@@ -758,7 +758,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // generate the neotransaction
-            this.neoTransaction = new NeoTransaction(this.Request.AssetType.ToAssetId(this.GetAssetMap()), 
+            this.neoTransaction = new NeoTransaction(this.assetId, 
                 this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString(),
                 this.fundingTrade?.founder.originalData.addressFunding, this.fundingTrade?.founder.originalData.scriptFunding);
 
@@ -782,6 +782,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public static void MakeTransaction(string sender, string receiver, string channel, string asset,
             string magic, UInt64 nonce, long payment, string hashcode = null)
         {
+
             // GetCurrent Channel
             Channel channelLevelDbApi = new Channel(channel, asset, sender, receiver);
             ChannelTableContent currentChannel = channelLevelDbApi.GetChannel(channel);

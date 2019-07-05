@@ -116,6 +116,11 @@ namespace Trinity
             return assetList;
         }
 
+        public static Dictionary<string, string> GetAssetMap()
+        {
+            return assetTypes;
+        }
+
         /*
          * start up server
          * 1. monitor server
