@@ -66,6 +66,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             // check the channel is opened firstly
             this.CheckChannelIsOpened();
+            this.CheckChannelSupportedAsset(asset);
 
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex)
                 || this.IsRole2(this.Request.MessageBody.RoleIndex);
@@ -96,6 +97,12 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             // check the channel is opened firstly
             this.CheckChannelIsOpened();
+            
+            // just check when first rsmc is handled
+            if (this.IsRole0(this.Request.MessageBody.RoleIndex))
+            {
+                this.CheckChannelSupportedAsset(this.Request.MessageBody.AssetType);
+            }
 
             this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex)
                 || this.IsRole3(this.Request.MessageBody.RoleIndex);

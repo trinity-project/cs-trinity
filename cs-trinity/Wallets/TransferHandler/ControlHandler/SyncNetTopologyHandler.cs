@@ -71,13 +71,12 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
                 balance.Add(receiver, new Dictionary<string, long> { { channelContent.asset, channelContent.balance } });
             }
 
-
-
             // makeup new request to peer
             SyncNetTopology syncRequest = new SyncNetTopology
             {
                 MessageType = action.ToString(),
                 NetMagic = channelContent.magic,
+                AssetType = channelContent.asset,
 
                 MessageBody = new SyncNetTopologyBody
                 {

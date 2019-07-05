@@ -119,7 +119,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             ChannelTableContent content = new ChannelTableContent
             {
                 channel = this.Request.ChannelName,
-                asset = this.assetId.ToAssetType(this.GetAssetMap()),
+                asset = this.assetId, // save the assetId for the channel
                 uri = uri,
                 peer = peerUri,
                 magic = this.Request.NetMagic,

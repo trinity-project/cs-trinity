@@ -88,17 +88,18 @@ namespace Trinity.ChannelSet
             }
             catch (Exception ExpInfo)
             {
-                Console.WriteLine("Failed to get the channel: {0}. Exception: {1}", channel, ExpInfo);
+                Log.Fatal("Failed to get the channel: {0}. Exception: {1}", channel, ExpInfo);
             }
 
             return null;
         }
 
-        public ChannelTableContent GetChannel(string peer, long payment, string state)
+        public ChannelTableContent GetChannel(string peer, long payment, string state, string asset)
         {
             foreach (ChannelTableContent channel in this.GetChannelListOfThisWallet())
             {
                 if (channel.peer.Equals(peer)
+                    && channel.asset.Equals(asset)
                     && channel.state.Equals(state)
                     && payment <= channel.balance)
                 {

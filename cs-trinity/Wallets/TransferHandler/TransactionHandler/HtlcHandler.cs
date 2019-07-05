@@ -65,6 +65,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             // check the channel is opened firstly
             this.CheckChannelIsOpened();
+            this.CheckChannelSupportedAsset(asset);
 
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
 
@@ -98,6 +99,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         {
             // check the channel is opened firstly
             this.CheckChannelIsOpened();
+
+            if (this.IsRole0(this.Request.MessageBody.RoleIndex))
+            {
+                this.CheckChannelSupportedAsset(this.Request.MessageBody.AssetType);
+            }
 
             this.isFounder = this.IsRole1(this.Request.MessageBody.RoleIndex);
 
@@ -322,7 +328,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         // ToDo: used in future
         private ChannelTableContent ChooseChannel(string peer, long payment)
         {
-            return this.GetChannelLevelDbEntry()?.GetChannel(peer, payment, EnumChannelState.OPENED.ToString());
+            return this.GetChannelLevelDbEntry()?.GetChannel(peer, payment, EnumChannelState.OPENED.ToString(), this.assetId);
         }
 
         private void TriggerHtlcToNextPeer()

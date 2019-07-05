@@ -109,6 +109,7 @@ namespace Trinity.Wallets.Templates.Messages
     {
         public virtual string MessageType { get; set; }
         public string NetMagic { get; set; }
+        public string AssetType { get; set; }
     }
 
     /// <summary>

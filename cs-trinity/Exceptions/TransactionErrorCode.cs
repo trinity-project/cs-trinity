@@ -142,5 +142,6 @@ namespace Trinity.Exceptions.WalletError
         Channel_Not_Opened = 0x102,
         Channel_With_Incompatible_Balance = 0x108,
         Channel_Without_Enough_Balance_For_Payment = 0x109,
+        Channel_Not_Support_Such_Asset_Type = 0x10a,
     }
 }

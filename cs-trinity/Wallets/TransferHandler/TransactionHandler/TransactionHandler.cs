@@ -272,6 +272,21 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 );
         }
 
+        public bool CheckChannelSupportedAsset(string asset)
+        {
+            string assetId = asset.Trim()?.ToAssetId(this.GetAssetMap());
+            string supportedAssetId = this.currentChannel?.asset.Trim().ToAssetId(this.GetAssetMap());
+
+            if (null != assetId && assetId.Equals(supportedAssetId))
+            {
+                return true;
+            }
+
+            throw new TransactionException(EnumTransactionErrorCode.Channel_Not_Support_Such_Asset_Type,
+                string.Format("Channel does not support this asset type. Support Asset: {0}, Trade Asset: {1}.", supportedAssetId, assetId),
+                this.Request.MessageType);
+        }
+
         public virtual bool VerifyRoleIndex()
         { 
             if (IsIllegalRole(this.currentRole))
@@ -796,7 +811,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     payment += Fixed8.Parse(router[routerIndex].fee.ToString()).GetData();
                 }
 
-                currentChannel = channelLevelDbApi.GetChannel(router[1].uri, payment, EnumChannelState.OPENED.ToString());
+                currentChannel = channelLevelDbApi.GetChannel(router[1].uri, payment, EnumChannelState.OPENED.ToString(), asset);
                 // Htlc transaction
                 if (null != currentChannel)
                 {
