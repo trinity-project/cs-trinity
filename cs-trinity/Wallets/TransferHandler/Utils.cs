@@ -114,7 +114,7 @@ namespace Trinity.Wallets
 
         /////////////////////////////////////////////////////////////////////////////
         ///
-        public static string ToAssetId(this string assetType, Dictionary<string, string> assetMap)
+        public static string ToAssetId(this string assetType, Dictionary<string, string> assetMap, bool isThrowException = true)
         {
             if (assetMap.ContainsKey(assetType))
             {
@@ -126,11 +126,16 @@ namespace Trinity.Wallets
             }
             else
             {
-                throw new Exception(string.Format("Not support AssetType: {0}", assetType));
+                if (isThrowException)
+                {
+                    throw new Exception(string.Format("Not support AssetType: {0}", assetType));
+                }
+
+                return assetType;
             }
         }
 
-        public static string ToAssetType(this string assetId, Dictionary<string, string> assetMap)
+        public static string ToAssetType(this string assetId, Dictionary<string, string> assetMap, bool isThrowException=true)
         {
             if (assetMap.ContainsKey(assetId))
             {
@@ -142,7 +147,12 @@ namespace Trinity.Wallets
             }
             else
             {
-                throw new Exception(string.Format("Not support AssetID: {0}", assetId));
+                if (isThrowException)
+                {
+                    throw new Exception(string.Format("Not support AssetID: {0}", assetId));
+                }
+
+                return assetId;
             }
         }
     }
