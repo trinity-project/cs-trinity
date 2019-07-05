@@ -49,11 +49,14 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
 
         public static AckRouterInfo GetRouter(string sender, string receiver, string asset, string magic, long payment)
         {
+            asset = asset.ToAssetType(startTrinity.GetAssetMap());
+
             GetRouterInfo request = new GetRouterInfo
             {
                 Sender = sender,
                 Receiver = receiver,
                 NetMagic = magic,
+                AssetType = asset,
 
                 MessageBody = new RouteInfoBody
                 {

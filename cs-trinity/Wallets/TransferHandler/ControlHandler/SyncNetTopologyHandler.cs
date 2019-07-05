@@ -52,6 +52,7 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
             // get the founder and receiver
             string founder;
             string receiver;
+            string asset = channelContent.asset.ToAssetType(startTrinity.GetAssetMap());
             Dictionary<string, Dictionary<string, long>> balance = new Dictionary<string, Dictionary<string, long>>();
 
             if (channelContent.role.Contains(EnumRole.FOUNDER.ToString()))
@@ -59,16 +60,16 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
                 founder = channelContent.uri;
                 receiver = channelContent.peer;
 
-                balance.Add(founder, new Dictionary<string, long> {{ channelContent.asset, channelContent.balance}});
-                balance.Add(receiver, new Dictionary<string, long> { { channelContent.asset, channelContent.peerBalance } });
+                balance.Add(founder, new Dictionary<string, long> {{ asset, channelContent.balance}});
+                balance.Add(receiver, new Dictionary<string, long> { { asset, channelContent.peerBalance } });
             }
             else
             {
                 founder = channelContent.peer;
                 receiver = channelContent.uri;
 
-                balance.Add(founder, new Dictionary<string, long> { { channelContent.asset, channelContent.peerBalance } });
-                balance.Add(receiver, new Dictionary<string, long> { { channelContent.asset, channelContent.balance } });
+                balance.Add(founder, new Dictionary<string, long> { { asset, channelContent.peerBalance } });
+                balance.Add(receiver, new Dictionary<string, long> { { asset, channelContent.balance } });
             }
 
             // makeup new request to peer
@@ -76,7 +77,7 @@ namespace Trinity.Wallets.TransferHandler.ControlHandler
             {
                 MessageType = action.ToString(),
                 NetMagic = channelContent.magic,
-                AssetType = channelContent.asset,
+                AssetType = asset,
 
                 MessageBody = new SyncNetTopologyBody
                 {
