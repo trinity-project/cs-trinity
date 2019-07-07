@@ -282,6 +282,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlockChain\Interface\IBlockChain.cs" />
+    <Compile Include="BlockChain\Interface\INeoNep5Transaction.cs" />
+    <Compile Include="BlockChain\Interface\INeoTransaction.cs" />
+    <Compile Include="BlockChain\Interface\INeoTransactionBase.cs" />
     <Compile Include="BlockChain\NeoInterface.cs" />
     <Compile Include="BlockChain\Monitor.cs" />
     <Compile Include="BlockChain\NeoTransaction.cs" />
