@@ -30,9 +30,115 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neo;
+using Neo.Wallets;
+using Neo.SmartContract;
+using Neo.IO.Json;
+using Neo.Network.P2P;
+using Neo.Network.P2P.Payloads;
+
+using Trinity.Wallets.Templates.Definitions;
+
 namespace Trinity.BlockChain.Interface
 {
-    public class INeoNep5Transaction : INeoTransactionBase
+    public class INeoNep5Transaction : NeoTransactionBase, IBlockChain
     {
+        public INeoNep5Transaction(string assetId, string pubKey, string balance, string peerPubKey, string peerBalance,
+            string addressFunding = null, string scriptFunding = null)
+            : base(assetId, pubKey, balance, peerPubKey, peerBalance, addressFunding, scriptFunding)
+        { }
+
+        public bool CreateFundingTx(out FundingTx fundingTx)
+        {
+            // Create multi-signarture contract address to store deposit
+            Contract contract = NeoInterface.CreateMultiSigContract(this.pubKey, this.peerPubkey);
+
+            fundingTx = null;
+            return true;
+        }
+
+        public bool CreateBRTX(out BreachRemedyTx breachRemedyTx, string txId)
+        {
+            breachRemedyTx = null;
+            return true;
+        }
+
+        public bool CreateCTX(out CommitmentTx commitmentTx)
+        {
+            commitmentTx = null;
+            return true;
+        }
+
+        public bool CreateRDTX(out RevocableDeliveryTx revocableDeliveryTx, string txId)
+        {
+            revocableDeliveryTx = null;
+            return true;
+        }
+
+        public bool CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, string HtlcPay)
+        {
+            HEDTX = null;
+            return true;
+        }
+
+        public bool CreateHERDTX(out HtlcExecutionRevocableDeliveryTx revocableDeliveryTx, string HtlcPay, string txId = null)
+        {
+            revocableDeliveryTx = null;
+            return true;
+        }
+
+        public bool CreateHETX(out HtlcExecutionTx HETX, string HtlcPay)
+        {
+            HETX = null;
+            return true;
+        }
+
+        public bool CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, string HtlcPay)
+        {
+            HTDTX = null;
+            return true;
+        }
+
+        public bool CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx revocableDeliveryTx, string HtlcPay, string txId = null)
+        {
+            revocableDeliveryTx = null;
+            return true;
+        }
+
+        public bool CreateHTTX(out HtlcTimoutTx HTTX, string HtlcPay)
+        {
+            HTTX = null;
+            return true;
+        }
+
+        public bool CreateReceiverHCTX(out HtlcCommitTx HCTX, string HtlcPay, string HashR)
+        {
+            HCTX = null;
+            return true;
+        }
+
+        public bool CreateReceiverRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId = null)
+        {
+            revocableDeliveryTx = null;
+            return true;
+        }
+
+        public bool CreateSenderHCTX(out HtlcCommitTx HCTX, string HtlcPay, string HashR)
+        {
+            HCTX = null;
+            return true;
+        }
+
+        public bool CreateSenderRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId = null)
+        {
+            revocableDeliveryTx = null;
+            return true;
+        }
+
+        public bool CreateSettle(out TxContents settleTx)
+        {
+            settleTx = null;
+            return true;
+        }
     }
 }
