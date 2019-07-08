@@ -53,6 +53,22 @@ namespace Trinity.BlockChain.Interface
             // Create multi-signarture contract address to store deposit
             Contract contract = NeoInterface.CreateMultiSigContract(this.pubKey, this.peerPubkey);
 
+            // Assembly transaction with Opcode for both wallets
+            string opdata = NeoInterface.CreateOpdata(address, contract.Address, balance, assetId);
+            string peerOpdata = NeoInterface.CreateOpdata(peerAddress, contract.Address, peerBalance, assetId);
+            Log.Debug("Assembly opdata. opdata: {0}.\r\n peerOpdata: {1}", opdata, peerOpdata);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.scriptHash, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.peerScriptHash, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+
+            // Allocate a new InvocationTransaction for funding transaction
+            Transaction transaction = this.AllocateTransaction(opdata + peerOpdata, attributes);
+
+            // Get Witness for Invocation Trasactions
+            string witness = this.MakeUpFundingWitness();
+
             fundingTx = null;
             return true;
         }
