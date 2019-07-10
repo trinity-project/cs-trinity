@@ -157,8 +157,8 @@ namespace Trinity.Wallets.TransferHandler
     /// <summary>
     /// Generic class for transfer messages
     /// </summary>
-    /// <typeparam name="TMessage"> Messages which is used to sent to peer </typeparam>
-    /// <typeparam name="TRMessage"> Messages which is received from peer and trigger next step </typeparam>
+    /// <typeparam name="TMessage"> Messages which is used to sent to remote </typeparam>
+    /// <typeparam name="TRMessage"> Messages which is received from remote and trigger next step </typeparam>
     /// <typeparam name="TRQHandler"> Transfer Handler which is used to handle the request message </typeparam>
     /// <typeparam name="TRSPHandler"> Transfer Handler withc is used to handle the response message </typeparam>
     public abstract class TransferHandler<TMessage, TRMessage, TRQHandler, TRSPHandler> : TransferHandlerBase, IDisposable
@@ -196,7 +196,7 @@ namespace Trinity.Wallets.TransferHandler
         }
 
         /// <summary>
-        /// Handle the messages from the peer.
+        /// Handle the messages from the remote.
         /// </summary>
         /// <returns></returns>
         public override bool Handle()
@@ -241,7 +241,7 @@ namespace Trinity.Wallets.TransferHandler
         }
 
         /// <summary>
-        /// Send the Request to peer
+        /// Send the Request to remote
         /// </summary>
         /// <returns></returns>
         public override bool MakeTransaction()

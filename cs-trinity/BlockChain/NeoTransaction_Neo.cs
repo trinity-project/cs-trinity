@@ -88,7 +88,7 @@ namespace Trinity.BlockChain
         private UInt160 scriptHash => (null != this.pubKey) ? this.pubKey.ToHash160() : null;
         private string address => (null != this.pubKey) ? this.pubKey.ToAddress() : null;
 
-        // peer wallet trade information of the channel
+        // remote wallet trade information of the channel
         private readonly string peerBalance;
         private readonly string peerPubkey;
         private UInt160 peerScriptHash => (null != this.peerPubkey) ? this.peerPubkey.ToHash160() : null;

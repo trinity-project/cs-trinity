@@ -121,7 +121,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 return false;
             }
 
-            // Trigger htlc to next peer
+            // Trigger htlc to next remote
             if (this.IsRole0(this.Request.MessageBody.RoleIndex))
             {
                 this.TriggerHtlcToNextPeer();
@@ -333,13 +333,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         private void TriggerHtlcToNextPeer()
         {
-            // trigger htlc to next peer
+            // trigger htlc to next remote
             if (this.IsReachedPayee(this.Request.Router, out int currentUriIndex))
             {
                 Log.Info("Htlc with HashR<{0}> has been finished since the payee has received the payment: {1}.",
                     this.Request.MessageBody.HashR, this.Request.MessageBody.Count);
 
-                // Trigger RResponse to peer wallet
+                // Trigger RResponse to remote wallet
                 RResponseHandler RResponseHndl = new RResponseHandler(this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
                     this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.TxNonce, this.Request.MessageBody.Count,
                     this.Request.MessageBody.HashR, this.currentHLockTransaction.rcode);

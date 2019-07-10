@@ -631,7 +631,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="isFromPeer"> indicates that the message is received from peer </param>
+        /// <param name="isFromPeer"> indicates that the message is received from remote </param>
         public virtual void InitializeLocals(bool isFromPeer = false)
         {
             // set common variables from header

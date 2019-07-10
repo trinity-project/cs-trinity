@@ -50,94 +50,215 @@ namespace Trinity.BlockChain.Interface
 
         public bool CreateFundingTx(out FundingTx fundingTx)
         {
-            // Create multi-signarture contract address to store deposit
-            Contract contract = NeoInterface.CreateMultiSigContract(this.pubKey, this.peerPubkey);
+            double currentTimestamp = this.timestamp;
 
-            fundingTx = null;
+            // Initial step for creating funding tx
+            this.InitializeFundingTx();
+
+            // Create Neo InvocationTransaction for the funding transaction
+            this.MakeUpFundingTransaction(out ContractTransaction transaction, this.addressFunding, this.local, this.remote, timestamp);
+
+            // create funding Transaction
+            this.FinalizeFundingTx(out fundingTx, transaction, currentTimestamp);
+
             return true;
         }
 
         public bool CreateBRTX(out BreachRemedyTx breachRemedyTx, string txId)
         {
-            breachRemedyTx = null;
+            double currentTimestamp = this.timestamp;
+
+            // Create Neo InvocationTransaction for the  Breach Remedy transaction
+            this.MakeUpBRTXTransaction(out ContractTransaction transaction, this.addressRsmc, this.remote, txId,
+                this.local.balance, currentTimestamp);
+
+            // create Revocable Delivery Transaction
+            this.FinalizeBRTX(out breachRemedyTx, transaction, currentTimestamp);
+
             return true;
         }
 
         public bool CreateCTX(out CommitmentTx commitmentTx)
         {
-            commitmentTx = null;
+            double currentTimestamp = this.timestamp;
+
+            // Initial step for creating Commitment tx
+            this.InitializeCTX(currentTimestamp);
+
+            // Create Neo InvocationTransaction for the Commitment transaction
+            this.MakeUpCTXTransaction(out ContractTransaction transaction, this.addressRsmc, this.local, this.remote, currentTimestamp);
+
+            // create Commitment Transaction
+            this.FinalizeCTX(out commitmentTx, transaction, currentTimestamp);
+
             return true;
         }
 
         public bool CreateRDTX(out RevocableDeliveryTx revocableDeliveryTx, string txId)
         {
-            revocableDeliveryTx = null;
+            double currentTimestamp = this.timestamp;
+
+            // Create Neo InvocationTransaction for the Revocable Delivery transaction
+            this.MakeUpRDTXTransaction(out ContractTransaction transaction, this.addressRsmc, this.local, txId, currentTimestamp);
+
+            // create Revocable Delivery Transaction
+            this.FinalizeRDTX(out revocableDeliveryTx, transaction, currentTimestamp);
+
             return true;
         }
 
-        public bool CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, string HtlcPay)
+        public bool CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, string HtlcPay, string txId)
         {
-            HEDTX = null;
+            double currentTimestamp = this.timestamp;
+
+            // Create Neo InvocationTransaction for the Htlc Execution Delivery transaction
+            this.MakeUpHEDTXTransaction(out ContractTransaction transaction, this.remote, HtlcPay, txId, currentTimestamp);
+
+            // create Htlc Execution Delivery Transaction
+            this.FinalizeHEDTX(out HEDTX, transaction, currentTimestamp);
+
             return true;
         }
 
-        public bool CreateHERDTX(out HtlcExecutionRevocableDeliveryTx revocableDeliveryTx, string HtlcPay, string txId = null)
+        public bool CreateHERDTX(out HtlcExecutionRevocableDeliveryTx HERDTX, string HtlcPay, string txId)
         {
-            revocableDeliveryTx = null;
+            double currentTimestamp = this.timestamp;
+
+            // Create Neo InvocationTransaction for the Htlc Execution Revocable Delivery transaction
+            this.MakeUpHERDTXTransaction(out ContractTransaction transaction, this.local, HtlcPay, txId, currentTimestamp);
+
+            // create Htlc Execution Revocable Delivery Transaction
+            this.FinalizeHERDTX(out HERDTX, transaction, currentTimestamp);
+
             return true;
         }
 
-        public bool CreateHETX(out HtlcExecutionTx HETX, string HtlcPay)
+        public bool CreateHETX(out HtlcExecutionTx HETX, string HtlcPay, string txId)
         {
-            HETX = null;
+            double currentTimestamp = this.timestamp;
+
+            // Initial step for creating Htcl Execution transaction
+            this.InitializeHETX(currentTimestamp);
+
+            // Create Neo InvocationTransaction for the Htcl Execution transaction
+            this.MakeUpHETXTransaction(out ContractTransaction transaction, HtlcPay, txId, currentTimestamp);
+
+            // create Htcl Execution Transaction
+            this.FinalizeHETX(out HETX, transaction, currentTimestamp);
+
             return true;
         }
 
-        public bool CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, string HtlcPay)
+        public bool CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, string HtlcPay, string txId)
         {
-            HTDTX = null;
+            double currentTimestamp = this.timestamp;
+
+            // Create Neo InvocationTransaction for the Htlc Timeout Delivery transaction
+            this.MakeUpHTDTXTransaction(out ContractTransaction transaction, this.remote, HtlcPay, txId, currentTimestamp);
+
+            // create Htlc Timeout Delivery Transaction
+            this.FinalizeHTDTX(out HTDTX, transaction, currentTimestamp);
+
             return true;
         }
 
-        public bool CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx revocableDeliveryTx, string HtlcPay, string txId = null)
+        public bool CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx HTRDTX, string HtlcPay, string txId = null)
         {
-            revocableDeliveryTx = null;
+            double currentTimestamp = this.timestamp;
+
+            // Create Neo InvocationTransaction for the Htlc Timeout Revocable Delivery transaction
+            this.MakeUpHTRDTXTransaction(out ContractTransaction transaction, this.local, HtlcPay, txId, currentTimestamp);
+
+            // create Htlc Timeout Revocable Delivery Transaction
+            this.FinalizeHTRDTX(out HTRDTX, transaction, currentTimestamp);
+
             return true;
         }
 
-        public bool CreateHTTX(out HtlcTimoutTx HTTX, string HtlcPay)
+        public bool CreateHTTX(out HtlcTimoutTx HTTX, string HtlcPay, string txId)
         {
-            HTTX = null;
+            double currentTimestamp = this.timestamp;
+
+            // Initial step for creating Htcl Execution transaction
+            this.InitializeHTTX(currentTimestamp);
+
+            // Create Neo InvocationTransaction for the Htcl Execution transaction
+            this.MakeUpHTTXTransaction(out ContractTransaction transaction, HtlcPay, txId, currentTimestamp);
+
+            // create Htcl Execution Transaction
+            this.FinalizeHTTX(out HTTX, transaction, currentTimestamp);
+
             return true;
         }
 
         public bool CreateReceiverHCTX(out HtlcCommitTx HCTX, string HtlcPay, string HashR)
         {
-            HCTX = null;
+            double currentTimestamp = this.timestamp;
+
+            // Initial step for creating HTLC Commitment Transaction for payee.
+            this.InitializeHCTX(HashR, currentTimestamp, false);
+
+            // Create Neo InvocationTransaction for the HCTX transaction for payee.
+            this.MakeUpHCTXTransaction(out ContractTransaction transaction, HtlcPay, currentTimestamp, false);
+
+            // Final step for creating HTLC Commitment Transaction for payee.
+            this.FinalizeHCTX(out HCTX, transaction, currentTimestamp);
+
             return true;
         }
 
         public bool CreateReceiverRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId = null)
         {
-            revocableDeliveryTx = null;
+            double currentTimestamp = this.timestamp;
+
+            // Create Neo InvocationTransaction for the HTLC Revocable Delivery transaction for payee.
+            this.MakeUpHRDTXTransaction(out ContractTransaction transaction, this.local, txId, currentTimestamp);
+
+            // Final step for creating HTLC Revocable Delivery Transaction for payee.
+            this.FinalizeHRDTX(out revocableDeliveryTx, transaction, currentTimestamp);
+
             return true;
         }
 
         public bool CreateSenderHCTX(out HtlcCommitTx HCTX, string HtlcPay, string HashR)
         {
-            HCTX = null;
+            double currentTimestamp = this.timestamp;
+
+            // Initial step for creating HTLC Commitment Transaction for payer.
+            this.InitializeHCTX(HashR, currentTimestamp);
+
+            // Create Neo InvocationTransaction for the HCTX transaction for payer.
+            this.MakeUpHCTXTransaction(out ContractTransaction transaction, HtlcPay, currentTimestamp);
+
+            // Final step for creating HTLC Commitment Transaction for payer.
+            this.FinalizeHCTX(out HCTX, transaction, currentTimestamp);
+
             return true;
         }
 
-        public bool CreateSenderRDTX(out HtlcRevocableDeliveryTx revocableDeliveryTx, string txId = null)
+        public bool CreateSenderRDTX(out HtlcRevocableDeliveryTx HRDTX, string txId)
         {
-            revocableDeliveryTx = null;
+            double currentTimestamp = this.timestamp;
+
+            // Create Neo InvocationTransaction for the HTLC Revocable Delivery transaction for payer.
+            this.MakeUpHRDTXTransaction(out ContractTransaction transaction, this.local, txId, currentTimestamp);
+
+            // Final step for creating HTLC Revocable Delivery Transaction for payer.
+            this.FinalizeHRDTX(out HRDTX, transaction, currentTimestamp);
+
             return true;
         }
 
         public bool CreateSettle(out TxContents settleTx)
         {
-            settleTx = null;
+            double currentTimestamp = this.timestamp;
+
+            // Create Neo InvocationTransaction for the Settle transaction
+            this.MakeUpSettleTransaction(out ContractTransaction transaction, currentTimestamp);
+
+            // create Revocable Delivery Transaction
+            this.FinalizeSettleTX(out settleTx, transaction, currentTimestamp);
+
             return true;
         }
     }

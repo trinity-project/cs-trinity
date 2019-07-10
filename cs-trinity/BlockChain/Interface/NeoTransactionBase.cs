@@ -37,7 +37,7 @@ using Neo.IO.Json;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 
-using Trinity;
+using Trinity.Wallets;
 using Trinity.Wallets.Templates.Definitions;
 
 namespace Trinity.BlockChain.Interface
@@ -54,7 +54,7 @@ namespace Trinity.BlockChain.Interface
         protected delegate TResult DoubleFixed6<in T, out TResult>(T value);
 
         protected double timestamp => (DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1))).TotalSeconds;
-        // 6-precision, but the last number is aways 0(caused by C#)
+        // 6-precision, but the last number is aways 0
         protected DoubleFixed6<double, string> ToFixed6 = currentTimestamp => currentTimestamp.ToString("F6");
 #endif
 
@@ -74,18 +74,9 @@ namespace Trinity.BlockChain.Interface
         protected string addressHtlc;
         protected string scriptHtlc;
 
-        // Peers of the trade
-        // self wallet trade information of the channel
-        protected readonly string balance;
-        protected readonly string pubKey;
-        protected UInt160 scriptHash => (null != this.pubKey) ? this.pubKey.ToHash160() : null;
-        protected string address => (null != this.pubKey) ? this.pubKey.ToAddress() : null;
-
-        // peer wallet trade information of the channel
-        protected readonly string peerBalance;
-        protected readonly string peerPubkey;
-        protected UInt160 peerScriptHash => (null != this.peerPubkey) ? this.peerPubkey.ToHash160() : null;
-        protected string peerAddress => (null != this.peerPubkey) ? this.peerPubkey.ToAddress() : null;
+        // peers of transaction traders of the channel
+        protected ChannelTrader local;
+        protected ChannelTrader remote;
 
         /// <summary>
         /// Default constructor for create NeoTransaction instances
@@ -101,15 +92,283 @@ namespace Trinity.BlockChain.Interface
             string addressFunding = null, string scriptFunding = null)
         {
             this.assetId = assetId;
-            
-            this.pubKey = pubKey.NeoStrip();
-            this.balance = balance.NeoStrip();
 
-            this.peerPubkey = peerPubKey.NeoStrip();
-            this.peerBalance = peerBalance.NeoStrip();
+            this.local = new ChannelTrader(pubKey, balance);
+            this.remote = new ChannelTrader(peerPubKey, peerBalance);
 
             this.addressFunding = addressFunding?.NeoStrip();
             this.scriptFunding = scriptFunding?.NeoStrip();
+        }
+
+        public void InitializeFundingTx()
+        {
+            // Create multi-signarture contract address to store deposit
+            Contract contract = NeoInterface.CreateMultiSigContract(this.local.publicKey, this.remote.publicKey);
+
+            this.SetAddressFunding(contract.Address);
+            this.SetScripFunding(contract.Script.ToHexString());
+        }
+
+        public void FinalizeFundingTx<TTransaction>(out FundingTx fundingTx, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness;
+            if (this.local.scriptHash > this.remote.scriptHash)
+            {
+                witness = "024140{signOther}2321" + this.remote.publicKey + "ac" + "4140{signSelf}2321" + this.local.publicKey + "ac";
+            }
+            else
+            {
+                witness = "024140{signSelf}2321" + this.local.publicKey + "ac" + "4140{signOther}2321" + this.remote.publicKey + "ac";
+            }
+
+            fundingTx = new FundingTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                addressFunding = this.addressFunding,
+                txId = transaction.Hash.ToString().Strip("\""),
+                scriptFunding = this.scriptFunding,
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void InitializeCTX(double timestamp)
+        {
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey, this.remote.scriptHash,
+                this.remote.publicKey, this.ToFixed6(timestamp));
+            Log.Debug("RSMCContract: {0}", RSMCContract);
+
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+        }
+
+        public void FinalizeCTX<TTransaction>(out CommitmentTx commitmentTx, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "018240{signSelf}40{signOther}da" + this.scriptFunding;
+
+            commitmentTx = new CommitmentTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                addressRSMC = this.addressRsmc,
+                scriptRSMC = this.scriptRsmc,
+                txId = transaction.Hash.ToString().Strip("\""),
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void FinalizeRDTX<TTransaction>(out RevocableDeliveryTx revocableDeliveryTx, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc);
+
+            revocableDeliveryTx = new RevocableDeliveryTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                txId = transaction.Hash.ToString().Strip("\""),
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void FinalizeBRTX<TTransaction>(out BreachRemedyTx breachRemedyTx, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc);
+
+            breachRemedyTx = new BreachRemedyTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                txId = transaction.Hash.ToString().Strip("\""),
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void FinalizeSettleTX<TTransaction>(out TxContents settleTx, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "018240{signSelf}40{signOther}da" + this.scriptFunding;
+
+            settleTx = new TxContents
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                txId = transaction.Hash.ToString().Strip("\""),
+                witness = witness,
+                timeAttribute = timestamp,
+            };
+        }
+
+        public void InitializeHCTX(string HashR, double timestamp, bool isPayer =true)
+        {
+            string currentTimeString = ToFixed6(timestamp);
+            string debugInfo = isPayer ? "Payer" : "Payee";
+            string payerPublicKey = isPayer ? this.local.publicKey : this.remote.publicKey;
+            string payeePublicKey = isPayer ? this.remote.publicKey : this.local.publicKey;
+
+            // Create RSMC contract address to store HTLC Payment
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey,
+                this.remote.scriptHash, this.remote.publicKey, currentTimeString);
+            Log.Debug("timestamp: {0}", currentTimeString);
+            Log.Debug("create {0} RSMCContract: {1}", debugInfo, RSMCContract);
+
+            // Create HTLC contract address to lock HTLC Payment
+#if DEBUG_LOCAL
+            JObject HTLCContract = NeoInterface.CreateHTLCContract((this.timestampLong + 600).ToString(), payerPublicKey, payeePublicKey, HashR);
+#else
+            JObject HTLCContract = NeoInterface.CreateHTLCContract(currentTimeString, payerPublicKey, payeePublicKey, HashR);
+#endif
+            Log.Debug("create {0} HTLCContract: {1}", debugInfo, HTLCContract);
+
+            // Initialize the address and script for HTLC transaction
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+            this.SetAddressHTLC(HTLCContract["address"].ToString());
+            this.SetScripHTLC(HTLCContract["script"].ToString());
+        }
+
+        public void FinalizeHCTX<TTransaction>(out HtlcCommitTx HCTX, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "018240{signSelf}40{signOther}da" + this.scriptFunding;
+
+            HCTX = new HtlcCommitTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                addressRSMC = this.addressRsmc,
+                addressHTLC = this.addressHtlc,
+                scriptRSMC = this.scriptRsmc,
+                scriptHTLC = this.scriptHtlc,
+                txId = transaction.Hash.ToString().Strip("\""),
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void FinalizeHRDTX<TTransaction>(out HtlcRevocableDeliveryTx HRDTX, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc);
+
+            HRDTX = new HtlcRevocableDeliveryTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                txId = transaction.Hash.ToString().Strip("\""),
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void InitializeHETX(double timestamp)
+        {
+            string currentTimeString = ToFixed6(timestamp);
+
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey,
+                this.remote.scriptHash, this.remote.publicKey, currentTimeString);
+            Log.Debug("HETX RSMCContract: {0}", RSMCContract);
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+        }
+
+        public void FinalizeHETX<TTransaction>(out HtlcExecutionTx HETX, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc);
+
+            HETX = new HtlcExecutionTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                txId = transaction.Hash.ToString().Strip("\""),
+                addressRSMC = this.addressRsmc,
+                scriptRSMC = this.scriptRsmc,
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void FinalizeHEDTX<TTransaction>(out HtlcExecutionDeliveryTx HEDTX, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc);
+
+            HEDTX = new HtlcExecutionDeliveryTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                txId = transaction.Hash.ToString().Strip("\""),
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void FinalizeHERDTX<TTransaction>(out HtlcExecutionRevocableDeliveryTx HERDTX, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc);
+
+            HERDTX = new HtlcExecutionRevocableDeliveryTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                txId = transaction.Hash.ToString().Strip("\""),
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void InitializeHTTX(double timestamp)
+        {
+            string currentTimeString = ToFixed6(timestamp);
+
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey, 
+                this.remote.scriptHash, this.remote.publicKey, currentTimeString);
+            Log.Debug("HTTX RSMCContract: {0}", RSMCContract);
+            this.SetAddressRSMC(RSMCContract["address"].ToString());
+            this.SetScripRSMC(RSMCContract["script"].ToString());
+        }
+
+        public void FinalizeHTTX<TTransaction>(out HtlcTimoutTx HTTX, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc);
+
+            HTTX = new HtlcTimoutTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                txId = transaction.Hash.ToString().Strip("\""),
+                addressRSMC = this.addressRsmc,
+                scriptRSMC = this.scriptRsmc,
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void FinalizeHTDTX<TTransaction>(out HtlcTimeoutDeliveryTx HTDTX, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptHtlc);
+
+            HTDTX = new HtlcTimeoutDeliveryTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                txId = transaction.Hash.ToString().Strip("\""),
+                witness = witness,
+                timeAttribute = timestamp
+            };
+        }
+
+        public void FinalizeHTRDTX<TTransaction>(out HtlcTimeoutRevocableDelivertyTx HTRDTX, TTransaction transaction, double timestamp)
+            where TTransaction : Transaction
+        {
+            string witness = "01{blockheight_script}40{signOther}40{signSelf}fd" + NeoInterface.CreateVerifyScript(this.scriptRsmc);
+
+            HTRDTX = new HtlcTimeoutRevocableDelivertyTx
+            {
+                txData = transaction.GetHashData().ToHexString().NeoStrip(),
+                txId = transaction.Hash.ToString().Strip("\""),
+                witness = witness,
+                timeAttribute = timestamp
+            };
         }
 
         public void SetAddressFunding(string addressFunding)
@@ -175,6 +434,22 @@ namespace Trinity.BlockChain.Interface
             };
         }
 
+        private long getTotalInputs(List<string> vouts)
+        {
+            long inputs_total = 0;
+            if (null == vouts)
+            {
+                return 0;
+            }
+            foreach (string item in vouts)
+            {
+                NeoInterface.Vin vin = item.Deserialize<NeoInterface.Vin>();
+                inputs_total += vin.value;
+            }
+
+            return inputs_total;
+        }
+
         /// <summary>
         /// Create Assebly Data of Contract Transaction for Neo or NeoGas.
         /// </summary>
@@ -201,32 +476,626 @@ namespace Trinity.BlockChain.Interface
 
         /* ==============================================================================
          * Sets of Override methods
+         * Default is for neo blockchain (neo, neogas or nep-5 coin).
          * ==============================================================================
          */
-        /// <summary>
-        /// Generate the witness for channel transaction.
-        /// Default is for neo blockchain (neo, neogas or nep-5 coin).
-        /// </summary>
-        /// <returns> Witness for transaction </returns>
-        protected virtual string MakeUpFundingWitness()
+        protected virtual void MakeUpFundingTransaction(out Transaction transaction, string contractAddress,
+            ChannelTrader localTrader, ChannelTrader remoteTrader, double timestamp)
         {
-            string witness;
-            if (this.scriptHash > this.peerScriptHash)
-            {
-                witness = "024140{signOther}2321" + this.peerPubkey + "ac" + "4140{signSelf}2321" + this.pubKey + "ac";
-            }
-            else
-            {
-                witness = "024140{signSelf}2321" + this.pubKey + "ac" + "4140{signOther}2321" + this.peerPubkey + "ac";
-            }
+            // Assembly transaction with Opcode for both wallets
+            string opdata = NeoInterface.CreateOpdata(localTrader.address, contractAddress, localTrader.balance, this.assetId);
+            Log.Debug("FUNDING opdata: {0}", opdata);
 
-            return witness;
+            string peerOpdata = NeoInterface.CreateOpdata(remoteTrader.address, contractAddress, remoteTrader.balance, this.assetId);
+            Log.Debug("FUNDING peerOpdata: {0}", peerOpdata);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, localTrader.scriptHash, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, remoteTrader.scriptHash, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+
+            // Allocate a new InvocationTransaction for funding transaction
+            transaction = this.AllocateTransaction(opdata + peerOpdata, attributes);
         }
 
-        protected virtual void MakeUpFundingTransaction<TTransaction>(out TTransaction transaction, string contractAddress,
-            string address, string pubkey)
+        protected virtual void MakeUpFundingTransaction(out ContractTransaction transaction, string contractAddress,
+            ChannelTrader localTrader, ChannelTrader remoteTrader, double timestamp)
         {
-            transaction = default;
+#if DEBUG_LOCAL
+            List<string> vouts = new List<string>();
+            Vin vout = new Vin
+            {
+                n = 0,
+                txid = "d12cd540f9298fd07a4f70ff02581dd1fb2414947a0da4a550b06ec6f0c0eba9",
+                value = 2
+            };
+            string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
+            vouts.Add(voutData);
+#else
+            List<string> vouts = NeoInterface.getGloablAssetVout(localTrader.scriptHash, assetId, uint.Parse(localTrader.balance));
+#endif
+            Log.Debug("Assembly vouts. vouts: {0}.\r\n", vouts);
+
+#if DEBUG_LOCAL
+            List<string> peerVouts = new List<string>();
+            Vin peerVout = new Vin
+            {
+                n = 0,
+                txid = "a2af30d58b2e90275f5251378eccbaa8fe8eff76d4016df5337d6b2f6608dace",
+                value = 2
+            };
+            string peervoutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(peerVout));
+            peerVouts.Add(peervoutData);
+#else
+            List<string> peerVouts = NeoInterface.getGloablAssetVout(localTrader.scriptHash, assetId, uint.Parse(remoteTrader.balance));
+#endif
+            Log.Debug("Assembly vouts. peerVouts: {0}.\r\n", peerVouts);
+
+            // Assembly transaction with input for both wallets
+            CoinReference[] self_inputs = NeoInterface.getInputFormVout(vouts);
+            CoinReference[] other_inputs = NeoInterface.getInputFormVout(peerVouts);
+            CoinReference[] inputsData = self_inputs.Concat(other_inputs).ToArray();
+
+            string amount = (uint.Parse(localTrader.balance) + uint.Parse(remoteTrader.balance)).ToString();
+            TransactionOutput[] output_to_fundingaddress = NeoInterface.createOutput(assetId, amount, this.addressFunding);
+
+            // Assembly transaction with output for both wallets
+            long totalInputs = this.getTotalInputs(vouts);
+            long peerTotalInputs = this.getTotalInputs(peerVouts);
+
+            TransactionOutput[] output_to_self = new TransactionOutput[] { };
+            TransactionOutput[] output_to_other = new TransactionOutput[] { };
+            if (totalInputs > long.Parse(localTrader.balance))
+            {
+                string selfBalance = (totalInputs - long.Parse(localTrader.balance)).ToString();
+                output_to_self = NeoInterface.createOutput(assetId, selfBalance, localTrader.address);
+            }
+            if (peerTotalInputs > long.Parse(localTrader.balance))
+            {
+                string otherBalance = (peerTotalInputs - long.Parse(localTrader.balance)).ToString();
+                output_to_other = NeoInterface.createOutput(assetId, otherBalance, remoteTrader.address);
+            }
+            TransactionOutput[] outputsData = output_to_fundingaddress.Concat(output_to_self).Concat(output_to_other).ToArray();
+
+            // Assembly transaction with attributes for both wallets
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            // Start to makeup the transaction body
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpCTXTransaction(out Transaction transaction, string contractAddress, 
+            ChannelTrader localTrader, ChannelTrader remoteTrader, double timestamp)
+        {
+            this.MakeUpCommitmentTransaction(out transaction, contractAddress, localTrader, remoteTrader, timestamp);
+        }
+
+        protected virtual void MakeUpCTXTransaction(out ContractTransaction transaction, string contractAddress,
+            ChannelTrader localTrader, ChannelTrader remoteTrader, double timestamp)
+        {
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = NeoInterface.createInputsData(this.fundingTxId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputToRSMC = NeoInterface.createOutput(assetId, localTrader.balance, contractAddress);
+            TransactionOutput[] outputToOther = NeoInterface.createOutput(assetId, remoteTrader.balance, remoteTrader.address);
+            TransactionOutput[] outputsData = outputToRSMC.Concat(outputToOther).ToArray();
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpRDTXTransaction(out Transaction transaction, string contractAddress,
+            ChannelTrader trader, string txId, double timestamp)
+        {
+            this.MakeUpRevocableOrBreachTransaction(out transaction, contractAddress, trader, txId, trader.balance, timestamp);
+        }
+
+        protected virtual void MakeUpRDTXTransaction(out ContractTransaction transaction, string contractAddress,
+            ChannelTrader trader, string txId, double timestamp)
+        {
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = NeoInterface.createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = NeoInterface.createOutput(this.assetId, trader.balance, trader.address);
+
+            string preTxId = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 addressHash = trader.address.ToScriptHash();
+
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.address.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpBRTXTransaction(out Transaction transaction, string contractAddress,
+            ChannelTrader trader, string txId, string balance, double timestamp)
+        {
+            this.MakeUpRevocableOrBreachTransaction(out transaction, contractAddress, trader, txId, balance, timestamp);
+        }
+
+        protected virtual void MakeUpBRTXTransaction(out ContractTransaction transaction, string contractAddress,
+            ChannelTrader trader, string txId, string balance, double timestamp)
+        {
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = NeoInterface.createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, balance, trader.address);
+
+            string preTxID = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark1, trader.address.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpSettleTransaction(out Transaction transaction,
+            ChannelTrader localTrader, ChannelTrader remoteTrader, double timestamp)
+        {
+            this.MakeUpCommitmentTransaction(out transaction, localTrader.address, localTrader, remoteTrader, timestamp);
+        }
+
+        protected virtual void MakeUpSettleTransaction(out ContractTransaction transaction, double timestamp)
+        {
+            uint amount = uint.Parse(this.local.balance) + uint.Parse(this.remote.balance);
+
+            // Assembly transaction with input for both wallets
+#if DEBUG_LOCAL
+            List<string> vouts = new List<string>();
+            Vin vout = new Vin
+            {
+                n = 0,
+                txid = "101c5e988e72bdabb121350f168bef8965f0fd2891c387b5384e9718c32c2c7d",
+                value = 2
+            };
+            string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
+            vouts.Add(voutData);
+#else
+            List<string> vouts = NeoInterface.getGloablAssetVout(this.addressFunding.ToScriptHash(), assetId, amount);
+#endif
+            CoinReference[] inputsData = NeoInterface.getInputFormVout(vouts);
+            Log.Debug("Assembly vouts. vouts: {0}.\r\n", vouts);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputToSelf = NeoInterface.createOutput(assetId, this.local.balance, this.local.address, true);
+            TransactionOutput[] outputToOther = NeoInterface.createOutput(assetId, this.remote.balance, this.remote.address, true);
+            TransactionOutput[] outputsData = outputToSelf.Concat(outputToOther).ToArray();
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpHCTXTransaction(out Transaction transaction, string HtlcPay, double timestamp, bool isPayer=true)
+        {
+            string debugInfo = isPayer ? "Payer" : "Payee";
+
+            // Create assembly data for HCTX
+            string opdataToHTLC = NeoInterface.CreateOpdata(this.addressFunding, this.addressHtlc, HtlcPay, this.assetId);
+            Log.Debug("opdataToHTLC of {0}: {1}", debugInfo, opdataToHTLC);
+            string opdataToRsmc = NeoInterface.CreateOpdata(this.addressFunding, this.addressRsmc, this.local.balance, this.assetId);
+            Log.Debug("opdataToRsmc of {0}: {1}", debugInfo, opdataToRsmc);
+            string OpdataToRemote = NeoInterface.CreateOpdata(this.addressFunding, this.remote.address, this.remote.balance, this.assetId);
+            Log.Debug("OpdataToRemote of {0}: {1}", debugInfo, OpdataToRemote);
+
+            // create attributes for HCTX
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressFunding.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            // Allocate new InvocationTransaction for HCTX
+            transaction = this.AllocateTransaction(opdataToRsmc + OpdataToRemote + opdataToHTLC, attributes);
+        }
+
+        protected virtual void MakeUpHCTXTransaction(out ContractTransaction transaction, string HtlcPay,
+            double timestamp, bool isPayer = true)
+        {
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            uint amount = uint.Parse(this.local.balance) + uint.Parse(this.remote.balance) + uint.Parse(HtlcPay);
+
+            // Assembly transaction with input for both wallets
+#if DEBUG_LOCAL
+            List<string> vouts = new List<string>();
+            Vin vout = new Vin
+            {
+                n = 0,
+                txid = "0x577fb4c3ca37a5eab7243478f3eae2b011800a10d5c4c0cd85e71bab52e76a79",
+                value = 2
+            };
+            string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
+            vouts.Add(voutData);
+#else
+            List<string> vouts = NeoInterface.getGloablAssetVout(this.addressFunding.ToScriptHash(), this.assetId, amount);
+#endif
+            CoinReference[] inputsData = NeoInterface.getInputFormVout(vouts);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputToRMSC = NeoInterface.createOutput(assetId, this.local.balance, this.addressRsmc, true);
+            TransactionOutput[] outputToPeer = NeoInterface.createOutput(assetId, this.remote.balance, this.remote.address, true);
+            TransactionOutput[] outputToHtlc = NeoInterface.createOutput(assetId, HtlcPay, this.addressHtlc, true);
+            TransactionOutput[] outputsData = outputToRMSC.Concat(outputToPeer).Concat(outputToHtlc).ToArray();
+
+            // Allocate new InvocationTransaction for HCTX
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpHRDTXTransaction(out Transaction transaction, ChannelTrader trader, string txId,
+            double timestamp, bool isPayer = true)
+        {
+            string debugInfo = isPayer ? "Payer" : "Payee";
+
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, trader.address, trader.balance, this.assetId);
+            Log.Debug("HRDTX opdata of {0}: {1}", debugInfo, opdata);
+
+            // create attributes
+            List<TransactionAttribute> attributes = this.MakeUpHRDTXAttributes(trader, txId, timestamp);
+
+            transaction = this.AllocateTransaction(opdata, attributes);
+        }
+
+        protected virtual void MakeUpHRDTXTransaction(out ContractTransaction transaction, ChannelTrader trader, string txId,
+            double timestamp, bool isPayer = true)
+        {
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = NeoInterface.createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, this.local.balance, this.local.address);
+
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.local.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            // Allocate new InvocationTransaction for HRDTX
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpHEDTXTransaction(out Transaction transaction, ChannelTrader trader, string HtlcPay, double timestamp)
+        {
+            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, trader.address, HtlcPay, this.assetId);
+            Log.Debug("HEDTX opdata: {0}", opdata);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressHtlc.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            transaction = this.AllocateTransaction(opdata, attributes);
+        }
+
+        protected virtual void MakeUpHEDTXTransaction(out ContractTransaction transaction, ChannelTrader trader, 
+            string HtlcPay, string txId,double timestamp)
+        {
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = NeoInterface.createInputsData(txId, 2);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = NeoInterface.createOutput(this.assetId, HtlcPay, trader.address);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, trader.address, HtlcPay, this.assetId);
+            Log.Debug("HEDTX opdata: {0}", opdata);
+
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpHERDTXTransaction(out Transaction transaction, ChannelTrader trader, string HtlcPay, string txId, double timestamp)
+        {
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, trader.address, HtlcPay, this.assetId);
+            Log.Debug("HERDTX opdata: {0}", opdata);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
+
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressRsmc.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            // allocate Transaction for HERDTX
+            transaction = this.AllocateTransaction(opdata, attributes);
+        }
+
+        protected virtual void MakeUpHERDTXTransaction(out ContractTransaction transaction, ChannelTrader trader, string HtlcPay, string txId, double timestamp)
+        {
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = NeoInterface.createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = NeoInterface.createOutput(this.assetId, HtlcPay, trader.address);
+
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);
+            
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpHETXTransaction(out Transaction transaction, string HtlcPay, double timestamp)
+        {
+            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.addressRsmc, HtlcPay, this.assetId);
+            Log.Debug("HETX opdata: {0}", opdata);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressHtlc.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            transaction = this.AllocateTransaction(opdata, attributes);
+        }
+
+        protected virtual void MakeUpHETXTransaction(out ContractTransaction transaction, string HtlcPay, string txId, double timestamp)
+        {
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = NeoInterface.createInputsData(txId, 2);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, HtlcPay, this.addressRsmc);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpHTDTXTransaction(out Transaction transaction, ChannelTrader trader, string HtlcPay, double timestamp)
+        {
+            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, trader.address, HtlcPay, this.assetId);
+            Log.Debug("HTDTX opdata: {0}", opdata);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressHtlc.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            transaction = this.AllocateTransaction(opdata, attributes);
+        }
+
+        protected virtual void MakeUpHTDTXTransaction(out ContractTransaction transaction, ChannelTrader trader, 
+            string HtlcPay, string txId, double timestamp)
+        {
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = NeoInterface.createInputsData(txId, 2);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, HtlcPay, trader.address);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpHTRDTXTransaction(out Transaction transaction, ChannelTrader trader, string HtlcPay, string txId, double timestamp)
+        {
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, trader.address, HtlcPay, this.assetId);
+            Log.Debug("HTRDTX opdata: {0}", opdata);
+
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressRsmc.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            transaction = this.AllocateTransaction(opdata, attributes);
+        }
+
+        protected virtual void MakeUpHTRDTXTransaction(out ContractTransaction transaction, ChannelTrader trader, 
+            string HtlcPay, string txId, double timestamp)
+        {
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = NeoInterface.createInputsData(txId, 0);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = NeoInterface.createOutput(this.assetId, HtlcPay, trader.address);
+
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+
+            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, trader.address, HtlcPay, this.assetId);
+            Log.Debug("HTRDTX opdata: {0}", opdata);
+
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        protected virtual void MakeUpHTTXTransaction(out Transaction transaction, string HtlcPay, double timestamp)
+        {
+            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.addressRsmc, HtlcPay, this.assetId);
+            Log.Debug("HTTX opdata: {0}", opdata);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            UInt160 address_hash_HTLC = this.addressHtlc.ToScriptHash();
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressHtlc.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            transaction = this.AllocateTransaction(opdata, attributes);
+        }
+
+        protected virtual void MakeUpHTTXTransaction(out ContractTransaction transaction, string HtlcPay, string txId, double timestamp)
+        {
+            // Assembly transaction with input for both wallets
+            CoinReference[] inputsData = NeoInterface.createInputsData(txId, 2);
+
+            // Assembly transaction with output for both wallets
+            TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, HtlcPay, this.addressRsmc);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
+        }
+
+        /* ==============================================================================
+            * Sets of Private methods
+            * Default is for neo blockchain (neo, neogas or nep-5 coin).
+            * ==============================================================================
+            */
+        private void MakeUpRevocableOrBreachTransaction(out Transaction transaction, string contractAddress,
+            ChannelTrader trader, string txId, string balance, double timestamp)
+        {
+            string opdata = NeoInterface.CreateOpdata(contractAddress, trader.address, balance, this.assetId);
+            Log.Debug("MakeUpRevocableOrBreachTransaction opdata: {0}", opdata);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            string preTxId = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId
+
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, contractAddress.ToScriptHash(), attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);
+
+            // Allocate a new InvocationTransaction for Commitment transaction
+            transaction = this.AllocateTransaction(opdata, attributes);
+        }
+
+        private void MakeUpCommitmentTransaction(out Transaction transaction, string contractAddress,
+            ChannelTrader localTrader, ChannelTrader remoteTrader, double timestamp)
+        {
+            string debugInfo = localTrader.address.Equals(contractAddress) ? "Settle" : "CTX";
+
+            string opdata = NeoInterface.CreateOpdata(this.addressFunding, contractAddress, localTrader.balance, this.assetId);
+            Log.Debug("{0} opdata: {1}", debugInfo, opdata);
+
+            string peerOpdata = NeoInterface.CreateOpdata(this.addressFunding, remoteTrader.address, remoteTrader.balance, this.assetId);
+            Log.Debug("{0} peerOpdata: {1}", debugInfo, peerOpdata);
+
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressFunding.ToScriptHash(), attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+
+            // Allocate a new InvocationTransaction for Commitment transaction
+            transaction = this.AllocateTransaction(opdata + peerOpdata, attributes);
+        }
+
+        private List<TransactionAttribute> MakeUpHRDTXAttributes(ChannelTrader trader, string txId, double timestamp)
+        {
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId  ???
+
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressRsmc.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);
+
+            return attributes;
         }
     }
 }

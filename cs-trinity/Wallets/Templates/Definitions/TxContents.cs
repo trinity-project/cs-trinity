@@ -45,6 +45,6 @@ namespace Trinity.Wallets.Templates.Definitions
         public string txData { get; set; }
         public string txId { get; set; }
         public string witness { get; set; }
-        public string timeAttribute { get; set; }
+        public double timeAttribute { get; set; }
     }
 }

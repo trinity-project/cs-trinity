@@ -84,7 +84,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             Log.Info("Succeed to handle RResponse. HashR: {0}, RCode: {1}",
                 this.Request.MessageBody.HR, this.Request.MessageBody.R);
 
-            // Trigger RResponse to previous peer
+            // Trigger RResponse to previous remote
             if (null != currentHLock?.incomeChannel)
             {
                 ChannelTableContent nextChannel = this.GetChannelLevelDbEntry()?.GetChannel(currentHLock?.incomeChannel);
