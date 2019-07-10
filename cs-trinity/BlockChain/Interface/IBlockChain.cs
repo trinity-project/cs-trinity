@@ -31,7 +31,7 @@ using Neo.SmartContract;
 using Trinity.Wallets.Templates.Definitions;
 
 
-namespace Trinity.BlockChain
+namespace Trinity.BlockChain.Interface
 {
     public interface IBlockChain
     {

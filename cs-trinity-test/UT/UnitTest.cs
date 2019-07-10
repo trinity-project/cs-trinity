@@ -70,7 +70,7 @@ namespace TestTrinity
             string BalanceOther = "100000000";
             string AssetId = "849d095d07950b9e56d0c895ec48ec5100cfdff1";
 
-            NeoTransaction neoTransaction = new NeoTransaction(AssetId, PublicKeySelf, BalanceSelf, PublicKeyOther, BalanceOther);
+            NeoTransactionAPI neoTransaction = new NeoTransactionAPI(AssetId, PublicKeySelf, BalanceSelf, PublicKeyOther, BalanceOther);
 
             //FundingTx
             Console.WriteLine("----------FundingTx------------");

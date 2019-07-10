@@ -39,6 +39,7 @@ using Neo.Network.P2P.Payloads;
 
 using Trinity;
 using Trinity.Wallets.Templates.Definitions;
+using Trinity.BlockChain.Interface;
 
 namespace Trinity.BlockChain
 {
@@ -47,7 +48,7 @@ namespace Trinity.BlockChain
     /// This class is used to adapt to NEO smartconcact.
     /// It helps Trinity broadcast the transaction to the NEO blockchain. 
     /// </summary>
-    public sealed class NeoTransaction
+    public sealed class NeoTransactionAPI
     {
         // Timestamp attribute for contract
 #if DEBUG_LOCAL
@@ -119,7 +120,7 @@ namespace Trinity.BlockChain
         /// <param name="peerBalance"> Peer Wallet's Balance in specified channel. Refer to comments for balance. </param>
         /// <param name="addressFunding"> Contract address for storing 2 wallets' Deposit. It's JUST created when Founder Message is triggerred. </param>
         /// <param name="scriptFunding"> Contract script </param>
-        public NeoTransaction(string assetId, string pubKey, string balance, string peerPubKey, string peerBalance,
+        public NeoTransactionAPI(string assetId, string pubKey, string balance, string peerPubKey, string peerBalance,
             string addressFunding = null, string scriptFunding = null)
         {
             this.assetId = assetId;
@@ -785,6 +786,110 @@ namespace Trinity.BlockChain
             transaction.Outputs = new TransactionOutput[0];
 
             return;
+        }
+
+        /// <summary>
+        /// This class will provide the uniform interface to create the transaction for Trinity Channel.
+        /// </summary>
+        public sealed class NeoTransaction
+        {
+            private const string AssetIdGAS = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
+            private const string AssetIdNEO = "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
+
+            private readonly IBlockChain IApi;
+
+            public NeoTransaction(string assetId, string pubKey, string balance, string peerPubKey, string peerBalance,
+            string addressFunding = null, string scriptFunding = null)
+            {
+                if (this.IsNeoOrNeoGas(assetId))
+                {
+                    this.IApi = new INeoTransaction(assetId, pubKey, balance, peerPubKey, peerBalance, addressFunding, scriptFunding);
+                }
+                else
+                {
+                    this.IApi = new INeoNep5Transaction(assetId, pubKey, balance, peerPubKey, peerBalance, addressFunding, scriptFunding);
+                }
+            }
+
+            public bool CreateFundingTx(out FundingTx fundingTx)
+            {
+                return this.IApi.CreateFundingTx(out fundingTx);
+            }
+
+            public bool CreateBRTX(out BreachRemedyTx breachRemedyTx, string txId)
+            {
+                return this.IApi.CreateBRTX(out breachRemedyTx, txId);
+            }
+
+            public bool CreateCTX(out CommitmentTx commitmentTx)
+            {
+                return this.IApi.CreateCTX(out commitmentTx);
+            }
+
+            public bool CreateRDTX(out RevocableDeliveryTx revocableDeliveryTx, string txId)
+            {
+                return this.IApi.CreateRDTX(out revocableDeliveryTx, txId);
+            }
+
+            public bool CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, string HtlcPay, string txId = null)
+            {
+                return this.IApi.CreateHEDTX(out HEDTX, HtlcPay, txId);
+            }
+
+            public bool CreateHERDTX(out HtlcExecutionRevocableDeliveryTx HERDTX, string HtlcPay, string txId = null)
+            {
+                return this.IApi.CreateHERDTX(out HERDTX, HtlcPay, txId);
+            }
+
+            public bool CreateHETX(out HtlcExecutionTx HETX, string HtlcPay, string txId = null)
+            {
+                return this.IApi.CreateHETX(out HETX, HtlcPay, txId);
+            }
+
+            public bool CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, string HtlcPay, string txId = null)
+            {
+                return this.IApi.CreateHTDTX(out HTDTX, HtlcPay, txId);
+            }
+
+            public bool CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx HTRDTX, string HtlcPay, string txId = null)
+            {
+                return this.IApi.CreateHTRDTX(out HTRDTX, HtlcPay, txId);
+            }
+
+            public bool CreateHTTX(out HtlcTimoutTx HTTX, string HtlcPay, string txId = null)
+            {
+                return this.IApi.CreateHTTX(out HTTX, HtlcPay, txId);
+            }
+
+            public bool CreateReceiverHCTX(out HtlcCommitTx HCTX, string HtlcPay, string HashR)
+            {
+                return this.IApi.CreateReceiverHCTX(out HCTX, HtlcPay, HashR);
+            }
+
+            public bool CreateReceiverRDTX(out HtlcRevocableDeliveryTx HRDTX, string txId = null)
+            {
+                return this.IApi.CreateReceiverRDTX(out HRDTX, txId);
+            }
+
+            public bool CreateSenderHCTX(out HtlcCommitTx HCTX, string HtlcPay, string HashR)
+            {
+                return this.IApi.CreateSenderHCTX(out HCTX, HtlcPay, HashR);
+            }
+
+            public bool CreateSenderRDTX(out HtlcRevocableDeliveryTx HRDTX, string txId = null)
+            {
+                return this.IApi.CreateSenderRDTX(out HRDTX, txId);
+            }
+
+            public bool CreateSettle(out TxContents settleTx)
+            {
+                return this.IApi.CreateSettle(out settleTx);
+            }
+
+            private bool IsNeoOrNeoGas(string assetId)
+            {
+                return AssetIdGAS.Equals(assetId) || AssetIdNEO.Equals(assetId);
+            }
         }
     }
 }

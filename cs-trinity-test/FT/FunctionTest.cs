@@ -104,7 +104,7 @@ namespace TestTrinity
             string balance = "0";
             string peerBalance = "200000000";
 
-            NeoTransaction neoTransaction = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit);
+            NeoTransactionAPI neoTransaction = new NeoTransactionAPI(assetId, pubKey, deposit, peerPubKey, peerDeposit);
             //生成Funding
             Console.WriteLine("---------Funding---------");
             neoTransaction.CreateFundingTx(out FundingTx fundingTx);
@@ -117,7 +117,7 @@ namespace TestTrinity
             string HashR = NeoUtils.Sha1(R);
             Console.WriteLine(HashR);                                      //f6d5a548cbb3c8f9e02c7aa1a17afc829fa65d33
 
-            NeoTransaction neoTransaction1 = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
+            NeoTransactionAPI neoTransaction1 = new NeoTransactionAPI(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
             Console.WriteLine("---------Sender_HCTX---------");
             neoTransaction1.CreateSenderHCTX(out HtlcCommitTx hctx, HtlcValue, HashR);
             Log.Debug("HCTX: {0}", hctx.Serialize());
@@ -152,7 +152,7 @@ namespace TestTrinity
             string balance = "0";
             string peerBalance = "200000000";
 
-            NeoTransaction neoTransaction = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit);
+            NeoTransactionAPI neoTransaction = new NeoTransactionAPI(assetId, pubKey, deposit, peerPubKey, peerDeposit);
             //生成Funding
             Console.WriteLine("---------Funding---------");
             neoTransaction.CreateFundingTx(out FundingTx fundingTx);
@@ -165,7 +165,7 @@ namespace TestTrinity
             string HashR = NeoUtils.Sha1(R);
             Console.WriteLine(HashR);                                      //f6d5a548cbb3c8f9e02c7aa1a17afc829fa65d33
 
-            NeoTransaction neoTransaction1 = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
+            NeoTransactionAPI neoTransaction1 = new NeoTransactionAPI(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
             Console.WriteLine("---------Receiver_HCTX---------");
             neoTransaction1.CreateReceiverHCTX(out HtlcCommitTx hctx, HtlcValue, HashR);
             Log.Debug("HCTX: {0}", hctx.Serialize());

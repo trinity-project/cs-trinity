@@ -515,7 +515,7 @@ namespace Trinity.BlockChain
 #endif
 
             string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.peerAddress, HtlcValue, this.assetId);
-            Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
+            //Log.Debug("createRDTX opdata_to_receiver: {0}", opdata);
 
             // Assembly transaction with input for both wallets
             CoinReference[] inputsData = createInputsData(txId, 2);

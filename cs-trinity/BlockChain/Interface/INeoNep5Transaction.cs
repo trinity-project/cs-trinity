@@ -56,7 +56,7 @@ namespace Trinity.BlockChain.Interface
             this.InitializeFundingTx();
 
             // Create Neo InvocationTransaction for the funding transaction
-            this.MakeUpFundingTransaction(out Transaction transaction, this.addressFunding, this.local, this.remote, timestamp);
+            this.MakeUpFundingTransaction(out Transaction transaction, timestamp);
 
             // create funding Transaction
             this.FinalizeFundingTx(out fundingTx, transaction, currentTimestamp);

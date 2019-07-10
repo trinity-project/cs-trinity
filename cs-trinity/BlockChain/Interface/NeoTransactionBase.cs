@@ -479,20 +479,16 @@ namespace Trinity.BlockChain.Interface
          * Default is for neo blockchain (neo, neogas or nep-5 coin).
          * ==============================================================================
          */
-        protected virtual void MakeUpFundingTransaction(out Transaction transaction, string contractAddress,
-            ChannelTrader localTrader, ChannelTrader remoteTrader, double timestamp)
+        protected virtual void MakeUpFundingTransaction(out Transaction transaction, double timestamp)
         {
             // Assembly transaction with Opcode for both wallets
-            string opdata = NeoInterface.CreateOpdata(localTrader.address, contractAddress, localTrader.balance, this.assetId);
+            string opdata = NeoInterface.CreateOpdata(this.local.address, this.addressFunding, this.local.balance, this.assetId);
             Log.Debug("FUNDING opdata: {0}", opdata);
 
-            string peerOpdata = NeoInterface.CreateOpdata(remoteTrader.address, contractAddress, remoteTrader.balance, this.assetId);
+            string peerOpdata = NeoInterface.CreateOpdata(this.remote.address, this.addressFunding, this.remote.balance, this.assetId);
             Log.Debug("FUNDING peerOpdata: {0}", peerOpdata);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, localTrader.scriptHash, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, remoteTrader.scriptHash, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(timestamp);
 
             // Allocate a new InvocationTransaction for funding transaction
             transaction = this.AllocateTransaction(opdata + peerOpdata, attributes);
@@ -558,13 +554,8 @@ namespace Trinity.BlockChain.Interface
             TransactionOutput[] outputsData = output_to_fundingaddress.Concat(output_to_self).Concat(output_to_other).ToArray();
 
             // Assembly transaction with attributes for both wallets
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
-#endif
-
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(timestamp);
+            
             // Start to makeup the transaction body
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
@@ -586,12 +577,7 @@ namespace Trinity.BlockChain.Interface
             TransactionOutput[] outputToOther = NeoInterface.createOutput(assetId, remoteTrader.balance, remoteTrader.address);
             TransactionOutput[] outputsData = outputToRSMC.Concat(outputToOther).ToArray();
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressFunding, timestamp);
 
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
@@ -611,19 +597,8 @@ namespace Trinity.BlockChain.Interface
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputsData = NeoInterface.createOutput(this.assetId, trader.balance, trader.address);
 
-            string preTxId = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
-
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 addressHash = trader.address.ToScriptHash();
-
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
-            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.address.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(
+                contractAddress, txId, trader.address.ToScriptHash(), timestamp);
 
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
@@ -643,16 +618,8 @@ namespace Trinity.BlockChain.Interface
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, balance, trader.address);
 
-            string preTxID = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark1, trader.address.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(
+                contractAddress, txId, trader.address.ToScriptHash(), timestamp);
 
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
@@ -689,12 +656,7 @@ namespace Trinity.BlockChain.Interface
             TransactionOutput[] outputToOther = NeoInterface.createOutput(assetId, this.remote.balance, this.remote.address, true);
             TransactionOutput[] outputsData = outputToSelf.Concat(outputToOther).ToArray();
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, this.timestamp, attributes).MakeAttribute(out attributes);
-#endif
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressFunding, timestamp);
 
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
@@ -712,14 +674,7 @@ namespace Trinity.BlockChain.Interface
             Log.Debug("OpdataToRemote of {0}: {1}", debugInfo, OpdataToRemote);
 
             // create attributes for HCTX
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressFunding.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressFunding, timestamp);
 
             // Allocate new InvocationTransaction for HCTX
             transaction = this.AllocateTransaction(opdataToRsmc + OpdataToRemote + opdataToHTLC, attributes);
@@ -728,13 +683,6 @@ namespace Trinity.BlockChain.Interface
         protected virtual void MakeUpHCTXTransaction(out ContractTransaction transaction, string HtlcPay,
             double timestamp, bool isPayer = true)
         {
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
-
             uint amount = uint.Parse(this.local.balance) + uint.Parse(this.remote.balance) + uint.Parse(HtlcPay);
 
             // Assembly transaction with input for both wallets
@@ -755,9 +703,12 @@ namespace Trinity.BlockChain.Interface
 
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputToRMSC = NeoInterface.createOutput(assetId, this.local.balance, this.addressRsmc, true);
-            TransactionOutput[] outputToPeer = NeoInterface.createOutput(assetId, this.remote.balance, this.remote.address, true);
+            TransactionOutput[] outputToRemote = NeoInterface.createOutput(assetId, this.remote.balance, this.remote.address, true);
             TransactionOutput[] outputToHtlc = NeoInterface.createOutput(assetId, HtlcPay, this.addressHtlc, true);
-            TransactionOutput[] outputsData = outputToRMSC.Concat(outputToPeer).Concat(outputToHtlc).ToArray();
+            TransactionOutput[] outputsData = outputToRMSC.Concat(outputToRemote).Concat(outputToHtlc).ToArray();
+
+            // create attributes for HCTX
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressFunding, timestamp);
 
             // Allocate new InvocationTransaction for HCTX
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
@@ -772,7 +723,7 @@ namespace Trinity.BlockChain.Interface
             Log.Debug("HRDTX opdata of {0}: {1}", debugInfo, opdata);
 
             // create attributes
-            List<TransactionAttribute> attributes = this.MakeUpHRDTXAttributes(trader, txId, timestamp);
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressRsmc, txId, trader.scriptHash, timestamp);
 
             transaction = this.AllocateTransaction(opdata, attributes);
         }
@@ -784,17 +735,10 @@ namespace Trinity.BlockChain.Interface
             CoinReference[] inputsData = NeoInterface.createInputsData(txId, 0);
 
             // Assembly transaction with output for both wallets
-            TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, this.local.balance, this.local.address);
+            TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, trader.balance, trader.address);
 
-            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
-            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, this.local.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+            // create attributes
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressRsmc, txId, trader.scriptHash, timestamp);
 
             // Allocate new InvocationTransaction for HRDTX
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
@@ -805,14 +749,7 @@ namespace Trinity.BlockChain.Interface
             string opdata = NeoInterface.CreateOpdata(this.addressHtlc, trader.address, HtlcPay, this.assetId);
             Log.Debug("HEDTX opdata: {0}", opdata);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressHtlc.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressHtlc, timestamp);
 
             transaction = this.AllocateTransaction(opdata, attributes);
         }
@@ -826,15 +763,7 @@ namespace Trinity.BlockChain.Interface
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputsData = NeoInterface.createOutput(this.assetId, HtlcPay, trader.address);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
-
-            string opdata = NeoInterface.CreateOpdata(this.addressHtlc, trader.address, HtlcPay, this.assetId);
-            Log.Debug("HEDTX opdata: {0}", opdata);
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressHtlc, timestamp);
 
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
@@ -844,41 +773,23 @@ namespace Trinity.BlockChain.Interface
             string opdata = NeoInterface.CreateOpdata(this.addressRsmc, trader.address, HtlcPay, this.assetId);
             Log.Debug("HERDTX opdata: {0}", opdata);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
-
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressRsmc.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
-            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
-
+            // create the attributes for HERDTX
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressRsmc, txId, trader.scriptHash, timestamp);
+            
             // allocate Transaction for HERDTX
             transaction = this.AllocateTransaction(opdata, attributes);
         }
 
         protected virtual void MakeUpHERDTXTransaction(out ContractTransaction transaction, ChannelTrader trader, string HtlcPay, string txId, double timestamp)
         {
-            // Assembly transaction with input for both wallets
+            // Assembly transaction data for both wallets in input and output directions
             CoinReference[] inputsData = NeoInterface.createInputsData(txId, 0);
-
-            // Assembly transaction with output for both wallets
             TransactionOutput[] outputsData = NeoInterface.createOutput(this.assetId, HtlcPay, trader.address);
 
-            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
-            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);
-            
+            // create the attributes for HERDTX
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressRsmc, txId, trader.scriptHash, timestamp);
+
+            // allocate Transaction for HERDTX
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
 
@@ -887,14 +798,7 @@ namespace Trinity.BlockChain.Interface
             string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.addressRsmc, HtlcPay, this.assetId);
             Log.Debug("HETX opdata: {0}", opdata);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressHtlc.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressHtlc, timestamp);
 
             transaction = this.AllocateTransaction(opdata, attributes);
         }
@@ -907,12 +811,7 @@ namespace Trinity.BlockChain.Interface
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, HtlcPay, this.addressRsmc);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressHtlc, timestamp);
 
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
@@ -922,15 +821,7 @@ namespace Trinity.BlockChain.Interface
             string opdata = NeoInterface.CreateOpdata(this.addressHtlc, trader.address, HtlcPay, this.assetId);
             Log.Debug("HTDTX opdata: {0}", opdata);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressHtlc.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressHtlc, timestamp);
 
             transaction = this.AllocateTransaction(opdata, attributes);
         }
@@ -944,61 +835,35 @@ namespace Trinity.BlockChain.Interface
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, HtlcPay, trader.address);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressHtlc, timestamp);
 
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
 
         protected virtual void MakeUpHTRDTXTransaction(out Transaction transaction, ChannelTrader trader, string HtlcPay, string txId, double timestamp)
         {
+            // Assembly transaction data for HTRDTX
             string opdata = NeoInterface.CreateOpdata(this.addressRsmc, trader.address, HtlcPay, this.assetId);
             Log.Debug("HTRDTX opdata: {0}", opdata);
 
-            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
+            // Create attribute for HTRDTX
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressRsmc, txId, trader.scriptHash, timestamp);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressRsmc.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
-            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
-
+            // Nep-5: Allocation transaction for HTRDTX
             transaction = this.AllocateTransaction(opdata, attributes);
         }
 
         protected virtual void MakeUpHTRDTXTransaction(out ContractTransaction transaction, ChannelTrader trader, 
             string HtlcPay, string txId, double timestamp)
         {
-            // Assembly transaction with input for both wallets
+            // Assembly transaction data of both wallets in input and output directions
             CoinReference[] inputsData = NeoInterface.createInputsData(txId, 0);
-
-            // Assembly transaction with output for both wallets
             TransactionOutput[] outputsData = NeoInterface.createOutput(this.assetId, HtlcPay, trader.address);
 
-            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
-            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);                                         //outPutTo
+            // Create attribute for HTRDTX
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressRsmc, txId, trader.scriptHash, timestamp);
 
-            string opdata = NeoInterface.CreateOpdata(this.addressRsmc, trader.address, HtlcPay, this.assetId);
-            Log.Debug("HTRDTX opdata: {0}", opdata);
-
+            // Neo or NeoGas: Allocation transaction for HTRDTX
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
 
@@ -1007,15 +872,7 @@ namespace Trinity.BlockChain.Interface
             string opdata = NeoInterface.CreateOpdata(this.addressHtlc, this.addressRsmc, HtlcPay, this.assetId);
             Log.Debug("HTTX opdata: {0}", opdata);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            UInt160 address_hash_HTLC = this.addressHtlc.ToScriptHash();
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressHtlc.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressHtlc, timestamp);
 
             transaction = this.AllocateTransaction(opdata, attributes);
         }
@@ -1028,12 +885,7 @@ namespace Trinity.BlockChain.Interface
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputsData = NeoInterface.createOutput(assetId, HtlcPay, this.addressRsmc);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-#if DEBUG_LOCAL
-            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
-#else
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-#endif
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressHtlc, timestamp);
 
             transaction = this.AllocateTransaction(inputsData, outputsData, attributes);
         }
@@ -1046,18 +898,14 @@ namespace Trinity.BlockChain.Interface
         private void MakeUpRevocableOrBreachTransaction(out Transaction transaction, string contractAddress,
             ChannelTrader trader, string txId, string balance, double timestamp)
         {
+            // Assembly data for Commitment or BreachRemedy transaction
             string opdata = NeoInterface.CreateOpdata(contractAddress, trader.address, balance, this.assetId);
             Log.Debug("MakeUpRevocableOrBreachTransaction opdata: {0}", opdata);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            string preTxId = txId.NeoStrip().HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId
-
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, contractAddress.ToScriptHash(), attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);
-
-            // Allocate a new InvocationTransaction for Commitment transaction
+            // Create attributes for Commitment or BreachRemedy transaction
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(contractAddress, txId, trader.scriptHash, timestamp);
+            
+            // Allocate a new InvocationTransaction for Commitment or BreachRemedy transaction
             transaction = this.AllocateTransaction(opdata, attributes);
         }
 
@@ -1072,28 +920,57 @@ namespace Trinity.BlockChain.Interface
             string peerOpdata = NeoInterface.CreateOpdata(this.addressFunding, remoteTrader.address, remoteTrader.balance, this.assetId);
             Log.Debug("{0} peerOpdata: {1}", debugInfo, peerOpdata);
 
-            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressFunding.ToScriptHash(), attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+            List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressFunding, timestamp);
 
             // Allocate a new InvocationTransaction for Commitment transaction
             transaction = this.AllocateTransaction(opdata + peerOpdata, attributes);
         }
 
-        private List<TransactionAttribute> MakeUpHRDTXAttributes(ChannelTrader trader, string txId, double timestamp)
+        private List<TransactionAttribute> MakeTransactionAttributes(string contractAddress, double timestamp)
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
-            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");   //preTxId  ???
 
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.addressRsmc.ToScriptHash(), attributes)
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, contractAddress.ToScriptHash(), attributes)
                 .MakeAttribute(out attributes);
 #if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
 #else
             new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
 #endif
+            
+            return attributes;
+        }
+
+        private List<TransactionAttribute> MakeTransactionAttributes(double timestamp)
+        {
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.local.scriptHash, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, this.remote.scriptHash, attributes).MakeAttribute(out attributes);
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
+
+            return attributes;
+        }
+
+        private List<TransactionAttribute> MakeTransactionAttributes(string contractAddress, string txId, UInt160 scriptHash, double timestamp)
+        {
+            string preTxId = txId.Substring(2).HexToBytes().Reverse().ToArray().ToHexString().Strip("\"");
+            List<TransactionAttribute> attributes = new List<TransactionAttribute>();
+
+            // Add contract address as one of attributes
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, contractAddress.ToScriptHash(), attributes)
+                .MakeAttribute(out attributes);
+
+#if DEBUG_LOCAL
+            new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
+#else
+            new NeoInterface.TransactionAttributeDouble(TransactionAttributeUsage.Remark, timestamp, attributes).MakeAttribute(out attributes);
+#endif
             new NeoInterface.TransactionAttributeString(TransactionAttributeUsage.Remark1, preTxId, attributes).MakeAttribute(out attributes);
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, trader.scriptHash, attributes).MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Remark2, scriptHash, attributes).MakeAttribute(out attributes);
 
             return attributes;
         }
