@@ -40,7 +40,7 @@ namespace Trinity.Wallets.Templates.Messages
         public string alias { get; set; }
         public string AutorCreate { get; set; }
         public string Ip { get; set; }
-        public int MaxChannel { get; set; }
+        public uint MaxChannel { get; set; }
         public Dictionary<string, Dictionary<string, Double>> Channel { get; set; }
     }
 
