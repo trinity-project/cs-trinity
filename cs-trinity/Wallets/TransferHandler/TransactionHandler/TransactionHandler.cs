@@ -78,7 +78,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
 
         // BlockChain transaction api
-        protected NeoTransactionAPI neoTransaction = null;
+        
+        protected NeoTransaction neoTransaction = null;
 
         // nonce for transaction
         // funding transaction nonce should be always zero.
@@ -733,10 +734,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return this.hlockTrade;
         }
 
-        public NeoTransactionAPI GetBlockChainAdaptorApi()
+        public NeoTransaction GetBlockChainAdaptorApi()
         {
             // Use the current channel balance to initialize some locals here
-            this.neoTransaction = new NeoTransactionAPI(this.assetId,
+            this.neoTransaction = new NeoTransaction(this.assetId,
                 this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString());
 
             this.SetTransactionValid();
@@ -744,7 +745,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return this.neoTransaction;
         }
 
-        public NeoTransactionAPI GetBlockChainAdaptorApi(bool isSettle)
+        public NeoTransaction GetBlockChainAdaptorApi(bool isSettle)
         {
             // Use the current channel balance to initialize some locals here
             this.balance = this.GetCurrentChannel().balance;
@@ -758,7 +759,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             }
 
             // generate the neotransaction
-            this.neoTransaction = new NeoTransactionAPI(this.assetId, 
+            this.neoTransaction = new NeoTransaction(this.assetId, 
                 this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString(),
                 this.fundingTrade?.founder.originalData.addressFunding, this.fundingTrade?.founder.originalData.scriptFunding);
 

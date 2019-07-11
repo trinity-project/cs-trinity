@@ -172,7 +172,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.neoTransaction.CreateCTX(out this.commTx);
 
             // create Revocable commitment transaction
-            this.neoTransaction.createRDTX(out this.rdTx, this.commTx.txId);
+            this.neoTransaction.CreateRDTX(out this.rdTx, this.commTx.txId);
 
             this.Request.MessageBody.Founder = this.fundingTx;
             this.Request.MessageBody.Commitment = this.commTx;

@@ -180,6 +180,16 @@ namespace Trinity.BlockChain.Interface
         /// </summary>
         /// <param name="settleTx"> Out Parameter. Settlement Transaction Content. </param>
         /// <returns> true if success, other if failure. </returns>
+        /// 
+        void SetAddressFunding(string addressFunding);
+        void SetScripFunding(string scriptFunding);
+        void SetFundingTxId(string fundingTxId);
+
+        void SetAddressRSMC(string addressRsmc);
+        void SetScripRSMC(string scriptRsmc);
+
+        void SetAddressHTLC(string addressHtlc);
+        void SetScripHTLC(string scriptHtlc);
     }
 
     public class ChannelTrader
