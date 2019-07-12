@@ -78,6 +78,8 @@ namespace Trinity.BlockChain.Interface
         protected ChannelTrader local;
         protected ChannelTrader remote;
 
+        public NeoTransactionBase() { }
+
         /// <summary>
         /// Default constructor for create NeoTransaction instances
         /// </summary>

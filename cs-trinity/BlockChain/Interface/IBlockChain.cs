@@ -203,7 +203,7 @@ namespace Trinity.BlockChain.Interface
         {
             this.publicKey = pubKey.NeoStrip();
             this.address = this.publicKey?.ToAddress();
-            this.scriptHash = this.publicKey?.ToScriptHash();
+            this.scriptHash = this.publicKey?.ToHash160();
 
             this.balance = balance;
         }

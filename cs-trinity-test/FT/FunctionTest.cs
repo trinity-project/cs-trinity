@@ -104,7 +104,7 @@ namespace TestTrinity
             string balance = "0";
             string peerBalance = "200000000";
 
-            NeoTransactionAPI neoTransaction = new NeoTransactionAPI(assetId, pubKey, deposit, peerPubKey, peerDeposit);
+            NeoTransaction neoTransaction = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit);
             //Éú³ÉFunding
             Console.WriteLine("---------Funding---------");
             neoTransaction.CreateFundingTx(out FundingTx fundingTx);
@@ -304,6 +304,7 @@ namespace TestTrinity
 
         public static void TestMain()
         {
+            TempTest1();
             //TempTest();
             // Output the message body to verify it's correct ??
             // TestVerifyMessageBody();
