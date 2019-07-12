@@ -117,7 +117,7 @@ namespace TestTrinity
             string HashR = NeoUtils.Sha1(R);
             Console.WriteLine(HashR);                                      //f6d5a548cbb3c8f9e02c7aa1a17afc829fa65d33
 
-            NeoTransactionAPI neoTransaction1 = new NeoTransactionAPI(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
+            NeoTransaction neoTransaction1 = new NeoTransaction(assetId, pubKey, balance, peerPubKey, peerBalance, fundingTx.addressFunding, fundingTx.scriptFunding);
             Console.WriteLine("---------Sender_HCTX---------");
             neoTransaction1.CreateSenderHCTX(out HtlcCommitTx hctx, HtlcValue, HashR);
             Log.Debug("HCTX: {0}", hctx.Serialize());
@@ -135,7 +135,7 @@ namespace TestTrinity
             Log.Debug("HTTX: {0}", HTTX.Serialize());
 
             Log.Debug("---------HTRDTX---------");
-            neoTransaction1.CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx RevocableDeliveryTx1, HTTX.txId, HtlcValue);
+            neoTransaction1.CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx RevocableDeliveryTx1, HtlcValue, HTTX.txId);
             Log.Debug("HTRDTX: {0}", RevocableDeliveryTx1.Serialize());
 
         }
@@ -152,7 +152,7 @@ namespace TestTrinity
             string balance = "0";
             string peerBalance = "200000000";
 
-            NeoTransactionAPI neoTransaction = new NeoTransactionAPI(assetId, pubKey, deposit, peerPubKey, peerDeposit);
+            NeoTransaction neoTransaction = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit);
             //Éú³ÉFunding
             Console.WriteLine("---------Funding---------");
             neoTransaction.CreateFundingTx(out FundingTx fundingTx);
@@ -165,7 +165,7 @@ namespace TestTrinity
             string HashR = NeoUtils.Sha1(R);
             Console.WriteLine(HashR);                                      //f6d5a548cbb3c8f9e02c7aa1a17afc829fa65d33
 
-            NeoTransactionAPI neoTransaction1 = new NeoTransactionAPI(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
+            NeoTransaction neoTransaction1 = new NeoTransaction(assetId, peerPubKey, peerBalance, pubKey, balance, fundingTx.addressFunding, fundingTx.scriptFunding);
             Console.WriteLine("---------Receiver_HCTX---------");
             neoTransaction1.CreateReceiverHCTX(out HtlcCommitTx hctx, HtlcValue, HashR);
             Log.Debug("HCTX: {0}", hctx.Serialize());
@@ -183,7 +183,7 @@ namespace TestTrinity
             Log.Debug("HETX: {0}", HETX.Serialize());
 
             Log.Debug("---------HERDTX---------");
-            neoTransaction1.CreateHERDTX(out HtlcExecutionRevocableDeliveryTx RevocableDeliveryTx1, HETX.txId, HtlcValue);
+            neoTransaction1.CreateHERDTX(out HtlcExecutionRevocableDeliveryTx RevocableDeliveryTx1, HtlcValue, HETX.txId);
             Log.Debug("CreateHERDTX: {0}", RevocableDeliveryTx1.Serialize());
 
         }
@@ -304,7 +304,7 @@ namespace TestTrinity
 
         public static void TestMain()
         {
-            TempTest1();
+            TempTest2();
             //TempTest();
             // Output the message body to verify it's correct ??
             // TestVerifyMessageBody();
@@ -320,7 +320,7 @@ namespace TestTrinity
 
             //MFTestCreateChannel();
 
-            TestRpc();
+            //TestRpc();
 
             Console.ReadKey();
         }

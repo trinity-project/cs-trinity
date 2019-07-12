@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
+#define DEBUG_LOCAL
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,13 +50,12 @@ namespace Trinity.BlockChain.Interface
         protected readonly string timestampString = "1554866712.123456";
         protected readonly long timestampLong = 1554866712;
 #else
+        protected double timestamp => (DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1))).TotalSeconds;
+#endif
         // Convert the double to string with with accuracy of 6 decimal points.
         protected delegate TResult DoubleFixed6<in T, out TResult>(T value);
-
-        protected double timestamp => (DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1))).TotalSeconds;
         // 6-precision, but the last number is aways 0
         protected DoubleFixed6<double, string> ToFixed6 = currentTimestamp => currentTimestamp.ToString("F6");
-#endif
 
         // which type of asset is used
         protected readonly string assetId;
@@ -137,8 +136,14 @@ namespace Trinity.BlockChain.Interface
 
         public void InitializeCTX(double timestamp)
         {
+#if DEBUG_LOCAL
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey, this.remote.scriptHash,
+                this.remote.publicKey, this.ToFixed6(timestampLong));
+#else
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey, this.remote.scriptHash,
                 this.remote.publicKey, this.ToFixed6(timestamp));
+#endif
+
             Log.Debug("RSMCContract: {0}", RSMCContract);
 
             this.SetAddressRSMC(RSMCContract["address"].ToString());
@@ -210,18 +215,21 @@ namespace Trinity.BlockChain.Interface
             string payerPublicKey = isPayer ? this.local.publicKey : this.remote.publicKey;
             string payeePublicKey = isPayer ? this.remote.publicKey : this.local.publicKey;
 
+#if DEBUG_LOCAL
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey,
+                this.remote.scriptHash, this.remote.publicKey, this.timestampString);
+            Console.WriteLine(this.local.publicKey);
+            Console.WriteLine(this.remote.publicKey);
+            JObject HTLCContract = NeoInterface.CreateHTLCContract((this.timestampLong + 600).ToString(), this.local.publicKey, this.remote.publicKey, HashR);
+#else
             // Create RSMC contract address to store HTLC Payment
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey,
                 this.remote.scriptHash, this.remote.publicKey, currentTimeString);
+            // Create HTLC contract address to lock HTLC Payment
+            JObject HTLCContract = NeoInterface.CreateHTLCContract(currentTimeString, this.local.publicKey, this.remote.publicKey, HashR);
+#endif
             Log.Debug("timestamp: {0}", currentTimeString);
             Log.Debug("create {0} RSMCContract: {1}", debugInfo, RSMCContract);
-
-            // Create HTLC contract address to lock HTLC Payment
-#if DEBUG_LOCAL
-            JObject HTLCContract = NeoInterface.CreateHTLCContract((this.timestampLong + 600).ToString(), payerPublicKey, payeePublicKey, HashR);
-#else
-            JObject HTLCContract = NeoInterface.CreateHTLCContract(currentTimeString, payerPublicKey, payeePublicKey, HashR);
-#endif
             Log.Debug("create {0} HTLCContract: {1}", debugInfo, HTLCContract);
 
             // Initialize the address and script for HTLC transaction
@@ -267,8 +275,14 @@ namespace Trinity.BlockChain.Interface
         {
             string currentTimeString = ToFixed6(timestamp);
 
+#if DEBUG_LOCAL
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey,
+                this.remote.scriptHash, this.remote.publicKey, this.timestampString);
+#else
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey,
                 this.remote.scriptHash, this.remote.publicKey, currentTimeString);
+#endif
+
             Log.Debug("HETX RSMCContract: {0}", RSMCContract);
             this.SetAddressRSMC(RSMCContract["address"].ToString());
             this.SetScripRSMC(RSMCContract["script"].ToString());
@@ -322,8 +336,13 @@ namespace Trinity.BlockChain.Interface
         {
             string currentTimeString = ToFixed6(timestamp);
 
+#if DEBUG_LOCAL
+            JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey,
+                this.remote.scriptHash, this.remote.publicKey, this.timestampString);
+#else
             JObject RSMCContract = NeoInterface.CreateRSMCContract(this.local.scriptHash, this.local.publicKey, 
                 this.remote.scriptHash, this.remote.publicKey, currentTimeString);
+#endif
             Log.Debug("HTTX RSMCContract: {0}", RSMCContract);
             this.SetAddressRSMC(RSMCContract["address"].ToString());
             this.SetScripRSMC(RSMCContract["script"].ToString());
@@ -501,13 +520,13 @@ namespace Trinity.BlockChain.Interface
         {
 #if DEBUG_LOCAL
             List<string> vouts = new List<string>();
-            Vin vout = new Vin
+            NeoInterface.Vin vout = new NeoInterface.Vin
             {
                 n = 0,
                 txid = "d12cd540f9298fd07a4f70ff02581dd1fb2414947a0da4a550b06ec6f0c0eba9",
                 value = 2
             };
-            string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
+            string voutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
             List<string> vouts = NeoInterface.getGloablAssetVout(localTrader.scriptHash, assetId, uint.Parse(localTrader.balance));
@@ -516,13 +535,13 @@ namespace Trinity.BlockChain.Interface
 
 #if DEBUG_LOCAL
             List<string> peerVouts = new List<string>();
-            Vin peerVout = new Vin
+            NeoInterface.Vin peerVout = new NeoInterface.Vin
             {
                 n = 0,
                 txid = "a2af30d58b2e90275f5251378eccbaa8fe8eff76d4016df5337d6b2f6608dace",
                 value = 2
             };
-            string peervoutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(peerVout));
+            string peervoutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(peerVout));
             peerVouts.Add(peervoutData);
 #else
             List<string> peerVouts = NeoInterface.getGloablAssetVout(localTrader.scriptHash, assetId, uint.Parse(remoteTrader.balance));
@@ -639,13 +658,13 @@ namespace Trinity.BlockChain.Interface
             // Assembly transaction with input for both wallets
 #if DEBUG_LOCAL
             List<string> vouts = new List<string>();
-            Vin vout = new Vin
+            NeoInterface.Vin vout = new NeoInterface.Vin
             {
                 n = 0,
                 txid = "101c5e988e72bdabb121350f168bef8965f0fd2891c387b5384e9718c32c2c7d",
                 value = 2
             };
-            string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
+            string voutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
             List<string> vouts = NeoInterface.getGloablAssetVout(this.addressFunding.ToScriptHash(), assetId, amount);
@@ -690,13 +709,13 @@ namespace Trinity.BlockChain.Interface
             // Assembly transaction with input for both wallets
 #if DEBUG_LOCAL
             List<string> vouts = new List<string>();
-            Vin vout = new Vin
+            NeoInterface.Vin vout = new NeoInterface.Vin
             {
                 n = 0,
                 txid = "0x577fb4c3ca37a5eab7243478f3eae2b011800a10d5c4c0cd85e71bab52e76a79",
                 value = 2
             };
-            string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
+            string voutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
             List<string> vouts = NeoInterface.getGloablAssetVout(this.addressFunding.ToScriptHash(), this.assetId, amount);
