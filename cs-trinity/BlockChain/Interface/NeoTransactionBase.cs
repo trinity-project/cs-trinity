@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#define DEBUG_LOCAL
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -523,8 +523,8 @@ namespace Trinity.BlockChain.Interface
             NeoInterface.Vin vout = new NeoInterface.Vin
             {
                 n = 0,
-                txid = "d12cd540f9298fd07a4f70ff02581dd1fb2414947a0da4a550b06ec6f0c0eba9",
-                value = 2
+                txid = "577fb4c3ca37a5eab7243478f3eae2b011800a10d5c4c0cd85e71bab52e76a78",
+                value = 239
             };
             string voutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
@@ -538,8 +538,8 @@ namespace Trinity.BlockChain.Interface
             NeoInterface.Vin peerVout = new NeoInterface.Vin
             {
                 n = 0,
-                txid = "a2af30d58b2e90275f5251378eccbaa8fe8eff76d4016df5337d6b2f6608dace",
-                value = 2
+                txid = "47b590b1d0765b90e0f6c762ddff905ee4d8c3c81ef7ff35397942b87f8ba31b",
+                value = 64
             };
             string peervoutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(peerVout));
             peerVouts.Add(peervoutData);
@@ -713,7 +713,7 @@ namespace Trinity.BlockChain.Interface
             {
                 n = 0,
                 txid = "0x577fb4c3ca37a5eab7243478f3eae2b011800a10d5c4c0cd85e71bab52e76a79",
-                value = 2
+                value = 4
             };
             string voutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
@@ -776,7 +776,7 @@ namespace Trinity.BlockChain.Interface
         }
 
         protected virtual void MakeUpHEDTXTransaction(out ContractTransaction transaction, ChannelTrader trader, 
-            string HtlcPay, string txId,double timestamp)
+            string HtlcPay, string txId, double timestamp)
         {
             // Assembly transaction with input for both wallets
             CoinReference[] inputsData = NeoInterface.createInputsData(txId, 2);
@@ -951,8 +951,7 @@ namespace Trinity.BlockChain.Interface
         {
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
 
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, contractAddress.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, contractAddress.ToScriptHash(), attributes).MakeAttribute(out attributes);
 #if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
 #else
@@ -982,8 +981,7 @@ namespace Trinity.BlockChain.Interface
             List<TransactionAttribute> attributes = new List<TransactionAttribute>();
 
             // Add contract address as one of attributes
-            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, contractAddress.ToScriptHash(), attributes)
-                .MakeAttribute(out attributes);
+            new NeoInterface.TransactionAttributeUInt160(TransactionAttributeUsage.Script, contractAddress.ToScriptHash(), attributes).MakeAttribute(out attributes);
 
 #if DEBUG_LOCAL
             new NeoInterface.TransactionAttributeLong(TransactionAttributeUsage.Remark, this.timestampLong, attributes).MakeAttribute(out attributes);
