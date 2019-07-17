@@ -220,7 +220,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.neoTransaction.CreateHTTX(out this.htTx, lockedPayment);
 
                 // create HTRDTX
-                this.neoTransaction.CreateHTRDTX(out this.htRdTx, this.htTx.txId, lockedPayment);
+                this.neoTransaction.CreateHTRDTX(out this.htRdTx, lockedPayment, this.htTx.txId);
 
                 // makeup message body
                 this.Request.MessageBody.HCTX = this.hcTx;
@@ -243,7 +243,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.neoTransaction.CreateHETX(out this.heTx, lockedPayment);
 
                 // create HERDTX
-                this.neoTransaction.CreateHERDTX(out this.heRdTx, this.heTx.txId, lockedPayment);
+                this.neoTransaction.CreateHERDTX(out this.heRdTx, lockedPayment, this.heTx.txId);
 
                 // create HTDTX
                 this.neoTransaction.CreateHTDTX(out this.htdTx, lockedPayment);
