@@ -793,15 +793,12 @@ namespace Trinity.BlockChain
     /// </summary>
     public sealed class NeoTransaction
     {
-        private const string AssetIdGAS = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
-        private const string AssetIdNEO = "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
-
         private readonly IBlockChain IApi;
 
         public NeoTransaction(string assetId, string pubKey, string balance, string peerPubKey, string peerBalance,
         string addressFunding = null, string scriptFunding = null)
         {
-            if (this.IsNeoOrNeoGas(assetId))
+            if (null != assetId && assetId.IsNeoOrNeoGas())
             {
                 this.IApi = new INeoTransaction(assetId, pubKey, balance, peerPubKey, peerBalance, addressFunding, scriptFunding);
             }
@@ -918,11 +915,6 @@ namespace Trinity.BlockChain
         public void SetScripHTLC(string scriptHtlc)
         {
             this.IApi.SetScripHTLC(scriptHtlc);
-        }
-
-        private bool IsNeoOrNeoGas(string assetId)
-        {
-            return AssetIdGAS.Equals(assetId) || AssetIdNEO.Equals(assetId);
         }
     }
 }

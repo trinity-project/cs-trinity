@@ -142,7 +142,7 @@ namespace Trinity.BlockChain
             string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
-            List<string> vouts = NeoInterface.getGloablAssetVout(UInt160.Parse(pubKey), assetId, uint.Parse(balance));
+            List<string> vouts = NeoInterface.getGlobalAssetVout(UInt160.Parse(pubKey), assetId, uint.Parse(balance));
 #endif
             Log.Debug("Assembly vouts. vouts: {0}.\r\n", vouts);
 
@@ -157,7 +157,7 @@ namespace Trinity.BlockChain
             string peervoutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(peerVout));
             peerVouts.Add(peervoutData);
 #else
-            List<string> peerVouts = NeoInterface.getGloablAssetVout(UInt160.Parse(pubKey), assetId, uint.Parse(peerBalance));
+            List<string> peerVouts = NeoInterface.getGlobalAssetVout(UInt160.Parse(pubKey), assetId, uint.Parse(peerBalance));
 #endif
             Log.Debug("Assembly vouts. peerVouts: {0}.\r\n", peerVouts);
 
@@ -366,7 +366,7 @@ namespace Trinity.BlockChain
             string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
-            List<string> vouts = getGloablAssetVout(fundingScriptHash, assetId, amount);
+            List<string> vouts = getGlobalAssetVout(fundingScriptHash, assetId, amount);
 #endif
             CoinReference[] inputsData = getInputFormVout(vouts);
             Log.Debug("Assembly vouts. vouts: {0}.\r\n", vouts);
@@ -439,7 +439,7 @@ namespace Trinity.BlockChain
             string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
-            List<string> vouts = getGloablAssetVout(fundingScriptHash, assetId, amount);
+            List<string> vouts = getGlobalAssetVout(fundingScriptHash, assetId, amount);
 #endif
             CoinReference[] inputsData = getInputFormVout(vouts);
 
@@ -657,7 +657,7 @@ namespace Trinity.BlockChain
             string voutData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
-            List<string> vouts = getGloablAssetVout(fundingScriptHash, assetId, amount);
+            List<string> vouts = getGlobalAssetVout(fundingScriptHash, assetId, amount);
 #endif
             CoinReference[] inputsData = getInputFormVout(vouts);
 

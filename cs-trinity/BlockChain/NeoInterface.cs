@@ -727,7 +727,7 @@ namespace Trinity.BlockChain
         private const long D = 100_000_000;
 
         //查找未花费的资产交易信息
-        public static List<string> getGloablAssetVout(UInt160 scriptHash, string _assetId, uint _amount)
+        public static List<string> getGlobalAssetVout(UInt160 scriptHash, string _assetId, uint _amount)
         {
             UInt256 assetId = UInt256.Parse(_assetId);
             Fixed8 amount = Fixed8.FromDecimal(_amount);

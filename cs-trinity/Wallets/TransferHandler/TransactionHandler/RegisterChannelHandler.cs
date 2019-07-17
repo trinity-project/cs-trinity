@@ -24,6 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Trinity.BlockChain;
 using Trinity.ChannelSet;
 using Trinity.ChannelSet.Definitions;
 using Trinity.TrinityDB.Definitions;
@@ -159,6 +160,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 AssetType = asset,
                 Deposit = payment,
             };
+
+            if (asset.IsNeoOrNeoGas())
+            {
+                this.Request.MessageBody.Reference = NeoInterface.getGlobalAssetVout(this.GetPublicKeyHash(), asset, (uint)payment);
+            }
         }
         // Not need BlockChain API for this RegisterChannel
         public override void InitializeBlockChainApi() { }

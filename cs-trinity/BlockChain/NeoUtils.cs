@@ -43,10 +43,18 @@ namespace Trinity.BlockChain
     /// </summary>
     public static class NeoUtils
     {
+        private const string AssetIdGAS = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
+        private const string AssetIdNEO = "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
+
         //////////////////////////////////////////////////////////////////////////////////////////
         ///  Adapt to Neo data type convertion                                                 ///
         ////////////////////////////////////////////////////////////////////////////////////////// 
-#region NeoInterfaceAdaptor
+        #region NeoInterfaceAdaptor
+        public static bool IsNeoOrNeoGas(this string assetId)
+        {
+            return AssetIdGAS.Equals(assetId) || AssetIdNEO.Equals(assetId);
+        }
+
         /// <summary>
         /// Remove the useless chars in the string value for Neo
         /// </summary>

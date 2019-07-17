@@ -24,6 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System.Collections.Generic;
 using MessagePack;
 
 namespace Trinity.Wallets.Templates.Messages
@@ -36,6 +37,7 @@ namespace Trinity.Wallets.Templates.Messages
     {
         public string AssetType { get; set; }
         public long Deposit { get; set; }
+        public List<string> Reference { get; set; }
         public string Comments { get; set; }
     }
 

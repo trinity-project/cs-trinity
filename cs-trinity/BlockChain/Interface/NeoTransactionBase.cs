@@ -529,7 +529,7 @@ namespace Trinity.BlockChain.Interface
             string voutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
-            List<string> vouts = NeoInterface.getGloablAssetVout(localTrader.scriptHash, assetId, uint.Parse(localTrader.balance));
+            List<string> vouts = NeoInterface.getGlobalAssetVout(localTrader.scriptHash, assetId, uint.Parse(localTrader.balance));
 #endif
             Log.Debug("Assembly vouts. vouts: {0}.\r\n", vouts);
 
@@ -544,7 +544,7 @@ namespace Trinity.BlockChain.Interface
             string peervoutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(peerVout));
             peerVouts.Add(peervoutData);
 #else
-            List<string> peerVouts = NeoInterface.getGloablAssetVout(localTrader.scriptHash, assetId, uint.Parse(remoteTrader.balance));
+            List<string> peerVouts = NeoInterface.getGlobalAssetVout(localTrader.scriptHash, assetId, uint.Parse(remoteTrader.balance));
 #endif
             Log.Debug("Assembly vouts. peerVouts: {0}.\r\n", peerVouts);
 
@@ -667,7 +667,7 @@ namespace Trinity.BlockChain.Interface
             string voutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
-            List<string> vouts = NeoInterface.getGloablAssetVout(this.addressFunding.ToScriptHash(), assetId, amount);
+            List<string> vouts = NeoInterface.getGlobalAssetVout(this.addressFunding.ToScriptHash(), assetId, amount);
 #endif
             CoinReference[] inputsData = NeoInterface.getInputFormVout(vouts);
             Log.Debug("Assembly vouts. vouts: {0}.\r\n", vouts);
@@ -718,7 +718,7 @@ namespace Trinity.BlockChain.Interface
             string voutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(vout));
             vouts.Add(voutData);
 #else
-            List<string> vouts = NeoInterface.getGloablAssetVout(this.addressFunding.ToScriptHash(), this.assetId, amount);
+            List<string> vouts = NeoInterface.getGlobalAssetVout(this.addressFunding.ToScriptHash(), this.assetId, amount);
 #endif
             CoinReference[] inputsData = NeoInterface.getInputFormVout(vouts);
 
