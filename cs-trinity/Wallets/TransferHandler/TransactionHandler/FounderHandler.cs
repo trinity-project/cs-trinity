@@ -139,6 +139,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 // set the neo transaction handler attribute
                 this.neoTransaction.SetAddressFunding(this.fundingTx.addressFunding);
                 this.neoTransaction.SetScripFunding(this.fundingTx.scriptFunding);
+                this.neoTransaction.SetFundingTxId(this.fundingTx.txId);
                 return true;
             }
             else

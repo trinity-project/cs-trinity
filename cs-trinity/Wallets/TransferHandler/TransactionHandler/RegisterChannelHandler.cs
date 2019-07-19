@@ -163,7 +163,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
             if (asset.IsNeoOrNeoGas())
             {
-                this.Request.MessageBody.Reference = NeoInterface.getGlobalAssetVout(this.GetPublicKeyHash(), asset, (uint)payment);
+                this.Request.MessageBody.Reference = NeoInterface.getGlobalAssetVout(NeoInterface.PublicKeyToScriptHash(this.GetWalletPublicKey()), asset, (uint)payment);
             }
         }
         // Not need BlockChain API for this RegisterChannel
