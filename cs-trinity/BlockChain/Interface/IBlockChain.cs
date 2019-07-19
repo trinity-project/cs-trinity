@@ -29,13 +29,13 @@ using Neo.Wallets;
 using Neo.SmartContract;
 
 using Trinity.Wallets.Templates.Definitions;
-
+using System.Collections.Generic;
 
 namespace Trinity.BlockChain.Interface
 {
     public interface IBlockChain
     {
-        bool CreateFundingTx(out FundingTx fundingTx);
+        bool CreateFundingTx(out FundingTx fundingTx, List<string> peerVout);
         /// <summary>
         /// For Funding Transaction.
         /// Create the Funding Transaction content which is used to create channel.

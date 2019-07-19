@@ -48,7 +48,7 @@ namespace Trinity.BlockChain.Interface
             : base(assetId, pubKey, balance, peerPubKey, peerBalance, addressFunding, scriptFunding)
         { }
 
-        public bool CreateFundingTx(out FundingTx fundingTx)
+        public bool CreateFundingTx(out FundingTx fundingTx, List<string> peerVout)
         {
             double currentTimestamp = this.timestamp;
 
@@ -56,7 +56,7 @@ namespace Trinity.BlockChain.Interface
             this.InitializeFundingTx();
 
             // Create Neo InvocationTransaction for the funding transaction
-            this.MakeUpFundingTransaction(out ContractTransaction transaction, this.addressFunding, this.local, this.remote, timestamp);
+            this.MakeUpFundingTransaction(out ContractTransaction transaction, this.addressFunding, this.local, this.remote, timestamp, peerVout);
 
             // create funding Transaction
             this.FinalizeFundingTx(out fundingTx, transaction, currentTimestamp);

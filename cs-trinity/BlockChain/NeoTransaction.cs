@@ -808,9 +808,9 @@ namespace Trinity.BlockChain
             }
         }
 
-        public bool CreateFundingTx(out FundingTx fundingTx)
+        public bool CreateFundingTx(out FundingTx fundingTx, List<string> peerVout)
         {
-            return this.IApi.CreateFundingTx(out fundingTx);
+            return this.IApi.CreateFundingTx(out fundingTx, peerVout);
         }
 
         public bool CreateBRTX(out BreachRemedyTx breachRemedyTx, string txId)

@@ -48,7 +48,7 @@ namespace Trinity.BlockChain.Interface
             : base(assetId, pubKey, balance, peerPubKey, peerBalance, addressFunding, scriptFunding)
         { }
 
-        public bool CreateFundingTx(out FundingTx fundingTx)
+        public bool CreateFundingTx(out FundingTx fundingTx, List<string> peerVout)
         {
             double currentTimestamp = this.timestamp;
 

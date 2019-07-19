@@ -88,7 +88,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // trigger new Founder message
             FounderHandler founderHndl = new FounderHandler(
                 this.Request.Receiver, this.Request.Sender, this.Request.ChannelName,
-                this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.MessageBody.Deposit);
+                this.Request.MessageBody.AssetType, this.Request.NetMagic, this.Request.MessageBody.Deposit, this.Request.MessageBody.Reference);
 
             return founderHndl.MakeTransaction();
         }

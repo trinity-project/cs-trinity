@@ -518,7 +518,7 @@ namespace Trinity.BlockChain.Interface
         }
 
         protected virtual void MakeUpFundingTransaction(out ContractTransaction transaction, string contractAddress,
-            ChannelTrader localTrader, ChannelTrader remoteTrader, double timestamp)
+            ChannelTrader localTrader, ChannelTrader remoteTrader, double timestamp, List<string> peerVouts)
         {
 #if DEBUG_LOCAL
             List<string> vouts = new List<string>();
@@ -546,9 +546,9 @@ namespace Trinity.BlockChain.Interface
             string peervoutData = MessagePack.MessagePackSerializer.ToJson(MessagePack.MessagePackSerializer.Serialize(peerVout));
             peerVouts.Add(peervoutData);
 #else
-            List<string> peerVouts = NeoInterface.getGlobalAssetVout(localTrader.scriptHash, assetId, uint.Parse(remoteTrader.balance));
+            //List<string> peerVouts = NeoInterface.getGlobalAssetVout(localTrader.scriptHash, assetId, uint.Parse(remoteTrader.balance));
 #endif
-            Log.Debug("Assembly vouts. peerVouts: {0}.\r\n", peerVouts);
+            //Log.Debug("Assembly vouts. peerVouts: {0}.\r\n", peerVouts);
 
             // Assembly transaction with input for both wallets
             CoinReference[] self_inputs = NeoInterface.getInputFormVout(vouts);

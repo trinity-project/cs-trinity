@@ -52,14 +52,16 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         private CommitmentTx commTx = null;
         private RevocableDeliveryTx rdTx = null;
         private TransactionFundingContent currentTransaction = null;
+        private List<string> peerVout = null;
 
         public FounderHandler(string sender, string receiver, string channel, string asset,
-            string magic, long deposit) : base(sender, receiver, channel, asset, magic, fundingNonce, deposit)
+            string magic, long deposit, List<string> vout=null) : base(sender, receiver, channel, asset, magic, fundingNonce, deposit)
         {
             this.isFounder = this.IsRole0(this.Request.MessageBody.RoleIndex);
 
             // set message header or message body
             this.Request.TxNonce = fundingNonce; // To avoid rewrite outside.
+            this.peerVout = vout;
         }
 
         public FounderHandler(Founder request, int role = 0) : base(request, role)
@@ -119,7 +121,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             if (this.IsRole0(this.Request.MessageBody.RoleIndex))
             {
                 // Because this is triggered by the RegisterChannel, the founder of this channel is value of Receiver;
-                this.neoTransaction.CreateFundingTx(out this.fundingTx);
+                this.neoTransaction.CreateFundingTx(out this.fundingTx, this.peerVout);
                 return true;
             }
             else if (this.IsRole1(this.Request.MessageBody.RoleIndex))
