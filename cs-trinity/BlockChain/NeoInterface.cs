@@ -730,7 +730,7 @@ namespace Trinity.BlockChain
         public static List<string> getGlobalAssetVout(UInt160 scriptHash, string _assetId, uint _amount)
         {
             UInt256 assetId = UInt256.Parse(_assetId);
-            Fixed8 amount = Fixed8.FromDecimal(_amount);
+            Fixed8 amount = Fixed8.Parse(new Fixed8(_amount).ToString());
             //UInt160 account = NeoInterface.PublicKeyToScriptHash(scriptHash);
             UInt160[] accounts = { scriptHash };
             Coin[] coinList = GetUnspentCoins(accounts, assetId, amount);
@@ -746,7 +746,7 @@ namespace Trinity.BlockChain
                 {
                     n = coin.Reference.PrevIndex,
                     txid = coin.Reference.PrevHash.ToString(),
-                    value = coin.Output.Value.GetData() / D
+                    value = coin.Output.Value.GetData()
                 };
 
                 string vinData = MessagePackSerializer.ToJson(MessagePackSerializer.Serialize(vin));

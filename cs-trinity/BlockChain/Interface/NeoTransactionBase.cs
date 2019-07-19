@@ -132,6 +132,8 @@ namespace Trinity.BlockChain.Interface
                 witness = witness,
                 timeAttribute = timestamp
             };
+
+            this.SetFundingTxId(fundingTx.txId);
         }
 
         public void InitializeCTX(double timestamp)
