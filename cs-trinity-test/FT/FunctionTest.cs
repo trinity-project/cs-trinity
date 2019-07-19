@@ -191,16 +191,16 @@ namespace TestTrinity
         //create_sender_HTLC_TXS_NEO
         public static void TempTest3()
         {
-            string assetId = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
+            string assetId = "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
             string pubKey = "035124620caa7edc45329259ed7ac88d2b232d051c0c93f24ad237a311262f19ed";
-            string deposit = "1";
+            string deposit = "2";
             string peerPubKey = "02e30ac5fd122410ebd90c247cc322db0aaf6e403542a9b4fe2ad75864c477c46d";
-            string peerDeposit = "1";
+            string peerDeposit = "2";
             string HtlcValue = "1";
             string balance = "1";
             string peerBalance = "3";
 
-            NeoTransaction_Neo neoTransaction = new NeoTransaction_Neo(assetId, pubKey, deposit, peerPubKey, peerDeposit);
+            NeoTransaction neoTransaction = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit);
             //生成Funding
             Console.WriteLine("---------Funding---------");
             neoTransaction.CreateFundingTx(out FundingTx fundingTx);
@@ -208,9 +208,9 @@ namespace TestTrinity
 
             Log.Debug("txData: {0}", fundingTx.txData);
 
-            Console.WriteLine("---------CTX---------");
-            neoTransaction.CreateCTX(out CommitmentTx commitmentTx);
-            Log.Debug("CTX: {0}", commitmentTx.Serialize());
+            //Console.WriteLine("---------CTX---------");
+            //neoTransaction.CreateCTX(out CommitmentTx commitmentTx);
+            //Log.Debug("CTX: {0}", commitmentTx.Serialize());
 
             //Console.WriteLine("---------RDTX---------");
             //neoTransaction.CreateRDTX(out RevocableDeliveryTx revocableDeliveryTx, commitmentTx.txId);
@@ -220,53 +220,54 @@ namespace TestTrinity
             //neoTransaction.CreateBRTX(out BreachRemedyTx breachRemedyTx, commitmentTx.txId);
             //Log.Debug("CTX: {0}", breachRemedyTx.Serialize());
 
-            NeoTransaction_Neo neoTransaction1 = new NeoTransaction_Neo(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
-            Console.WriteLine("---------Settle---------");
-            neoTransaction1.CreateSettle(out TxContents settleTx);
-            Log.Debug("CTX: {0}", settleTx.Serialize());
+            //NeoTransaction_Neo neoTransaction1 = new NeoTransaction_Neo(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
+            //Console.WriteLine("---------Settle---------");
+            //neoTransaction1.CreateSettle(out TxContents settleTx);
+            //Log.Debug("CTX: {0}", settleTx.Serialize());
 
             //生成HashR
-            //Console.WriteLine("---------HashR---------");
+            Console.WriteLine("---------HashR---------");
             //string R = neoTransaction.CreateR(64);
-            //string R = "173968fa86d12fceeda5dc0a431f433fd68323e7e0c38e14a5611acb6a11ea66";
-            //string HashR = NeoUtils.Sha1(R);
-            //Console.WriteLine(HashR);                                      //f6d5a548cbb3c8f9e02c7aa1a17afc829fa65d33
+            string R = "173968fa86d12fceeda5dc0a431f433fd68323e7e0c38e14a5611acb6a11ea66";
+            string HashR = NeoUtils.Sha1(R);
+            Console.WriteLine(HashR);                                      //f6d5a548cbb3c8f9e02c7aa1a17afc829fa65d33
 
-            //NeoTransaction_Neo neoTransaction1 = new NeoTransaction_Neo(assetId, pubKey, balance, peerPubKey, peerBalance, fundingTx.addressFunding, fundingTx.scriptFunding);
-            //Console.WriteLine("---------Sender_HCTX---------");
-            //neoTransaction1.CreateSenderHCTX(out HtlcCommitTx hctx, HtlcValue, HashR);
-            //Log.Debug("HCTX: {0}", hctx.Serialize());
+            NeoTransaction neoTransaction1 = new NeoTransaction(assetId, pubKey, balance, peerPubKey, peerBalance, fundingTx.addressFunding, fundingTx.scriptFunding);
+            Console.WriteLine("---------Sender_HCTX---------");
+            neoTransaction1.CreateSenderHCTX(out HtlcCommitTx hctx, HtlcValue, HashR);
+            Log.Debug("HCTX: {0}", hctx.Serialize());
 
-            //Log.Debug("---------Sender_RDTX---------");
-            //neoTransaction1.CreateSenderRDTX(out HtlcRevocableDeliveryTx RevocableDeliveryTx, hctx.txId);
-            //Log.Debug("RDTX: {0}", RevocableDeliveryTx.Serialize());
+            Log.Debug("---------Sender_RDTX---------");
+            neoTransaction1.CreateSenderRDTX(out HtlcRevocableDeliveryTx RevocableDeliveryTx, hctx.txId);
+            Log.Debug("RDTX: {0}", RevocableDeliveryTx.Serialize());
 
-            //Log.Debug("---------HEDTX---------");
-            //neoTransaction1.CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, hctx.txId, HtlcValue);
-            //Log.Debug("HEDTX: {0}", HEDTX.Serialize());
+            Log.Debug("---------HEDTX---------");
+            neoTransaction1.CreateHEDTX(out HtlcExecutionDeliveryTx HEDTX, HtlcValue, hctx.txId);
+            Log.Debug("HEDTX: {0}", HEDTX.Serialize());
 
-            //Log.Debug("---------HTTX---------");
-            //neoTransaction1.CreateHTTX(out HtlcTimoutTx HTTX, hctx.txId, HtlcValue);
-            //Log.Debug("HTTX: {0}", HTTX.Serialize());
+            Log.Debug("---------HTTX---------");
+            neoTransaction1.CreateHTTX(out HtlcTimoutTx HTTX, HtlcValue, hctx.txId);
+            Log.Debug("HTTX: {0}", HTTX.Serialize());
 
-            //Log.Debug("---------HTRDTX---------");
-            //neoTransaction1.CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx RevocableDeliveryTx1, HTTX.txId, HtlcValue);
-            //Log.Debug("HTRDTX: {0}", RevocableDeliveryTx1.Serialize());
+            Log.Debug("---------HTRDTX---------");
+            neoTransaction1.CreateHTRDTX(out HtlcTimeoutRevocableDelivertyTx RevocableDeliveryTx1, HtlcValue, HTTX.txId);
+            Log.Debug("HTRDTX: {0}", RevocableDeliveryTx1.Serialize());
         }
 
         //create_receiver_HTLC_TXS_NEO
         public static void TempTest4()
         {
             string assetId = "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
-            string pubKey = "025aa64efb9a5176a550210cdc795060cab8f7711e7cd69dbe12b9bbd3ee2dd721";
+            string pubKey = "035124620caa7edc45329259ed7ac88d2b232d051c0c93f24ad237a311262f19ed";
             string deposit = "2";
-            string peerPubKey = "0391e05b532e5e8aa9eb0ef3c3888cf7636a428c339c33ad620d0f2900437999d6";
+            string peerPubKey = "02e30ac5fd122410ebd90c247cc322db0aaf6e403542a9b4fe2ad75864c477c46d";
             string peerDeposit = "2";
             string HtlcValue = "1";
             string balance = "1";
             string peerBalance = "3";
 
-            NeoTransaction_Neo neoTransaction = new NeoTransaction_Neo(assetId, pubKey, deposit, peerPubKey, peerDeposit);
+
+            NeoTransaction neoTransaction = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit);
             //生成Funding
             Console.WriteLine("---------Funding---------");
             neoTransaction.CreateFundingTx(out FundingTx fundingTx);
@@ -279,7 +280,7 @@ namespace TestTrinity
             string HashR = NeoUtils.Sha1(R);
             Console.WriteLine(HashR);                                      //f6d5a548cbb3c8f9e02c7aa1a17afc829fa65d33
 
-            NeoTransaction_Neo neoTransaction1 = new NeoTransaction_Neo(assetId, peerPubKey, peerBalance, pubKey, balance, fundingTx.addressFunding, fundingTx.scriptFunding);
+            NeoTransaction neoTransaction1 = new NeoTransaction(assetId, peerPubKey, peerBalance, pubKey, balance, fundingTx.addressFunding, fundingTx.scriptFunding);
 
             Console.WriteLine("---------Receiver_HCTX---------");
             neoTransaction1.CreateReceiverHCTX(out HtlcCommitTx hctx, HtlcValue, HashR);
@@ -290,21 +291,81 @@ namespace TestTrinity
             Log.Debug("RDTX: {0}", RevocableDeliveryTx.Serialize());
 
             Log.Debug("---------HTDTX---------");
-            neoTransaction1.CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, hctx.txId, HtlcValue);
+            neoTransaction1.CreateHTDTX(out HtlcTimeoutDeliveryTx HTDTX, HtlcValue, hctx.txId);
             Log.Debug("HTDTX: {0}", HTDTX.Serialize());
 
             Log.Debug("---------HETX---------");
-            neoTransaction1.CreateHETX(out HtlcExecutionTx HETX, hctx.txId, HtlcValue);
+            neoTransaction1.CreateHETX(out HtlcExecutionTx HETX, HtlcValue, hctx.txId);
             Log.Debug("HETX: {0}", HETX.Serialize());
 
             Log.Debug("---------HERDTX---------");
-            neoTransaction1.CreateHERDTX(out HtlcExecutionRevocableDeliveryTx RevocableDeliveryTx1, HETX.txId, HtlcValue);
+            neoTransaction1.CreateHERDTX(out HtlcExecutionRevocableDeliveryTx RevocableDeliveryTx1, HtlcValue, HETX.txId);
             Log.Debug("CreateHERDTX: {0}", RevocableDeliveryTx1.Serialize());
+        }
+
+        public static void TempTest5()
+        {
+            string txData = "d101a00400e1f50514d008ddd23960d102165f6b960e22cc75c32d992b14296ac124021a71c449a9bad320c16429b08ad6ee53c1087472616e7366657267f1dfcf0051ec48ec95c8d0569e0b95075d099d84f10400e1f50514b1fdddf658ce5ff9f83e66ede2f333ecfcc0463e14296ac124021a71c449a9bad320c16429b08ad6ee53c1087472616e7366657267f1dfcf0051ec48ec95c8d0569e0b95075d099d84f100000000000000000220296ac124021a71c449a9bad320c16429b08ad6eef0045cad62180000";
+            string address = "ASkZe5DCXsSFARJnwEB3DGxkfTK17LteRa";
+            string value = "100000000";
+            string peerPubky = "AY11NSgBM3Hvx56nyUXD6ocLAahrcMps6C";
+            string peerValue = "100000000";
+            string assetId = "f1dfcf0051ec48ec95c8d0569e0b95075d099d84";
+            bool result = NeoInterface.verifyNep5TxData(txData, address, value, peerPubky, peerValue);
+            Console.WriteLine(result);
+
+            //Console.WriteLine("-------------");
+            //string txData1 = "800001f0045cad621802786ae752ab1be785cdc0c4d5100a8011b0e2eaf3783424b7eaa537cac3b47f5712001ba38b7fb842793935fff71ec8c3d8e45e90ffdd62c7f6e0905b76d0b190b5470000039b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc50084d71700000000aba048c1ee515dd1435897ecc53339c2ea3a219f9b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc5004da184050000004420eb4807cd30acf82c82327ccb64d5f63274149b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc5007e8c71010000001f4b48c07d45ae25cb11f428a3c8faaccd9462e6";
+            //string txid1 = "0x577fb4c3ca37a5eab7243478f3eae2b011800a10d5c4c0cd85e71bab52e76a78";
+            //string n1 = "18";
+            //string txid2 = "0100";
+            //string n2 = "0100";
+            //bool result1 = NeoInterface.verifyNeoTxData(txData1, txid1, n1, txid2, n2);
+            //Console.WriteLine(result1);
+        }
+
+
+        //test_create__GAS_TX
+        public static void TempTest6()
+        {
+            string assetId = "0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
+            string pubKey = "0292a25f5f0772d73d3fb50d42bb3cb443505b15e106789d19efa4d09c5ddca756";
+            string deposit = "1";
+            string peerPubKey = "022949376faacb0c6783da8ab63548926cb3a2e8d786063a449833f927fa8853f0";
+            string peerDeposit = "1";
+            string HtlcValue = "1";
+            string balance = "1";
+            string peerBalance = "3";
+
+            NeoTransaction neoTransaction = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit);
+            //生成Funding
+            Console.WriteLine("---------Funding---------");
+            neoTransaction.CreateFundingTx(out FundingTx fundingTx);
+            Log.Debug("FundingTX: {0}", fundingTx.Serialize());
+
+            Log.Debug("txData: {0}", fundingTx.txData);
+
+            //Console.WriteLine("---------CTX---------");
+            //neoTransaction.CreateCTX(out CommitmentTx commitmentTx);
+            //Log.Debug("CTX: {0}", commitmentTx.Serialize());
+
+            //Console.WriteLine("---------RDTX---------");
+            //neoTransaction.CreateRDTX(out RevocableDeliveryTx revocableDeliveryTx, commitmentTx.txId);
+            //Log.Debug("CTX: {0}", revocableDeliveryTx.Serialize());
+
+            //Console.WriteLine("---------BRTX---------");
+            //neoTransaction.CreateBRTX(out BreachRemedyTx breachRemedyTx, commitmentTx.txId);
+            //Log.Debug("CTX: {0}", breachRemedyTx.Serialize());
+
+            NeoTransaction neoTransaction1 = new NeoTransaction(assetId, pubKey, deposit, peerPubKey, peerDeposit, fundingTx.addressFunding, fundingTx.scriptFunding);
+            Console.WriteLine("---------Settle---------");
+            neoTransaction1.CreateSettle(out TxContents settleTx);
+            Log.Debug("CTX: {0}", settleTx.Serialize());
         }
 
         public static void TestMain()
         {
-            TempTest2();
+            TempTest6();
             //TempTest();
             // Output the message body to verify it's correct ??
             // TestVerifyMessageBody();

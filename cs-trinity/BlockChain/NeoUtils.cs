@@ -138,6 +138,16 @@ namespace Trinity.BlockChain
         {
             return value.ToHash160().ToAddress();
         }
+
+        /// <summary>
+        /// In Neo, it can reverse the hexstring.
+        /// </summary>
+        /// <param name="value"> hexstring </param>
+        /// <returns> Wallet's Address </returns>
+        public static string HexReverse(this string value)
+        {
+            return value.HexToBytes().Reverse().ToArray().ToHexString();
+        }
         #endregion // NeoInterfaceAdaptor
 
         #region SHA1_CRYPTO

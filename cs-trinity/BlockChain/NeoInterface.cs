@@ -49,6 +49,7 @@ using Trinity.Wallets;
 using Trinity.TrinityDB.Definitions;
 using Trinity.ChannelSet;
 using Trinity.ChannelSet.Definitions;
+using System.Text.RegularExpressions;
 
 namespace Trinity.BlockChain
 {
@@ -855,6 +856,61 @@ namespace Trinity.BlockChain
                     contract.Address, contract.ScriptHash);
                 }
             }
+        }
+
+        ///<summary>
+        ///verify Nep5 TxData
+        ///</summary>
+        ///<param name="txData"></param>
+        ///<param name="address"></param>
+        ///<param name="value"></param>
+        ///<param name="peerAddress"></param>
+        ///<param name="peerValue"></param>
+        public static bool verifyNep5TxData(string txData, string address, string value, string peerAddress, string peerValue)
+        {
+            if (txData == null) return false;
+            string scriptHash = address.ToScriptHash().ToArray().ToHexString();
+            Console.WriteLine(scriptHash);
+            string Value = BigInteger.Parse(value).ToByteArray().ToHexString();
+            Console.WriteLine(Value);
+            Regex reg = new Regex(Value + @"((\w{2})|(\w{44}))" + scriptHash);
+            bool result = reg.IsMatch(txData);
+            Console.WriteLine(result);
+            string peerScriptHash = peerAddress.ToScriptHash().ToArray().ToHexString();
+            Console.WriteLine(peerScriptHash);
+            string PeerValue = BigInteger.Parse(peerValue).ToByteArray().ToHexString();
+            Console.WriteLine(Value);
+            Regex peeReg = new Regex(PeerValue + @"((\w{2})|(\w{44}))" + peerScriptHash);
+            bool peerResult = peeReg.IsMatch(txData);
+            Console.WriteLine(peerResult);
+            return result && peerResult;
+        }
+
+        ///<summary>
+        ///verify Neo/Gas TxData
+        ///</summary>
+        ///<param name="txData"></param>
+        ///<param name="txid"></param>
+        ///<param name="n"></param>
+        ///<param name="peerTxid"></param>
+        ///<param name="peerN"></param>
+        public static bool verifyNeoTxData(string txData, string txid, string n, string peerTxid, string peerN)
+        {
+            if (txData == null) return false;
+            string txIdReverse = txid.RemovePrefix().HexReverse();
+            Console.WriteLine(txIdReverse);
+            string Value = BigInteger.Parse(n).ToByteArray().ToHexString();
+            Console.WriteLine(Value);
+            Regex reg = new Regex(txIdReverse + Value);
+            Console.WriteLine(txIdReverse + Value);
+            bool result = reg.IsMatch(txData);
+            string txIdReverse1 = peerTxid.RemovePrefix().HexReverse();
+            Console.WriteLine(txIdReverse1);
+            string Value1 = BigInteger.Parse(peerN).ToByteArray().ToHexString();
+            Console.WriteLine(Value1);
+            Regex reg1 = new Regex(txIdReverse1 + Value1);
+            bool result1 = reg1.IsMatch(txData);
+            return result && result1;
         }
     }
 }
