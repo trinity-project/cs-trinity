@@ -214,10 +214,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.neoTransaction.CreateSenderRDTX(out this.rdTx, this.hcTx.txId);
 
                 // create HEDTX
-                this.neoTransaction.CreateHEDTX(out this.hedTx, lockedPayment);
+                this.neoTransaction.CreateHEDTX(out this.hedTx, lockedPayment, this.hcTx.txId);
 
                 // create HTTX
-                this.neoTransaction.CreateHTTX(out this.htTx, lockedPayment);
+                this.neoTransaction.CreateHTTX(out this.htTx, lockedPayment, this.hcTx.txId);
 
                 // create HTRDTX
                 this.neoTransaction.CreateHTRDTX(out this.htRdTx, lockedPayment, this.htTx.txId);
@@ -240,13 +240,13 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 this.neoTransaction.CreateReceiverRDTX(out this.rdTx, this.hcTx.txId);
 
                 // create HETX
-                this.neoTransaction.CreateHETX(out this.heTx, lockedPayment);
+                this.neoTransaction.CreateHETX(out this.heTx, lockedPayment, this.hcTx.txId);
 
                 // create HERDTX
                 this.neoTransaction.CreateHERDTX(out this.heRdTx, lockedPayment, this.heTx.txId);
 
                 // create HTDTX
-                this.neoTransaction.CreateHTDTX(out this.htdTx, lockedPayment);
+                this.neoTransaction.CreateHTDTX(out this.htdTx, lockedPayment, this.hcTx.txId);
 
                 // makeup message body
                 this.Request.MessageBody.HCTX = this.hcTx;
