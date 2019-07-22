@@ -55,6 +55,7 @@ namespace Trinity
             {
                 assetTypes.Clear();
                 /* get neo/gas asset information */
+                /*
                 using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
                 {
                     IEnumerable<Coin> coins = CurrentWallet?.GetCoins().Where(p => !p.State.HasFlag(CoinState.Spent)) ?? Enumerable.Empty<Coin>();
@@ -77,6 +78,9 @@ namespace Trinity
                         assetTypes.Add(asset_name, asset_id);
                     }
                 }
+                */
+                assetTypes.Add("NEO", Settings.Default.NeoAssetId);
+                assetTypes.Add("NeoGas", Settings.Default.NeoGasAssetId);
 
                 /* get nep-5 asset information */
                 if (CurrentWallet != null)
