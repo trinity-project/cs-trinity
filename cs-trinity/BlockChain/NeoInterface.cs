@@ -799,7 +799,7 @@ namespace Trinity.BlockChain
         public static TransactionOutput[] createOutput(string _assetId, string _amount, string address, bool refunding = false)
         {
             UInt256 assetId = UInt256.Parse(_assetId);
-            uint uAmount = uint.Parse(_amount);
+            long uAmount = long.Parse(_amount);
             Fixed8 amount;
 
             if (0 == uAmount && refunding)
@@ -812,7 +812,7 @@ namespace Trinity.BlockChain
             }
             else
             {
-                amount = Fixed8.FromDecimal(uAmount);
+                amount = new Fixed8(uAmount);
             }
             UInt160 address_hash = address.ToScriptHash();
 
