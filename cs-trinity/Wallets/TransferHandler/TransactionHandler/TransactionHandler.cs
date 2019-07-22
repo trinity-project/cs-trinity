@@ -762,6 +762,7 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.neoTransaction = new NeoTransaction(this.assetId, 
                 this.GetPubKey(), this.balance.ToString(), this.GetPeerPubKey(), this.peerBalance.ToString(),
                 this.fundingTrade?.founder.originalData.addressFunding, this.fundingTrade?.founder.originalData.scriptFunding);
+            this.neoTransaction.SetFundingTxId(this.fundingTrade?.founder.originalData.txId);
 
             this.SetTransactionValid();
 
