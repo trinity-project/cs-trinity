@@ -859,58 +859,31 @@ namespace Trinity.BlockChain
         }
 
         ///<summary>
-        ///verify Nep5 TxData
+        ///verify TxData 
         ///</summary>
         ///<param name="txData"></param>
-        ///<param name="address"></param>
-        ///<param name="value"></param>
-        ///<param name="peerAddress"></param>
-        ///<param name="peerValue"></param>
-        public static bool verifyNep5TxData(string txData, string address, string value, string peerAddress, string peerValue)
+        ///<param name="assetId"></param>
+        ///<param name="pubKey"></param>
+        ///<param name="deposit"></param>
+        ///<param name="peerPubKey"></param>
+        ///<param name="peerDeposit"></param>
+        public static bool verifyTxData(string txData, string _txData, string assetId)
         {
-            if (txData == null) return false;
-            string scriptHash = address.ToScriptHash().ToArray().ToHexString();
-            Console.WriteLine(scriptHash);
-            string Value = BigInteger.Parse(value).ToByteArray().ToHexString();
-            Console.WriteLine(Value);
-            Regex reg = new Regex(Value + @"((\w{2})|(\w{44}))" + scriptHash);
-            bool result = reg.IsMatch(txData);
-            Console.WriteLine(result);
-            string peerScriptHash = peerAddress.ToScriptHash().ToArray().ToHexString();
-            Console.WriteLine(peerScriptHash);
-            string PeerValue = BigInteger.Parse(peerValue).ToByteArray().ToHexString();
-            Console.WriteLine(Value);
-            Regex peeReg = new Regex(PeerValue + @"((\w{2})|(\w{44}))" + peerScriptHash);
-            bool peerResult = peeReg.IsMatch(txData);
-            Console.WriteLine(peerResult);
-            return result && peerResult;
-        }
+            string _txDataProcessed;
+            string txDataProcessed;
+            if (null == txData || null == _txData || null == assetId) return false;
 
-        ///<summary>
-        ///verify Neo/Gas TxData
-        ///</summary>
-        ///<param name="txData"></param>
-        ///<param name="txid"></param>
-        ///<param name="n"></param>
-        ///<param name="peerTxid"></param>
-        ///<param name="peerN"></param>
-        public static bool verifyNeoTxData(string txData, string txid, string n, string peerTxid, string peerN)
-        {
-            if (txData == null) return false;
-            string txIdReverse = txid.RemovePrefix().HexReverse();
-            Console.WriteLine(txIdReverse);
-            string Value = BigInteger.Parse(n).ToByteArray().ToHexString();
-            Console.WriteLine(Value);
-            Regex reg = new Regex(txIdReverse + Value);
-            Console.WriteLine(txIdReverse + Value);
-            bool result = reg.IsMatch(txData);
-            string txIdReverse1 = peerTxid.RemovePrefix().HexReverse();
-            Console.WriteLine(txIdReverse1);
-            string Value1 = BigInteger.Parse(peerN).ToByteArray().ToHexString();
-            Console.WriteLine(Value1);
-            Regex reg1 = new Regex(txIdReverse1 + Value1);
-            bool result1 = reg1.IsMatch(txData);
-            return result && result1;
+            if (assetId.IsNeoOrNeoGas())
+            {
+                txDataProcessed = txData.Substring(110, txData.Length - 110);
+                _txDataProcessed = _txData.Substring(110, _txData.Length - 110);
+            } else
+            {
+                txDataProcessed = txData.Substring(0, txData.Length - 22);
+                _txDataProcessed = _txData.Substring(0, _txData.Length - 22);
+            }
+
+            return txDataProcessed == _txDataProcessed;
         }
     }
 }
