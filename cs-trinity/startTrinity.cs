@@ -14,9 +14,11 @@ using Neo.Wallets;
 using Trinity.BlockChain;
 using Trinity.Properties;
 using Neo.Persistence;
+using System.Runtime.InteropServices;
 
 namespace Trinity
 {
+    public delegate void DelegateChannelInfo();
     public static class startTrinity
     {
         public static Wallet currentWallet = null;
@@ -26,11 +28,14 @@ namespace Trinity
         public static TrinityWallet trinityWallet;
         public static Dictionary<string, string> assetTypes = new Dictionary<string, string>();
 
+        public static DelegateChannelInfo myChannelStateDelegate = null;
+
         public static void trinityConfigure(NeoSystem neoSystem,
                                             StringCollection NEP5Watched,
                                             Wallet wallet, 
                                             string publicKey, 
-                                            string magic, 
+                                            string magic,
+                                            DelegateChannelInfo myDelegate,
                                             string ip=null, 
                                             string port=null)
         {
@@ -38,6 +43,8 @@ namespace Trinity
             currentWallet = wallet;
             currentAccountPublicKey = publicKey;
             assetTypes = GetCurrentWalletAssetType(wallet, NEP5Watched);
+
+            myChannelStateDelegate = myDelegate;
 
             ip = ip is null ? Settings.Default.gatewayIP : ip;
             port = port is null ? Settings.Default.gatewayPort : port;

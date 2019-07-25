@@ -39,6 +39,7 @@ using Trinity.TrinityDB;
 using Trinity.TrinityDB.Definitions;
 using Trinity.Wallets;
 using Trinity.Exceptions.DBError;
+using Trinity;
 
 namespace Trinity.ChannelSet
 {
@@ -145,18 +146,19 @@ namespace Trinity.ChannelSet
         public void AddChannel(string channel, ChannelTableContent value)
         {
             this.TableChannel.Db.Add(this.TableChannel.bothKeyword.Add(channel.ToBytesUtf8()), channel, value);
+            startTrinity.myChannelStateDelegate();
         }
 
         public void UpdateChannel(string channel, ChannelTableContent value)
         {
             this.TableChannel.Db.Update(this.TableChannel.bothKeyword.Add(channel.ToBytesUtf8()), channel, value);
-
-
+            startTrinity.myChannelStateDelegate();
         }
 
         public void DeleteChannel(string channel)
         {
             this.TableChannel.Db.Delete(this.TableChannel.bothKeyword.Add(channel.ToBytesUtf8()), channel);
+            startTrinity.myChannelStateDelegate();
         }
 
         // channel summary info
@@ -261,26 +263,31 @@ namespace Trinity.ChannelSet
         public void AddTransaction<TItemContent>(UInt64 nonce, TItemContent value)
         {
             this.TableTransaction.Db.Add(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString(), value);
+            startTrinity.myChannelStateDelegate();
         }
 
         public void AddTransaction(string txid, TransactionTabelSummary value)
         {
             this.TableTransaction.Db.Add(this.TableTransaction.txIdGroup.Add(txid.ToBytesUtf8()), txid, value);
+            startTrinity.myChannelStateDelegate();
         }
 
         public void UpdateTransaction<TItemContent>(UInt64 nonce, TItemContent value)
         {
             this.TableTransaction.Db.Update(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString(), value);
+            startTrinity.myChannelStateDelegate();
         }
 
         public void DeleteTransaction(UInt64 nonce)
         {
             this.TableTransaction.Db.Delete(this.TableTransaction.record?.Add(nonce.ToString().ToBytesUtf8()), nonce.ToString());
+            startTrinity.myChannelStateDelegate();
         }
 
         public void DeleteTransaction(string txid)
         {
             this.TableTransaction.Db.Delete(this.TableTransaction.txIdGroup.Add(txid.ToBytesUtf8()), txid);
+            startTrinity.myChannelStateDelegate();
         }
 
         /// =============================================================================================
