@@ -73,6 +73,8 @@ namespace Trinity.TrinityDB.Definitions
         public string state;    // mapping to EnumTransactionState
         // TODO : might be used in the future.
         public string type;     // mapping to EnumTransactionType
+        public string timestamp;
+        public string channel;
     }
 
     [MessagePackObject(keyAsPropertyName: true)]

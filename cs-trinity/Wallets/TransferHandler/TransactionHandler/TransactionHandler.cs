@@ -545,6 +545,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 role = this.currentRole,
                 isFounder = isFounder,
                 state = EnumTransactionState.initial.ToString(),
+                channel = this.Request.ChannelName,
+                timestamp = DateTime.Now.ToLocalTime().ToString(),
             };
         }
 
