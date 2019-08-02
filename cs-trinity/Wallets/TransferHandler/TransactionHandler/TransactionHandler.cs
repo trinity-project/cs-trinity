@@ -700,7 +700,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
 
         public virtual Channel GetChannelLevelDbEntry()
         {
-            this.channelDBEntry = this.channelDBEntry ?? new Channel(this.channelName, this.assetId, this.selfUri, this.peerUri);
+            this.channelDBEntry = this.channelDBEntry ?? 
+                new Channel(this.channelName, this.assetId, this.selfUri, this.peerUri);
             return this.channelDBEntry;
         }
 

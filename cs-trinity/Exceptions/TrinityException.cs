@@ -63,6 +63,7 @@ namespace Trinity.Exceptions
     public class TrinityException : Exception
     {
         public TrinityException() : base() { }
+        public TrinityException(int HResult) : base() { this.HResult = HResult; }
         public TrinityException(string message) : base(message) { }
         public virtual string GetErrorString() { return null; }
     }

@@ -39,23 +39,27 @@ using Trinity.TrinityDB;
 using Trinity.TrinityDB.Definitions;
 using Trinity.Wallets;
 using Trinity.Exceptions.DBError;
-using Trinity;
+using Trinity.Properties;
 
 namespace Trinity.ChannelSet
 {
     public class Channel        // : IDisposable
     {
-        private string uri;
-        private string peerUri;
-        private string assetType;
-        private string channelName;
+        private static readonly string magic = string.Format(@"{0}{1}", Neo.Network.P2P.Message.Magic,
+            Neo.Network.P2P.Message.Magic == Settings.Default.NeoMagicMainNet ?
+            Settings.Default.trinityMagicMainNet : Settings.Default.trinityMagicTestNet);
+
+        private readonly string uri;
+        private readonly string peerUri;
+        private readonly string assetType;
+        private readonly string channelName;
         //private string pubKey;
         //private string address;
         //private string peerPubKey;
         //private string peerAddress;
         //private Dictionary<string, double> Deposit;
         //private Dictionary<string, double> Balance;
-        
+
         private readonly ChannelModel TableChannel = null;
         private readonly TransactionModel TableTransaction = null;
         private readonly BlockModel TableBlock = null;
@@ -212,7 +216,7 @@ namespace Trinity.ChannelSet
             }
             catch (Exception ExpInfo)
             {
-                Console.WriteLine("Failed to get transaction with nonce: {0}. Exception: {1}", nonce, ExpInfo);
+                Log.Fatal("Failed to get transaction with nonce: {0}. Exception: {1}", nonce, ExpInfo);
             }
 
             return default;
@@ -343,7 +347,7 @@ namespace Trinity.ChannelSet
 
         public virtual string dbPath()
         {
-            return "./trinity/leveldb";
+            return string.Format("./trinity/leveldb/OffChain_{0}", uint.Parse(Channel.magic));
         }
 
         //public void Dispose()
