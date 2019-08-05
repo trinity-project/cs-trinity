@@ -221,14 +221,14 @@ namespace Trinity.Wallets.TransferHandler
                 Log.Fatal("{0}: failed since trinity internal error. System error: {1}.",
                     this.Request.MessageType, ExpInfo.Message);
                 this.FailStep(ExpInfo.GetErrorString());
-                throw new TrinityException(ExpInfo.HResult);
+                //throw new TrinityException(ExpInfo.HResult);
             }
             catch (Exception ExpInfo)
             {
                 Log.Fatal("{0}: failed since error found by system. System error: {1}.", 
                     this.Request.MessageType, ExpInfo.Message);
                 this.FailStep(ExpInfo.ToString());
-                throw new Exception(ExpInfo.Message);
+                //throw new Exception(ExpInfo.Message);
             }
             
             return false;
