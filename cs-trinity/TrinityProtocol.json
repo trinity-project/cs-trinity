@@ -1,5 +1,6 @@
 {
   "ProtocolConfiguration": {
+    "OffChain" : "./trinity/leveldb/OffChain_{0}",
     "Alias" : "CsTrinityWallet",
     "AutoCreate" : true,
     "Gateway" : {

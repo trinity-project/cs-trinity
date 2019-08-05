@@ -16,6 +16,7 @@ namespace Trinity.Properties
         public string localPort { get; private set; }
         public string alias { get; private set; }
         public string autoCreate { get; private set; }
+        public string offChain { get; private set; }
         public uint maxChannel { get; private set; }
         public uint trinityMagicMainNet { get; private set; }
         public uint trinityMagicTestNet { get; private set; }
@@ -39,6 +40,7 @@ namespace Trinity.Properties
 
             this.alias = section.GetSection("Alias").Value;
             this.autoCreate = section.GetSection("AutoCreate").Value;
+            this.offChain = section.GetSection("OffChain").Value;
             this.maxChannel = uint.Parse(section.GetSection("ChannelSettings").GetSection("MaxChannel").Value);
             this.trinityMagicMainNet = MagicMainNet;
             this.trinityMagicTestNet = MagicTestNet;

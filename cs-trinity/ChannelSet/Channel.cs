@@ -347,7 +347,7 @@ namespace Trinity.ChannelSet
 
         public virtual string dbPath()
         {
-            return string.Format("./trinity/leveldb/OffChain_{0}", uint.Parse(Channel.magic));
+            return string.Format(Settings.Default.offChain, ulong.Parse(Channel.magic).ToString("X16"));
         }
 
         //public void Dispose()
