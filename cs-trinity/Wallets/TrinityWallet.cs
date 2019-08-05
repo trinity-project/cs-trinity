@@ -39,6 +39,7 @@ using Trinity.Wallets.Templates.Messages;
 using Trinity.Wallets.TransferHandler.TransactionHandler;
 using Trinity.Wallets.TransferHandler.ControlHandler;
 using Trinity.Properties;
+using Trinity.Exceptions;
 
 namespace Trinity
 {
@@ -181,8 +182,19 @@ namespace Trinity
                 }
 
                 // parse the message header
-                
-                this.ProcessMessage(message);
+                try
+                {
+                    this.ProcessMessage(message);
+                }
+                catch (TrinityException ExpInfo)
+                {
+                    Log.Fatal("HResult: 0X{0}. Trinity Exception: {1}.", ExpInfo.HResult.ToString("X16"), ExpInfo.Message);
+                    // How to notify ui the error code.
+                }
+                catch (Exception ExpInfo)
+                {
+                    Log.Fatal("HResult: 0X{0}. System Exception: {1}.", ExpInfo.HResult.ToString("X16"), ExpInfo.Message);
+                }
 
                 // Default sleep 1s
                 Thread.Sleep(msSleep);
@@ -207,6 +219,7 @@ namespace Trinity
 
             if (null == header)
             {
+                Log.Warn("Illegal message is received. Message: {0}", message);
                 return;
             }
 
