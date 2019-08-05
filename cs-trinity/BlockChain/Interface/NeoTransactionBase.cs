@@ -677,7 +677,19 @@ namespace Trinity.BlockChain.Interface
             // Assembly transaction with output for both wallets
             TransactionOutput[] outputToSelf = NeoInterface.createOutput(assetId, this.local.balance, this.local.address, true);
             TransactionOutput[] outputToOther = NeoInterface.createOutput(assetId, this.remote.balance, this.remote.address, true);
-            TransactionOutput[] outputsData = outputToSelf.Concat(outputToOther).ToArray();
+            TransactionOutput[] outputsData = new TransactionOutput[] { };
+            if (outputToSelf == null)
+            {
+                outputsData = outputToOther;
+            }
+            else if (outputToOther == null)
+            {
+                outputsData = outputToSelf;
+                
+            } else
+            {
+                outputsData = outputToSelf.Concat(outputToOther).ToArray();
+            }
 
             List<TransactionAttribute> attributes = this.MakeTransactionAttributes(this.addressFunding, timestamp);
 
