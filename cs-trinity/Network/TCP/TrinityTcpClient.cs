@@ -39,8 +39,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Trinity;
 using Trinity.TrinityDB;
-
-
+using Trinity.Wallets.TransferHandler.ControlHandler;
+using Trinity.Properties;
 
 namespace Trinity.Network.TCP
 {
@@ -201,6 +201,34 @@ namespace Trinity.Network.TCP
             return length;
         }
 
+        private void RegisterToGateway()
+        {
+            // Trigger RegisterKeepAlive message to gateway
+            RegisterWallet registerWalletHndl = new RegisterWallet();
+            registerWalletHndl.MakeTransaction();
+        }
+
+        /// <summary>
+        /// This method will sync the basic wallet information to the gateway.
+        /// </summary>
+        private void NotifyWalletInfoToGateway()
+        {
+            string pubKey = TrinityWallet.GetWalletPubKey();
+            string magic = TrinityWallet.GetMagic();
+
+            string sender = pubKey + "@" + Settings.Default.localIp + ":" + Settings.Default.localPort;
+            // Trigger SyncWalletData message to gateway
+            SyncWalletHandler syncWalletHndl = new SyncWalletHandler(sender, magic);
+            syncWalletHndl.SetPublicKey(pubKey);
+            syncWalletHndl.SetAlias("NoAlias");
+            syncWalletHndl.SetAutoCreate("0");
+            syncWalletHndl.SetNetAddress(Settings.Default.localIp + ":" + Settings.Default.localPort);
+            syncWalletHndl.SetMaxChannel(10);
+            syncWalletHndl.SetChannelInfo();
+
+            syncWalletHndl.MakeTransaction();
+        }
+
         private int ReceiveHeader()
         {
             byte[] msgHeader = new byte[this.messageHeaderLength];
@@ -210,7 +238,22 @@ namespace Trinity.Network.TCP
 
             while (this.messageHeaderLength > received)
             {
-                received += this.tcpClient.Client.Receive(msgHeader, offset, readSize, SocketFlags.None);
+                try
+                {
+                    received += this.tcpClient.Client.Receive(msgHeader, offset, readSize, SocketFlags.None);
+                }
+                catch(Exception ex)
+                {
+                    Log.Warn("re-setup tcp client connection due to exception {0}", ex.Message);
+                    this.tcpClient.Close();
+                    this.CreateConnetion();
+
+                    RegisterToGateway();
+
+                    NotifyWalletInfoToGateway();
+
+                    continue;
+                }
                 offset = received;
                 readSize = this.messageHeaderLength - offset;
             }

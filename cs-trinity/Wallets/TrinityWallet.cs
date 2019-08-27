@@ -68,6 +68,7 @@ namespace Trinity
                 Neo.Network.P2P.Message.Magic == Settings.Default.NeoMagicMainNet ? Settings.Default.trinityMagicMainNet : Settings.Default.trinityMagicTestNet);
 
         public string pubKey;
+        public static string walletPubKey;
         /// <summary>
         /// 
         /// </summary>
@@ -79,6 +80,7 @@ namespace Trinity
             this.neoSystem = system;
             this.neoWallet = wallet;
             this.pubKey = pubKey;
+            walletPubKey = pubKey;
             this.magic = TrinityWallet.netMagic;
             this.gatewayIp = ip ?? TrinityWalletConfig.ip;
             this.gatewayPort = port ?? TrinityWalletConfig.port;
@@ -160,6 +162,11 @@ namespace Trinity
         {
             return TrinityWallet.netMagic;
         }
+
+        public static string GetWalletPubKey()
+        {
+            return TrinityWallet.walletPubKey;
+        }      
 
         public static bool IsMainnet()
         {
