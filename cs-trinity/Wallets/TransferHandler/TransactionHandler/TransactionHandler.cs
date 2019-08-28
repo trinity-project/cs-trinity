@@ -722,6 +722,18 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             return this.GetChannelLevelDbEntry().TryGetTransaction<TTransactionContent>(this.Request.TxNonce);
         }
 
+        
+        public virtual TTransactionContent GetLatestConfirmTransaction<TTransactionContent>()
+            where TTransactionContent : TransactionTabelContent
+        {
+            ulong latestConfirmNonce = this.Request.TxNonce - 1;
+            if (latestConfirmNonce >= 0)
+            {
+                return this.GetChannelLevelDbEntry().TryGetTransaction<TTransactionContent>(latestConfirmNonce);
+            }
+            return null;
+        }
+
         public virtual TransactionFundingContent GetFundingTrade()
         {
             this.fundingTrade = this.fundingTrade ?? this.channelDBEntry?.TryGetTransaction<TransactionFundingContent>(fundingNonce);
