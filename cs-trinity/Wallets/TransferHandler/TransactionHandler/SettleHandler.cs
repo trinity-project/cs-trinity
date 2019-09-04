@@ -283,4 +283,26 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         }
         #endregion
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    /// ForceSettleHandler Prototype
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>
+    /// Class Handler to force closing channel.
+    /// </summary>
+    public class ForceSettleHandler
+    {
+        public ForceSettleHandler() { }
+
+        public void ForceClosingChannel(List<string> channelList)
+        {
+            foreach (string channel in channelList)
+            {
+                // force close channel
+            }
+        }
+
+        
+    }
 }
