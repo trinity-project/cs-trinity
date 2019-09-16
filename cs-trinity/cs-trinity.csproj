@@ -306,6 +306,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
+    <Compile Include="Wallets\Event\CloseChannelEvent.cs" />
     <Compile Include="Wallets\Templates\Definitions\EnumSyncTopoAction.cs" />
     <Compile Include="Wallets\Templates\Definitions\EnumTransactionState.cs" />
     <Compile Include="Exceptions\TransactionException.cs" />
