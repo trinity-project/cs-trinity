@@ -166,12 +166,30 @@ namespace Trinity.BlockChain
                         Log.Debug("Change {0} to OPENED state.", Summary.channel);
                         SyncNetTopologyHandler.AddNetworkTopology(ChannelData);
                         break;
+
                     case "settle":
                         ChannelData.state = EnumChannelState.SETTLED.ToString();
                         Log.Debug("Change {0} to SETTLED state.", Summary.channel);
-
                         NeoInterface.removeContractFormAccount(channel, ChannelData);
                         break;
+
+                    case "commitment":
+                        ChannelData.state = EnumChannelState.CLOSING.ToString();
+                        Log.Debug("Change {0} to CLOSING state.", Summary.channel);
+                        // remove the channel from the network topo
+                        SyncNetTopologyHandler.DeleteNetworkTopology(ChannelData);
+
+                        // trigger the breachremedy transaction for punishment.
+                        break;
+
+                    case "revocable":
+                    case "breachremedy":
+                        ChannelData.state = EnumChannelState.CLOSED.ToString();
+                        Log.Debug("Change {0} to CLOSED state.", Summary.channel);
+                        // remove the multi-contract account for this channel
+                        NeoInterface.removeContractFormAccount(channel, ChannelData);
+                        break;
+
                     default:
                         Log.Debug("Unsuport transaction type -- {0} for trinity channel.", Summary.txType);
                         return;
