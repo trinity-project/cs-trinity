@@ -54,6 +54,21 @@ namespace Trinity.TrinityDB
             }
         }
 
+        public SliceBuilder blockEventGroup
+        {
+            get
+            {
+                if (null != this.group)
+                {
+                    return SliceBuilder.Begin(ModelPrefix.MPBlockEventGroup).Add(this.group);
+                }
+                else
+                {
+                    return SliceBuilder.Begin(ModelPrefix.MPBlockEventGroup);
+                }
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>

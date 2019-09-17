@@ -1,4 +1,4 @@
-/*
+﻿/*
 Author: Trinity Core Team
 
 MIT License
@@ -25,23 +25,15 @@ SOFTWARE.
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using MessagePack;
 
 namespace Trinity.TrinityDB.Definitions
 {
-    internal static class ModelPrefix
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class BlockEventContent
     {
-        public const byte MPChannelSummary = 0x1;
-        public const byte MPChannel = 0x10;
-
-        public const byte MPTransaction = 0x20;
-        public const byte MPTransactionTxId = 0x21;
-        public const byte MPTransactionHtlcLockPair = 0x22;
-
-        public const byte MPBlockGroup = 0x40;
-        public const byte MPBlockEventGroup = 0x41;
+        public string channel;
+        public string eventType; // mapping to EnumTransactionType
     }
 }

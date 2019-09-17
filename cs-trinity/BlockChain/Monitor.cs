@@ -38,6 +38,7 @@ using Trinity.TrinityDB.Definitions;
 using Trinity.BlockChain;
 using Trinity.ChannelSet.Definitions;
 using Trinity.Wallets.TransferHandler.ControlHandler;
+using Trinity.Wallets.Event;
 
 namespace Trinity.BlockChain
 {
@@ -143,12 +144,12 @@ namespace Trinity.BlockChain
                 TransactionTabelSummary Summary = channel.TryGetTransaction(id1);
                 if (Summary != null)
                 {
-                    ConductEvent(Summary);
+                    ConductEvent(Summary, id1, block);
                 }
             }
         }
 
-        public void ConductEvent(TransactionTabelSummary Summary)
+        public void ConductEvent(TransactionTabelSummary Summary, string txId, uint blockHeight)
         {
             try
             {
@@ -180,6 +181,8 @@ namespace Trinity.BlockChain
                         SyncNetTopologyHandler.DeleteNetworkTopology(ChannelData);
 
                         // trigger the breachremedy transaction for punishment.
+                        CloseChannelEvent EventHandler = new CloseChannelEvent(Summary.channel, this.uri);
+                        EventHandler.TriggerBreachRemedyEvent(txId, Summary.nonce, blockHeight);
                         break;
 
                     case "revocable":

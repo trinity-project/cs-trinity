@@ -345,6 +345,22 @@ namespace Trinity.ChannelSet
             return 0;
         }
 
+        public void AddBlockEvent(uint blockHeight, BlockEventContent value)
+        {
+            this.TableBlock.Db.Add(this.TableBlock.blockEventGroup.Add(blockHeight).Add(value?.channel?.ToBytesUtf8()), null, value);
+        }
+
+        public List<BlockEventContent> GetBlockEvents(uint blockHeight)
+        {
+            // Fuzzy get
+            return this.TableBlock.Db.FuzzyGet<BlockEventContent>(this.TableBlock.blockEventGroup.Add(blockHeight));
+        }
+
+        public void DeleteBlockEvent(uint blockHeight, string channel)
+        {
+            this.TableBlock.Db.Delete(this.TableBlock.blockEventGroup.Add(blockHeight).Add(channel.ToBytesUtf8()), channel);
+        }
+
         public virtual string dbPath()
         {
             return string.Format(Settings.Default.offChain, ulong.Parse(Channel.magic).ToString("X16"));

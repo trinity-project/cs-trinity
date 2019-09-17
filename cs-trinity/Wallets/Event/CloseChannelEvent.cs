@@ -56,6 +56,7 @@ namespace Trinity.Wallets.Event
         private ChannelTableContent currentChannel = null;
 
         private string TransactionType = null;
+        private string MonitorTxId = null;
 
         // Transaction contents
         private TxContentsSignGeneric<CommitmentTx> commitment;
@@ -102,19 +103,43 @@ namespace Trinity.Wallets.Event
             this.TriggerForceCloseChannel();
         }
 
-        public void AddRevocableEvent()
+        public void AddRevocableEvent(uint blockHeight)
         {
+            BlockEventContent blockEvent = new BlockEventContent
+            {
+                channel = this.channelName,
+                eventType = EnumTransactionType.REVOCABLE.ToString()
+            };
 
+            this.channelDBEntry.AddBlockEvent(blockHeight, blockEvent);
         }
 
-        public void TriggerRevocableEvent()
+        public void TriggerRevocableEvent(uint blockHeight)
         {
-
+            // only when channel state in Closing, trigger to broad cast the revocable trade.
+            if (this.currentChannel?.state == EnumChannelState.CLOSED.ToString())
+            {
+                return;
+            }
         }
 
-        public void TriggerBreachRemedyEvent()
+        public void TriggerBreachRemedyEvent(string txId, UInt64 nonce, uint blockHeight)
         {
+            if (null == txId)
+            {
+                return;
+            }
 
+            this.GetTransactionContentByNonce(nonce+1);
+            if (txId.Equals(this.MonitorTxId))
+            {
+                this.TriggerBreachRemedyTransaction();
+            }
+            else
+            {
+                // add event
+                this.AddRevocableEvent(blockHeight);
+            }
         }
 
         private void UpdateChannelState(EnumChannelState state)
@@ -133,6 +158,7 @@ namespace Trinity.Wallets.Event
             {
                 case "RSMC":
                     TransactionRsmcContent rsmc = this.channelDBEntry?.TryGetTransaction<TransactionRsmcContent>(nonce);
+                    this.MonitorTxId = rsmc.monitorTxId;
                     this.commitment = rsmc.commitment;
                     this.revocableDelivery = rsmc.revocableDelivery;
                     this.breachRemedy = rsmc.breachRemedy;
@@ -140,12 +166,14 @@ namespace Trinity.Wallets.Event
 
                 case "HTLC":
                     TransactionHtlcContent htlc = this.channelDBEntry?.TryGetTransaction<TransactionHtlcContent>(nonce);
+                    this.MonitorTxId = htlc.monitorTxId;
                     this.HCTX = htlc.HCTX;
                     this.RDTX = htlc.RDTX;
                     break;
 
                 case "FUNDING":
                     TransactionFundingContent funding = this.channelDBEntry?.TryGetTransaction<TransactionFundingContent>(nonce);
+                    this.MonitorTxId = funding.monitorTxId;
                     this.commitment = funding.commitment;
                     this.revocableDelivery = funding.revocableDelivery;
                     break;
