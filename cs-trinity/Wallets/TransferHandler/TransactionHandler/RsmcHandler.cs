@@ -128,6 +128,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 if (this.IsRole2(this.Request.MessageBody.RoleIndex) || this.IsRole3(this.Request.MessageBody.RoleIndex))
                 {
                     this.UpdateChannelBalance();
+
+                    // add self BreachRemedy txid for monitoring
+                    this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.BreachRemedy.originalData.txId,
+                        this.Request.ChannelName, EnumTransactionType.BREACHREMEDY);
                 }
                 
                 return true;
@@ -217,6 +221,10 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                 TransactionRsmcContent latestConfirmTransaction = this.GetLatestConfirmTransaction<TransactionRsmcContent>();
                 this.neoTransaction.CreateBRTX(out this.brTx, latestConfirmTransaction.commitment.originalData.txId);
                 this.Request.MessageBody.BreachRemedy = this.MakeupSignature(this.brTx);
+
+                // add BreachRemedy txid for monitoring
+                this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.BreachRemedy.originalData.txId,
+                    this.Request.ChannelName, EnumTransactionType.BREACHREMEDY);
             }
 
             return true;
@@ -436,7 +444,11 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
                     "Succeed handling RsmcSign. Channel: {0}, AssetType: {1}, Balance: {2}. PeerBalance: {3}, Payment: {4}, RoleIndex: {5}",
                     this.Request.ChannelName, this.Request.AssetType, this.SelfBalance(), this.PeerBalance(),
                     this.Request.MessageBody.Value, this.Request.MessageBody.RoleIndex, this.Request.MessageBody.RoleIndex);
-                return false;
+
+                // Add self txid for monitoring
+                this.AddTransactionSummary();
+
+                return true;
             }
 
             return false;

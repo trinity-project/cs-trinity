@@ -345,6 +345,9 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             // Add contract address to the account to monitor it
             NeoInterface.addContractToAccount(this.Request.Sender, this.Request.Receiver);
 
+            // Add self txid to monitor
+            this.AddTransactionSummary();
+
             // broadcast this transaction
             if (IsRole1(this.Request.MessageBody.RoleIndex))
             {
@@ -385,6 +388,8 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
             this.Request.MessageBody.RevocableDelivery = this.MakeupSignature(this.onGoingRequest.MessageBody.RevocableDelivery);
 
             // Add txid for monitor
+            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Founder.originalData.txId,
+                this.Request.ChannelName, EnumTransactionType.FUNDING);
             this.AddTransactionSummary();
             return true;
         }
@@ -473,9 +478,6 @@ namespace Trinity.Wallets.TransferHandler.TransactionHandler
         public override void AddTransactionSummary()
         {
             // Add txid for monitor
-            this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Founder.originalData.txId,
-                this.Request.ChannelName, EnumTransactionType.FUNDING);
-
             this.AddTransactionSummary(this.Request.TxNonce, this.Request.MessageBody.Commitment.originalData.txId,
                 this.Request.ChannelName, EnumTransactionType.COMMITMENT);
 
