@@ -91,7 +91,8 @@ namespace Trinity.Wallets.Event
 
             // if current transaction is settle trade, maybe settle is not reponsed correctly
             UInt64 currentNonce = this.currentChannelSummary.nonce;
-            if (this.currentChannelSummary.type.Equals(EnumTransactionType.SETTLE.ToString()))
+            TransactionTabelContent latestTrade = this.channelDBEntry?.TryGetTransaction<TransactionTabelContent>(currentNonce);
+            if (EnumTransactionType.SETTLE.ToString().Equals(latestTrade?.type))
             {
                 currentNonce -= 1;
             }
