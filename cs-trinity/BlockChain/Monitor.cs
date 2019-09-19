@@ -105,6 +105,7 @@ namespace Trinity.BlockChain
                     //Console.WriteLine("①本地块高:" + walletBlockHeitht + " 链上:" + blockChainHeight + " 当前时间:" + t);
                     MonitorTxId(currentMonitordBlockHeight);
                     channel.AddBlockHeight(this.uri, currentMonitordBlockHeight);
+                    TriggerChannelEvent(currentMonitordBlockHeight);
                     currentMonitordBlockHeight++;
                     Thread.Sleep(100);
                 }
@@ -205,6 +206,33 @@ namespace Trinity.BlockChain
             {
                 Log.Error("Exception occurred during update channel: {0}. Operation: {1}. Exception: {2}", 
                     Summary?.channel, Summary?.txType, ExpInfo);
+            }
+        }
+
+        private void TriggerChannelEvent(uint blockHeight)
+        {
+            List<BlockEventContent> channelEventList = this.channel.GetBlockEvents(blockHeight);
+
+            foreach(BlockEventContent channelEvent in channelEventList)
+            {
+                if (null != channelEvent?.channel)
+                {
+                    this.TriggerChannelEventByEventType(channelEvent, blockHeight);
+                }
+            }
+        }
+
+        private void TriggerChannelEventByEventType(BlockEventContent channelEvent, uint blockHeight)
+        {
+            switch (channelEvent.eventType)
+            {
+                case "REVOCABLE":
+                    CloseChannelEvent closeEvent = new CloseChannelEvent(channelEvent.channel, this.uri);
+                    closeEvent.TriggerRevocableEvent(blockHeight);
+                    break;
+
+                default:
+                    break;
             }
         }
     }

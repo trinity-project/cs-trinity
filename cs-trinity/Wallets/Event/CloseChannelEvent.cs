@@ -57,6 +57,7 @@ namespace Trinity.Wallets.Event
 
         private string TransactionType = null;
         private string MonitorTxId = null;
+        private const uint DelayBlockHeight = 25;
 
         // Transaction contents
         private TxContentsSignGeneric<CommitmentTx> commitment;
@@ -104,22 +105,25 @@ namespace Trinity.Wallets.Event
             this.TriggerForceCloseChannel();
         }
 
-        public void AddRevocableEvent(uint blockHeight)
+        public void AddRevocableEvent(UInt64 nonce, uint blockHeight)
         {
             BlockEventContent blockEvent = new BlockEventContent
             {
+                nonce = nonce,
                 channel = this.channelName,
                 eventType = EnumTransactionType.REVOCABLE.ToString()
             };
 
-            this.channelDBEntry.AddBlockEvent(blockHeight, blockEvent);
+            this.channelDBEntry.AddBlockEvent(blockHeight + DelayBlockHeight, blockEvent);
         }
 
         public void TriggerRevocableEvent(uint blockHeight)
         {
             // only when channel state in Closing, trigger to broad cast the revocable trade.
-            if (this.currentChannel?.state == EnumChannelState.CLOSED.ToString())
+            if (this.currentChannel?.state == EnumChannelState.CLOSING.ToString())
             {
+                Log.Info("Start to trigger Revocable transaction at block: {0}", blockHeight);
+                this.TriggerRevocableTransaction(blockHeight);
                 return;
             }
         }
@@ -134,12 +138,12 @@ namespace Trinity.Wallets.Event
             this.GetTransactionContentByNonce(nonce+1);
             if (txId.Equals(this.MonitorTxId))
             {
-                this.TriggerBreachRemedyTransaction();
+                this.TriggerBreachRemedyTransaction(blockHeight);
             }
             else
             {
                 // add event
-                this.AddRevocableEvent(blockHeight);
+                this.AddRevocableEvent(nonce, blockHeight);
             }
         }
 
@@ -202,17 +206,21 @@ namespace Trinity.Wallets.Event
             }
         }
 
-        private void TriggerRevocableTransaction()
+        private void TriggerRevocableTransaction(uint blockHeight)
         {
+            string witness = null;
+
             switch (this.TransactionType)
             {
                 case "RSMC":
                 case "FUNDING":
-                    this.BroadcastTransaction(this.revocableDelivery.originalData.txData, this.revocableDelivery.txDataSign, this.revocableDelivery.originalData.witness);
+                    witness = this.revocableDelivery.originalData.witness.Replace("{blockheight_script}", this.ConvertBlockHeightString(blockHeight));
+                    this.BroadcastTransaction(this.revocableDelivery.originalData.txData, this.revocableDelivery.txDataSign, witness);
                     break;
 
                 case "HTLC":
-                    this.BroadcastTransaction(this.RDTX.originalData.txData, this.RDTX.txDataSign, this.RDTX.originalData.witness);
+                    witness = this.RDTX.originalData.witness.Replace("{blockheight_script}", this.ConvertBlockHeightString(blockHeight));
+                    this.BroadcastTransaction(this.RDTX.originalData.txData, this.RDTX.txDataSign, witness);
                     break;
 
                 default:
@@ -220,11 +228,14 @@ namespace Trinity.Wallets.Event
             }
         }
 
-        private void TriggerBreachRemedyTransaction()
+        private void TriggerBreachRemedyTransaction(uint blockHeight)
         {
+            string witness = null;
+
             switch (this.TransactionType)
             {
                 case "RSMC":
+                    witness = this.breachRemedy.originalData.witness.Replace("{blockheight_script}", this.ConvertBlockHeightString(blockHeight));
                     this.BroadcastTransaction(this.breachRemedy.originalData.txData, this.breachRemedy.txDataSign, this.breachRemedy.originalData.witness);
                     break;
 
@@ -245,5 +256,16 @@ namespace Trinity.Wallets.Event
             return NeoInterface.SendRawTransaction(txData + witness);
         }
 
+        private string ConvertBlockHeightString(uint blockHeight)
+        {
+            string height = string.Format("{0:X}", blockHeight);
+            
+            if (1 == height.Length % 2)
+            {
+                return height.PadLeft(height.Length + 1, '0');
+            }
+
+            return height;
+        }
     }
 }

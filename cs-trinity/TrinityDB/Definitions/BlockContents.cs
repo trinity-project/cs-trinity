@@ -33,6 +33,7 @@ namespace Trinity.TrinityDB.Definitions
     [MessagePackObject(keyAsPropertyName: true)]
     public class BlockEventContent
     {
+        public UInt64 nonce;
         public string channel;
         public string eventType; // mapping to EnumTransactionType
     }

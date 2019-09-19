@@ -347,7 +347,7 @@ namespace Trinity.ChannelSet
 
         public void AddBlockEvent(uint blockHeight, BlockEventContent value)
         {
-            this.TableBlock.Db.Add(this.TableBlock.blockEventGroup.Add(blockHeight).Add(value?.channel?.ToBytesUtf8()), null, value);
+            this.TableBlock.Db.Add(this.TableBlock.blockEventGroup.Add(blockHeight).Add(value?.channel?.ToBytesUtf8()), value?.channel, value);
         }
 
         public List<BlockEventContent> GetBlockEvents(uint blockHeight)
