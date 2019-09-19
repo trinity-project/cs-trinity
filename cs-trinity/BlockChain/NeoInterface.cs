@@ -398,7 +398,7 @@ namespace Trinity.BlockChain
             return BigInteger.Parse(i.ToString()).ToByteArray().ToHexString();
         }
 
-        public static string BlockheightToScript(long input)
+        public static string BlockheightToScript(uint input)
         {
             string inputHex = Convert.ToString(input, 16);
 

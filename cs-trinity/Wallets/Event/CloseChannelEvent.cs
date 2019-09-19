@@ -57,7 +57,7 @@ namespace Trinity.Wallets.Event
 
         private string TransactionType = null;
         private string MonitorTxId = null;
-        private const uint DelayBlockHeight = 1000;
+        private const uint DelayBlockHeight = 30;
 
         // Transaction contents
         private TxContentsSignGeneric<CommitmentTx> commitment;
@@ -279,14 +279,7 @@ namespace Trinity.Wallets.Event
 
         private string ConvertBlockHeightString(uint blockHeight)
         {
-            string height = string.Format("{0:X}", blockHeight);
-            
-            if (1 == height.Length % 2)
-            {
-                return height.PadLeft(height.Length + 1, '0');
-            }
-
-            return height;
+            return NeoInterface.BlockheightToScript(blockHeight);
         }
     }
 }
