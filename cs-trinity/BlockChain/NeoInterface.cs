@@ -398,6 +398,29 @@ namespace Trinity.BlockChain
             return BigInteger.Parse(i.ToString()).ToByteArray().ToHexString();
         }
 
+        public static string BlockheightToScript(long input)
+        {
+            string inputHex = Convert.ToString(input, 16);
+
+            if (inputHex.Length % 2 == 1)
+            {
+                inputHex = inputHex.Insert(0, 0.ToString());
+            }
+
+            byte[] reverseValue = HexString2Bytes(inputHex).Reverse().ToArray();
+            string inputReverse = Bytes2HexString(reverseValue);
+
+            string lengthString = (inputReverse.Length / 2).ToString();
+            if ((lengthString.Length % 2) != 0)
+            {
+                lengthString = lengthString.Insert(0, 0.ToString());
+            }
+            string totalLength = Convert.ToString(83 + int.Parse(lengthString));
+            string output = String.Format("{0}{1}{2}", totalLength, lengthString, inputReverse);
+
+            return output; 
+        }
+
         ///<summary>
         ///创建多签合约，封装自NEO方法
         ///</summary>
