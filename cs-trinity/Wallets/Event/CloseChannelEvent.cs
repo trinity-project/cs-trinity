@@ -57,7 +57,7 @@ namespace Trinity.Wallets.Event
 
         private string TransactionType = null;
         private string MonitorTxId = null;
-        private const uint DelayBlockHeight = 1000;
+        private const uint DelayBlockHeight = 30;
 
         // Transaction contents
         private TxContentsSignGeneric<CommitmentTx> commitment;
@@ -206,11 +206,12 @@ namespace Trinity.Wallets.Event
             {
                 case "RSMC":
                 case "FUNDING":
-                    this.BroadcastTransaction(this.commitment.originalData.txData, this.commitment.txDataSign, this.commitment.originalData.witness);
+                    this.BroadcastTransaction(this.commitment.originalData.txId, this.commitment.originalData.txData,
+                        this.commitment.txDataSign, this.commitment.originalData.witness);
                     break;
 
                 case "HTLC":
-                    this.BroadcastTransaction(this.HCTX.originalData.txData, this.HCTX.txDataSign, this.HCTX.originalData.witness);
+                    this.BroadcastTransaction(this.HCTX.originalData.txId, this.HCTX.originalData.txData, this.HCTX.txDataSign, this.HCTX.originalData.witness);
                     break;
 
                 default:
@@ -227,12 +228,13 @@ namespace Trinity.Wallets.Event
                 case "RSMC":
                 case "FUNDING":
                     witness = this.revocableDelivery.originalData.witness.Replace("{blockheight_script}", this.ConvertBlockHeightString(blockHeight));
-                    this.BroadcastTransaction(this.revocableDelivery.originalData.txData, this.revocableDelivery.txDataSign, witness);
+                    this.BroadcastTransaction(this.revocableDelivery.originalData.txId, this.revocableDelivery.originalData.txData,
+                        this.revocableDelivery.txDataSign, witness);
                     break;
 
                 case "HTLC":
                     witness = this.RDTX.originalData.witness.Replace("{blockheight_script}", this.ConvertBlockHeightString(blockHeight));
-                    this.BroadcastTransaction(this.RDTX.originalData.txData, this.RDTX.txDataSign, witness);
+                    this.BroadcastTransaction(this.RDTX.originalData.txId, this.RDTX.originalData.txData, this.RDTX.txDataSign, witness);
                     break;
 
                 default:
@@ -248,7 +250,8 @@ namespace Trinity.Wallets.Event
             {
                 case "RSMC":
                     witness = this.breachRemedy.originalData.witness.Replace("{blockheight_script}", this.ConvertBlockHeightString(blockHeight));
-                    this.BroadcastTransaction(this.breachRemedy.originalData.txData, this.breachRemedy.txDataSign, this.breachRemedy.originalData.witness);
+                    this.BroadcastTransaction(this.breachRemedy.originalData.txId, this.breachRemedy.originalData.txData, 
+                        this.breachRemedy.txDataSign, this.breachRemedy.originalData.witness);
                     break;
 
                 case "HTLC":
@@ -259,7 +262,7 @@ namespace Trinity.Wallets.Event
             }
         }
 
-        private JObject BroadcastTransaction(string txData, string peerTxDataSignarture, string witness)
+        private JObject BroadcastTransaction(string txId, string txData, string peerTxDataSignarture, string witness)
         {
             string txDataSignarture = this.wallet?.Sign(txData);
             witness = witness.Replace("{signOther}", txDataSignarture).Replace("{signSelf}", peerTxDataSignarture);
@@ -271,7 +274,7 @@ namespace Trinity.Wallets.Event
             }
             catch (Exception ExpInfo)
             {
-                Log.Error("Broadcast transaction failed. Exceptions: {0}", ExpInfo);
+                Log.Error("Broadcast transaction<txId: {0}> failed. Exceptions: {1}", txId, ExpInfo);
                 return false;
             }
             
