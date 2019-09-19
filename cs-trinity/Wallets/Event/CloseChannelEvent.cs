@@ -265,7 +265,16 @@ namespace Trinity.Wallets.Event
             witness = witness.Replace("{signOther}", txDataSignarture).Replace("{signSelf}", peerTxDataSignarture);
 
             // Broadcast the transaction by calling rpc interface
-            return NeoInterface.SendRawTransaction(txData + witness);
+            try
+            {
+                return NeoInterface.SendRawTransaction(txData + witness);
+            }
+            catch (Exception ExpInfo)
+            {
+                Log.Error("Broadcast transaction failed. Exceptions: {0}", ExpInfo);
+                return false;
+            }
+            
         }
 
         private string ConvertBlockHeightString(uint blockHeight)
