@@ -57,7 +57,7 @@ namespace Trinity.Wallets.Event
 
         private string TransactionType = null;
         private string MonitorTxId = null;
-        private const uint DelayBlockHeight = 30;
+        private const uint DelayBlockHeight = 1000;
 
         // Transaction contents
         private TxContentsSignGeneric<CommitmentTx> commitment;
