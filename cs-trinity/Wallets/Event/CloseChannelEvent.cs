@@ -57,7 +57,7 @@ namespace Trinity.Wallets.Event
 
         private string TransactionType = null;
         private string MonitorTxId = null;
-        private const uint DelayBlockHeight = 25;
+        private const uint DelayBlockHeight = 1000;
 
         // Transaction contents
         private TxContentsSignGeneric<CommitmentTx> commitment;
@@ -117,12 +117,13 @@ namespace Trinity.Wallets.Event
             this.channelDBEntry.AddBlockEvent(blockHeight + DelayBlockHeight, blockEvent);
         }
 
-        public void TriggerRevocableEvent(uint blockHeight)
+        public void TriggerRevocableEvent(UInt64 nonce, uint blockHeight)
         {
             // only when channel state in Closing, trigger to broad cast the revocable trade.
             if (this.currentChannel?.state == EnumChannelState.CLOSING.ToString())
             {
                 Log.Info("Start to trigger Revocable transaction at block: {0}", blockHeight);
+                this.GetTransactionContentByNonce(nonce);
                 this.TriggerRevocableTransaction(blockHeight);
                 return;
             }
@@ -135,7 +136,8 @@ namespace Trinity.Wallets.Event
                 return;
             }
 
-            this.GetTransactionContentByNonce(nonce+1);
+            // get transaction by nonce+1
+            this.GetTransactionContentByNonce(nonce + 1);
             if (txId.Equals(this.MonitorTxId))
             {
                 this.TriggerBreachRemedyTransaction(blockHeight);
@@ -156,8 +158,18 @@ namespace Trinity.Wallets.Event
 
         private void GetTransactionContentByNonce(UInt64 nonce)
         {
+            TransactionTabelContent currentTrade;
+
             // get current transaction
-            TransactionTabelContent currentTrade = this.channelDBEntry?.TryGetTransaction<TransactionTabelContent>(nonce);
+            try
+            {
+                currentTrade = this.channelDBEntry?.TryGetTransaction<TransactionTabelContent>(nonce);
+            }
+            catch (TrinityLevelDBException)
+            {
+                return;
+            }
+
             this.TransactionType = currentTrade?.type?.ToUpper();
             switch (this.TransactionType)
             {
@@ -208,7 +220,7 @@ namespace Trinity.Wallets.Event
 
         private void TriggerRevocableTransaction(uint blockHeight)
         {
-            string witness = null;
+            string witness;
 
             switch (this.TransactionType)
             {
@@ -230,7 +242,7 @@ namespace Trinity.Wallets.Event
 
         private void TriggerBreachRemedyTransaction(uint blockHeight)
         {
-            string witness = null;
+            string witness;
 
             switch (this.TransactionType)
             {

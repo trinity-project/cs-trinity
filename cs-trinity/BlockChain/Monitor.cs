@@ -217,18 +217,18 @@ namespace Trinity.BlockChain
             {
                 if (null != channelEvent?.channel)
                 {
-                    this.TriggerChannelEventByEventType(channelEvent, blockHeight);
+                    this.TriggerChannelEventByEventType(channelEvent, channelEvent.nonce, blockHeight);
                 }
             }
         }
 
-        private void TriggerChannelEventByEventType(BlockEventContent channelEvent, uint blockHeight)
+        private void TriggerChannelEventByEventType(BlockEventContent channelEvent, UInt64 nonce, uint blockHeight)
         {
             switch (channelEvent.eventType)
             {
                 case "REVOCABLE":
                     CloseChannelEvent closeEvent = new CloseChannelEvent(channelEvent.channel, this.uri);
-                    closeEvent.TriggerRevocableEvent(blockHeight);
+                    closeEvent.TriggerRevocableEvent(nonce, blockHeight);
                     break;
 
                 default:

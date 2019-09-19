@@ -243,7 +243,7 @@ namespace Trinity.ChannelSet
 
             throw new TrinityLevelDBException(
                     EnumLevelDBErrorCode.Transaction_Contents_Not_Found,
-                    string.Format("Transaction information with nonce-{0} not found!", nonce),
+                    string.Format("Transaction information with nonce< value: {0}> not found!", nonce),
                     EnumLevelDBErrorBase.TRANSACTION_TABLE_DETAIL.ToString()
                 );
         }
