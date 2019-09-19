@@ -57,7 +57,7 @@ namespace Trinity.Wallets.Event
 
         private string TransactionType = null;
         private string MonitorTxId = null;
-        private const uint DelayBlockHeight = 30;
+        private const uint DelayBlockHeight = 1000;
 
         // Transaction contents
         private TxContentsSignGeneric<CommitmentTx> commitment;
@@ -114,7 +114,9 @@ namespace Trinity.Wallets.Event
                 eventType = EnumTransactionType.REVOCABLE.ToString()
             };
 
-            this.channelDBEntry.AddBlockEvent(blockHeight + DelayBlockHeight, blockEvent);
+            uint atBlockHeight = blockHeight + DelayBlockHeight;
+            this.channelDBEntry.AddBlockEvent(atBlockHeight, blockEvent);
+            Log.Debug("Add channel close revocable event at block: {0}.", atBlockHeight);
         }
 
         public void TriggerRevocableEvent(UInt64 nonce, uint blockHeight)
